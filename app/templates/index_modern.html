@@ -1,0 +1,719 @@
+{% extends "base_modern.html" %}
+
+{% block title %}FoodFlow - Gestione Intelligente Della Dispensa | Riduci Sprechi del 70%{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Hero Section */
+.hero-modern {
+    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
+    color: white;
+    padding: 6rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-modern::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 8s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(255,255,255,0.2);
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    backdrop-filter: blur(10px);
+}
+
+.hero-title {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+}
+
+.hero-subtitle {
+    font-size: 1.25rem;
+    opacity: 0.95;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.cta-primary {
+    background: white;
+    color: #00D563;
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    transition: all 0.3s;
+}
+
+.cta-primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+    color: #00B350;
+}
+
+.cta-secondary {
+    background: transparent;
+    color: white;
+    padding: 1rem 2.5rem;
+    border: 2px solid white;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    transition: all 0.3s;
+}
+
+.cta-secondary:hover {
+    background: white;
+    color: #00D563;
+}
+
+.hero-visual {
+    position: relative;
+}
+
+.dashboard-mockup {
+    background: white;
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: perspective(1000px) rotateY(-5deg);
+    transition: all 0.5s;
+}
+
+.dashboard-mockup:hover {
+    transform: perspective(1000px) rotateY(0deg);
+}
+
+.trust-badges {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+    opacity: 0.9;
+}
+
+.trust-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+}
+
+/* Features Section */
+.feature-card-modern {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    height: 100%;
+    border: 2px solid transparent;
+}
+
+.feature-card-modern:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    border-color: #00D563;
+}
+
+.feature-icon-modern {
+    width: 70px;
+    height: 70px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
+    color: white;
+}
+
+.feature-card-modern.premium {
+    background: linear-gradient(145deg, #FEF3C7 0%, #FDE68A 100%);
+    border-color: #F59E0B;
+}
+
+.feature-card-modern.premium .feature-icon-modern {
+    background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+}
+
+/* Social Proof */
+.social-proof {
+    background: #F8FAFC;
+    padding: 4rem 0;
+}
+
+.testimonial-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.testimonial-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.rating {
+    color: #F59E0B;
+}
+
+/* Stats Section */
+.stats-highlight {
+    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
+    color: white;
+    padding: 4rem 0;
+}
+
+.stat-number {
+    font-size: 3.5rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* How It Works */
+.step-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    position: relative;
+    text-align: center;
+}
+
+.step-number {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 auto 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,213,99,0.4);
+}
+
+.step-card::after {
+    content: '→';
+    position: absolute;
+    top: 50%;
+    right: -30px;
+    transform: translateY(-50%);
+    font-size: 2rem;
+    color: #CBD5E1;
+}
+
+.step-card:last-child::after {
+    display: none;
+}
+
+/* FAQ */
+.faq-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.faq-item:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+    color: #1E293B;
+}
+
+.faq-answer {
+    margin-top: 1rem;
+    color: #64748B;
+    display: none;
+}
+
+.faq-item.active .faq-answer {
+    display: block;
+}
+
+/* CTA Final */
+.cta-final {
+    background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+    color: white;
+    padding: 5rem 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-final::before {
+    content: '🚀';
+    position: absolute;
+    bottom: -50px;
+    right: -50px;
+    font-size: 15rem;
+    opacity: 0.1;
+}
+
+@media (max-width: 768px) {
+    .hero-title {
+        font-size: 2.5rem;
+    }
+    
+    .dashboard-mockup {
+        transform: none;
+    }
+    
+    .step-card::after {
+        display: none;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-modern">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6 mb-5 mb-lg-0">
+                <div class="hero-badge">
+                    <i class="bi bi-lightning-fill"></i>
+                    <span>Oltre 1.000 famiglie risparmiano con FoodFlow</span>
+                </div>
+                
+                <h1 class="hero-title">
+                    Riduci gli Sprechi<br>
+                    Alimentari del <span style="color: #FCD34D;">70%</span>
+                </h1>
+                
+                <p class="hero-subtitle">
+                    Gestisci la tua dispensa con l'intelligenza artificiale. 
+                    Ricevi ricette personalizzate, riduci gli sprechi e risparmia tempo e denaro.
+                </p>
+                
+                <div class="d-flex gap-3 flex-wrap mb-4">
+                    <a href="{{ url_for('register') }}" class="cta-primary">
+                        Inizia Gratis →
+                    </a>
+                    <a href="#features" class="cta-secondary">
+                        Guarda Come Funziona
+                    </a>
+                </div>
+                
+                <div class="trust-badges">
+                    <div class="trust-badge">
+                        <i class="bi bi-shield-check"></i>
+                        <span>100% Gratis</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="bi bi-clock"></i>
+                        <span>Setup in 2 minuti</span>
+                    </div>
+                    <div class="trust-badge">
+                        <i class="bi bi-credit-card"></i>
+                        <span>Nessuna Carta Richiesta</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="hero-visual">
+                    <div class="dashboard-mockup">
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="text-center p-3" style="background: #F0FDF4; border-radius: 12px;">
+                                    <i class="bi bi-box-seam" style="font-size: 2rem; color: #10B981;"></i>
+                                    <h6 class="mt-2 mb-0" style="color: #1E293B;">45 Prodotti</h6>
+                                    <small style="color: #64748B;">Monitorati</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="text-center p-3" style="background: #FEF3C7; border-radius: 12px;">
+                                    <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #F59E0B;"></i>
+                                    <h6 class="mt-2 mb-0" style="color: #1E293B;">3 In Scadenza</h6>
+                                    <small style="color: #64748B;">Questa settimana</small>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="text-center p-3" style="background: #DBEAFE; border-radius: 12px;">
+                                    <i class="bi bi-magic" style="font-size: 2rem; color: #3B82F6;"></i>
+                                    <h6 class="mt-2 mb-0" style="color: #1E293B;">5 Ricette AI</h6>
+                                    <small style="color: #64748B;">Suggerite per te</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Social Proof -->
+<section class="social-proof">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="h3 fw-bold mb-2">Cosa Dicono i Nostri Utenti</h2>
+            <div class="rating mb-3">
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-fill"></i>
+                <i class="bi bi-star-half"></i>
+                <span class="text-muted ms-2">4.8/5 da 523 recensioni</span>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="testimonial-avatar">MR</div>
+                        <div>
+                            <h6 class="mb-0">Maria Rossi</h6>
+                            <small class="text-muted">Mamma di 3 figli</small>
+                        </div>
+                    </div>
+                    <div class="rating mb-2">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-muted mb-0">
+                        "Ho ridotto gli sprechi del 60% in 2 mesi. Le ricette AI sono fantastiche e uso ingredienti che altrimenti butterei!"
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="testimonial-avatar">LB</div>
+                        <div>
+                            <h6 class="mb-0">Luca Bianchi</h6>
+                            <small class="text-muted">Studente</small>
+                        </div>
+                    </div>
+                    <div class="rating mb-2">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                    </div>
+                    <p class="text-muted mb-0">
+                        "Perfetto per chi vive da solo! Mi aiuta a pianificare e non spreco più nulla. Risparmio circa 50€ al mese."
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="testimonial-card">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="testimonial-avatar">SF</div>
+                        <div>
+                            <h6 class="mb-0">Sara Ferrari</h6>
+                            <small class="text-muted">Chef Casalinga</small>
+                        </div>
+                    </div>
+                    <div class="rating mb-2">
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-fill"></i>
+                        <i class="bi bi-star-half"></i>
+                    </div>
+                    <p class="text-muted mb-0">
+                        "L'app mi suggerisce ricette creative con quello che ho in casa. Amo il sistema di gamification!"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold mb-3">Tutto Quello Che Ti Serve, In Un'Unica App</h2>
+            <p class="lead text-muted">Gestione intelligente end-to-end del cibo</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card-modern premium">
+                    <div class="feature-icon-modern">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">AI Avanzata</h5>
+                    <p class="text-muted mb-0">
+                        Ricette personalizzate, liste spesa automatiche e suggerimenti nutrizionali basati sui tuoi gusti e obiettivi.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon-modern">
+                        <i class="bi bi-bell"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Notifiche Smart</h5>
+                    <p class="text-muted mb-0">
+                        Avvisi proattivi per scadenze, scorte basse e suggerimenti per utilizzare ingredienti prima che scadano.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon-modern">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Analytics Dettagliate</h5>
+                    <p class="text-muted mb-0">
+                        Traccia sprechi, nutrizione e spesa. Vedi trend e ottimizza continuamente la tua gestione alimentare.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon-modern">
+                        <i class="bi bi-heart-pulse"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Piano Nutrizionale</h5>
+                    <p class="text-muted mb-0">
+                        Calcolo automatico BMR/TDEE e macros. Piano pasti personalizzato per perdita peso, massa muscolare o mantenimento.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon-modern">
+                        <i class="bi bi-arrow-repeat"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Tutto Connesso</h5>
+                    <p class="text-muted mb-0">
+                        Piano pasti → Lista spesa → Dispensa → Ricette. Zero copia-incolla, tutto si aggiorna automaticamente.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon-modern">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                    <h5 class="fw-bold mb-3">Gamification</h5>
+                    <p class="text-muted mb-0">
+                        Punti, badge, streak e classifiche. Rendi la gestione del cibo divertente e mantieni la motivazione alta.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5" style="background: #F8FAFC;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold mb-3">Come Funziona</h2>
+            <p class="lead text-muted">4 semplici passaggi per iniziare</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card">
+                    <div class="step-number">1</div>
+                    <h5 class="fw-bold mb-3">Aggiungi Prodotti</h5>
+                    <p class="text-muted mb-0">
+                        Inserisci gli ingredienti della tua dispensa con scadenze e quantità
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card">
+                    <div class="step-number">2</div>
+                    <h5 class="fw-bold mb-3">Ricevi Ricette</h5>
+                    <p class="text-muted mb-0">
+                        L'AI suggerisce ricette basate su cosa hai disponibile
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card">
+                    <div class="step-number">3</div>
+                    <h5 class="fw-bold mb-3">Lista Spesa Auto</h5>
+                    <p class="text-muted mb-0">
+                        La lista si aggiorna con ingredienti mancanti per le ricette
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-3 col-md-6">
+                <div class="step-card">
+                    <div class="step-number">4</div>
+                    <h5 class="fw-bold mb-3">Cucina e Risparmia</h5>
+                    <p class="text-muted mb-0">
+                        Riduci sprechi e risparmia tempo e denaro ogni settimana
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats -->
+<section class="stats-highlight">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3">
+                <div class="stat-number">1000+</div>
+                <div class="stat-label">Famiglie Attive</div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-number">5,000+</div>
+                <div class="stat-label">Prodotti Tracciati</div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-number">70%</div>
+                <div class="stat-label">Sprechi Ridotti</div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-number">50€</div>
+                <div class="stat-label">Risparmio Mensile Medio</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section class="py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="display-6 fw-bold mb-3">Domande Frequenti</h2>
+        </div>
+        
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-question">
+                        <span>È davvero gratis?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Sì, FoodFlow è completamente gratuito. Non richiediamo carta di credito e non ci sono costi nascosti. Tutte le funzionalità sono accessibili gratuitamente.
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-question">
+                        <span>Come funziona l'AI per le ricette?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        L'intelligenza artificiale analizza gli ingredienti nella tua dispensa, le tue preferenze alimentari e le scadenze per suggerirti ricette personalizzate che massimizzano l'uso di ciò che hai.
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-question">
+                        <span>Devo inserire manualmente ogni prodotto?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Inizialmente sì, ma dopo il setup iniziale (circa 10 minuti), il sistema si aggiorna automaticamente quando consumi ingredienti o aggiungi nuovi prodotti dalla lista spesa.
+                    </div>
+                </div>
+                
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-question">
+                        <span>Funziona per diete speciali (vegano, gluten-free, etc)?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Assolutamente! Puoi impostare restrizioni alimentari, allergie e preferenze nel tuo profilo nutrizionale e l'AI terrà conto di tutte le tue esigenze.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="cta-final">
+    <div class="container text-center">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <h2 class="display-5 fw-bold mb-4">
+                    Inizia Oggi a Ridurre gli Sprechi
+                </h2>
+                <p class="lead mb-4">
+                    Unisciti a oltre 1.000 famiglie che hanno già trasformato la loro gestione alimentare. 
+                    Setup in 2 minuti, nessuna carta richiesta.
+                </p>
+                <a href="{{ url_for('register') }}" class="cta-primary mb-3">
+                    Crea Account Gratis →
+                </a>
+                <p class="mt-3 opacity-75">
+                    <small>✓ Gratis Forever  ✓ Nessuna Carta  ✓ Cancellazione Sempre Possibile</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

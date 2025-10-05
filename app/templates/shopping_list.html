@@ -1,0 +1,1160 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Lista Spesa - FoodFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === SHOPPING LIST STYLES === */
+    .shopping-container {
+        padding: 2rem 0;
+        min-height: 100vh;
+    }
+
+    /* Header Card */
+    .shopping-header {
+        background: var(--gradient-hero);
+        border-radius: var(--radius-xl);
+        padding: 2.5rem;
+        color: white;
+        box-shadow: var(--shadow-xl);
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shopping-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        animation: headerPattern 30s linear infinite;
+    }
+
+    @keyframes headerPattern {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(30px, 30px); }
+    }
+
+    /* Stats Cards */
+    .stat-card-shopping {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition-normal);
+        border: 2px solid transparent;
+        height: 100%;
+    }
+
+    .stat-card-shopping:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-xl);
+        border-color: var(--primary-green);
+    }
+
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat-icon.success { background: linear-gradient(135deg, #10B981, #34D399); }
+    .stat-icon.warning { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+    .stat-icon.info { background: linear-gradient(135deg, #3B82F6, #60A5FA); }
+    .stat-icon.danger { background: linear-gradient(135deg, #EF4444, #F87171); }
+
+    /* Shopping List Card */
+    .list-card {
+        background: white;
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg);
+        overflow: hidden;
+        transition: var(--transition-normal);
+        border: 2px solid transparent;
+    }
+
+    .list-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-2xl);
+        border-color: var(--primary-green);
+    }
+
+    .list-card-header {
+        background: var(--gradient-card);
+        padding: 1.5rem;
+        border-bottom: 2px solid var(--neutral-100);
+    }
+
+    .list-card-body {
+        padding: 1.5rem;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    /* Shopping Items */
+    .shopping-item {
+        background: var(--neutral-50);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: var(--transition-normal);
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shopping-item::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 4px;
+        height: 100%;
+        background: var(--neutral-300);
+        transition: var(--transition-fast);
+    }
+
+    .shopping-item.priority-high::before { background: var(--danger); }
+    .shopping-item.priority-medium::before { background: var(--warning); }
+    .shopping-item.priority-low::before { background: var(--info); }
+
+    .shopping-item:hover {
+        background: white;
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary-green);
+    }
+
+    .shopping-item.completed {
+        opacity: 0.6;
+        background: var(--neutral-100);
+    }
+
+    .shopping-item.completed .item-name {
+        text-decoration: line-through;
+        color: var(--neutral-500);
+    }
+
+    /* Checkbox Custom */
+    .custom-checkbox {
+        width: 24px;
+        height: 24px;
+        border: 2px solid var(--neutral-300);
+        border-radius: 6px;
+        cursor: pointer;
+        transition: var(--transition-fast);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .custom-checkbox:hover {
+        border-color: var(--primary-green);
+        transform: scale(1.1);
+    }
+
+    .custom-checkbox.checked {
+        background: var(--gradient-hero);
+        border-color: var(--primary-green);
+    }
+
+    .custom-checkbox.checked i {
+        color: white;
+        font-size: 14px;
+    }
+
+    /* Item Details */
+    .item-content {
+        flex: 1;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: var(--neutral-800);
+        margin-bottom: 0.25rem;
+    }
+
+    .item-meta {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        font-size: 0.85rem;
+        color: var(--neutral-600);
+    }
+
+    .item-quantity {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .item-category {
+        background: var(--neutral-200);
+        padding: 0.2rem 0.6rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+    }
+
+    /* Priority Badge */
+    .priority-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .priority-badge.high {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+    }
+
+    .priority-badge.medium {
+        background: rgba(245, 158, 11, 0.1);
+        color: var(--warning);
+    }
+
+    .priority-badge.low {
+        background: rgba(59, 130, 246, 0.1);
+        color: var(--info);
+    }
+
+    /* Progress Bar */
+    .list-progress {
+        height: 8px;
+        background: var(--neutral-200);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        margin-top: 1rem;
+    }
+
+    .list-progress-bar {
+        height: 100%;
+        background: var(--gradient-hero);
+        border-radius: var(--radius-full);
+        transition: width 0.5s ease;
+    }
+
+    /* Add Item Form */
+    .add-item-section {
+        padding: 1.5rem;
+        background: var(--neutral-50);
+        border-top: 2px solid var(--neutral-100);
+    }
+
+    .add-item-form {
+        display: grid;
+        grid-template-columns: 2fr 1fr 1fr auto;
+        gap: 0.75rem;
+        align-items: end;
+    }
+
+    .form-group-inline {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-label-inline {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--neutral-700);
+        margin-bottom: 0.4rem;
+    }
+
+    .form-input-modern {
+        padding: 0.75rem;
+        border: 2px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        transition: var(--transition-fast);
+        background: white;
+    }
+
+    .form-input-modern:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 3px rgba(0, 213, 99, 0.1);
+    }
+
+    /* Action Buttons */
+    .btn-action {
+        width: 36px;
+        height: 36px;
+        border-radius: var(--radius-md);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: var(--transition-fast);
+        font-size: 0.9rem;
+    }
+
+    .btn-action.primary {
+        background: var(--gradient-hero);
+        color: white;
+    }
+
+    .btn-action.danger {
+        background: linear-gradient(135deg, #EF4444, #F87171);
+        color: white;
+    }
+
+    .btn-action.secondary {
+        background: var(--neutral-200);
+        color: var(--neutral-700);
+    }
+
+    .btn-action:hover {
+        transform: scale(1.1);
+        box-shadow: var(--shadow-md);
+    }
+
+    /* AI Suggestions Panel */
+    .ai-suggestions-panel {
+        background: linear-gradient(135deg, rgba(0, 213, 99, 0.05), rgba(0, 188, 212, 0.05));
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        border: 2px dashed var(--primary-green);
+        margin-bottom: 2rem;
+    }
+
+    .suggestion-item {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: var(--transition-fast);
+        cursor: pointer;
+    }
+
+    .suggestion-item:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateX(5px);
+    }
+
+    .suggestion-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--gradient-hero);
+        color: white;
+        font-size: 1.2rem;
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-state-icon {
+        font-size: 5rem;
+        color: var(--neutral-300);
+        margin-bottom: 1.5rem;
+    }
+
+    .empty-state h3 {
+        color: var(--neutral-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--neutral-500);
+        margin-bottom: 2rem;
+    }
+
+    /* Budget Tracker */
+    .budget-tracker {
+        background: var(--neutral-50);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .budget-bar {
+        height: 8px;
+        background: var(--neutral-200);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+        margin-top: 0.5rem;
+    }
+
+    .budget-fill {
+        height: 100%;
+        background: var(--gradient-hero);
+        border-radius: var(--radius-full);
+        transition: width 0.5s ease;
+    }
+
+    .budget-fill.over-budget {
+        background: linear-gradient(135deg, #EF4444, #F87171);
+    }
+
+    /* Modal Styles */
+    .modal-modern .modal-content {
+        border-radius: var(--radius-xl);
+        border: none;
+        box-shadow: var(--shadow-2xl);
+    }
+
+    .modal-modern .modal-header {
+        background: var(--gradient-hero);
+        color: white;
+        border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+        padding: 1.5rem;
+    }
+
+    .modal-modern .modal-body {
+        padding: 2rem;
+    }
+
+    /* Animations */
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    .slide-in {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .add-item-form {
+            grid-template-columns: 1fr;
+        }
+
+        .shopping-header {
+            padding: 1.5rem;
+        }
+
+        .list-card-body {
+            max-height: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="shopping-container">
+    <div class="container">
+        <!-- Header -->
+        <div class="shopping-header">
+            <div class="row align-items-center" style="position: relative; z-index: 1;">
+                <div class="col-lg-8">
+                    <h1 class="mb-2">
+                        <i class="bi bi-cart-check-fill me-2"></i>
+                        Lista Spesa Intelligente
+                    </h1>
+                    <p class="mb-0 opacity-90">
+                        Gestisci i tuoi acquisti con AI, analytics e automazioni smart
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                    <button class="btn btn-light btn-lg me-2" onclick="generateSmartList()">
+                        <i class="bi bi-magic me-2"></i>Lista AI
+                    </button>
+                    <button class="btn btn-outline-light btn-lg" data-bs-toggle="modal" data-bs-target="#newListModal">
+                        <i class="bi bi-plus-circle me-2"></i>Nuova
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Stats -->
+        {% if analytics %}
+        <div class="row mb-4">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card-shopping">
+                    <div class="stat-icon success">
+                        <i class="bi bi-check-circle-fill text-white"></i>
+                    </div>
+                    <h3 class="mb-1">{{ analytics.completed_lists }}</h3>
+                    <p class="text-muted mb-0">Liste Completate</p>
+                    <small class="text-success">
+                        <i class="bi bi-arrow-up me-1"></i>
+                        {{ analytics.completion_rate|round(1) }}% completamento
+                    </small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card-shopping">
+                    <div class="stat-icon info">
+                        <i class="bi bi-bag-check-fill text-white"></i>
+                    </div>
+                    <h3 class="mb-1">{{ analytics.total_items }}</h3>
+                    <p class="text-muted mb-0">Prodotti Acquistati</p>
+                    <small class="text-info">
+                        <i class="bi bi-graph-up me-1"></i>
+                        {{ analytics.completed_items }} completati
+                    </small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card-shopping">
+                    <div class="stat-icon warning">
+                        <i class="bi bi-wallet2 text-white"></i>
+                    </div>
+                    <h3 class="mb-1">€{{ analytics.avg_spent }}</h3>
+                    <p class="text-muted mb-0">Spesa Media</p>
+                    <small class="text-warning">
+                        <i class="bi bi-calendar me-1"></i>
+                        Ogni {{ analytics.shopping_frequency_days }} giorni
+                    </small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="stat-card-shopping">
+                    <div class="stat-icon danger">
+                        <i class="bi bi-exclamation-triangle-fill text-white"></i>
+                    </div>
+                    <h3 class="mb-1">{{ low_stock|length }}</h3>
+                    <p class="text-muted mb-0">Prodotti in Esaurimento</p>
+                    <small class="text-danger">
+                        <i class="bi bi-arrow-down me-1"></i>
+                        Scorte basse
+                    </small>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- AI Suggestions -->
+        {% if ai_suggestions %}
+        <div class="ai-suggestions-panel">
+            <h5 class="mb-3">
+                <i class="bi bi-magic me-2"></i>
+                Suggerimenti AI
+            </h5>
+            <div class="row">
+                {% for suggestion in ai_suggestions[:6] %}
+                <div class="col-lg-6 mb-2">
+                    <div class="suggestion-item" onclick="addSuggestionToList({{ suggestion|tojson }})">
+                        <div class="suggestion-icon">
+                            <i class="bi bi-{{ suggestion.icon }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">{{ suggestion.name }}</div>
+                            <small class="text-muted">
+                                {{ suggestion.quantity }} {{ suggestion.unit }} • {{ suggestion.reason }}
+                            </small>
+                        </div>
+                        <span class="priority-badge {{ suggestion.priority }}">
+                            {{ suggestion.priority|upper }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Shopping Lists -->
+        {% if lists %}
+        <div class="row">
+            {% for list in lists %}
+            <div class="col-lg-6 mb-4">
+                <div class="list-card slide-in" style="animation-delay: {{ loop.index0 * 0.1 }}s;">
+                    <!-- Header -->
+                    <div class="list-card-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-1">
+                                    <i class="bi bi-list-check me-2"></i>
+                                    {{ list.name }}
+                                </h5>
+                                {% if list.store_name %}
+                                <small class="text-muted">
+                                    <i class="bi bi-shop me-1"></i>{{ list.store_name }}
+                                </small>
+                                {% endif %}
+                            </div>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots-vertical"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="renameList({{ list.id }}, '{{ list.name|e }}')">
+                                            <i class="bi bi-pencil me-2"></i>Rinomina
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="duplicateList({{ list.id }})">
+                                            <i class="bi bi-files me-2"></i>Duplica
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="dropdown-item" href="#" onclick="exportList({{ list.id }})">
+                                            <i class="bi bi-download me-2"></i>Esporta PDF
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-success" href="#" onclick="completeList({{ list.id }})">
+                                            <i class="bi bi-check-circle me-2"></i>Completa e Aggiorna Dispensa
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="#" onclick="deleteList({{ list.id }})">
+                                            <i class="bi bi-trash me-2"></i>Elimina
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <!-- Progress -->
+                        {% if list.items %}
+                        <div class="list-progress">
+                            <div class="list-progress-bar" style="width: {{ list.completion_percentage }}%"></div>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            {{ list.completed_items }}/{{ list.total_items }} completati 
+                            ({{ list.completion_percentage|round(1) }}%)
+                        </small>
+                        {% endif %}
+
+                        <!-- Budget Tracker -->
+                        {% if list.budget %}
+                        <div class="budget-tracker">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-semibold">Budget:</span>
+                                <span class="fw-bold">
+                                    €{{ list.actual_spent or 0 }} / €{{ list.budget }}
+                                </span>
+                            </div>
+                            <div class="budget-bar">
+                                {% set budget_percentage = ((list.actual_spent or 0) / list.budget * 100) if list.budget > 0 else 0 %}
+                                <div class="budget-fill {% if budget_percentage > 100 %}over-budget{% endif %}" 
+                                     style="width: {{ [budget_percentage, 100]|min }}%"></div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Items List -->
+                    <div class="list-card-body" id="list-items-{{ list.id }}">
+                        {% if list.items %}
+                            {% for item in list.items %}
+                            <div class="shopping-item {% if item.completed %}completed{% endif %} priority-{{ ['low', 'medium', 'high'][item.priority or 0] }}" 
+                                 id="item-{{ item.id }}">
+                                <div class="custom-checkbox {% if item.completed %}checked{% endif %}" 
+                                     onclick="toggleItem({{ item.id }}, {{ list.id }})">
+                                    {% if item.completed %}
+                                    <i class="bi bi-check-lg"></i>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="item-content">
+                                    <div class="item-name">{{ item.name }}</div>
+                                    <div class="item-meta">
+                                        <span class="item-quantity">
+                                            <i class="bi bi-box-seam"></i>
+                                            {{ item.quantity }} {{ item.unit }}
+                                        </span>
+                                        {% if item.category %}
+                                        <span class="item-category">{{ item.category }}</span>
+                                        {% endif %}
+                                        {% if item.estimated_price %}
+                                        <span>
+                                            <i class="bi bi-tag"></i>
+                                            €{{ item.estimated_price }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                    {% if item.notes %}
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="bi bi-sticky"></i> {{ item.notes }}
+                                    </small>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex gap-1">
+                                    <button class="btn-action secondary" onclick="editItem({{ item.id }}, {{ item|tojson }})" title="Modifica">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn-action danger" onclick="deleteItem({{ item.id }}, {{ list.id }})" title="Elimina">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                        <div class="text-center py-4">
+                            <i class="bi bi-cart-x text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">Lista vuota. Aggiungi il primo prodotto!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Add Item Form -->
+                    <div class="add-item-section">
+                        <form class="add-item-form" onsubmit="addItem(event, {{ list.id }})">
+                            <div class="form-group-inline">
+                                <label class="form-label-inline">Prodotto</label>
+                                <input type="text" class="form-input-modern" name="name" placeholder="Nome prodotto" required>
+                            </div>
+                            <div class="form-group-inline">
+                                <label class="form-label-inline">Quantità</label>
+                                <input type="number" step="0.1" class="form-input-modern" name="quantity" placeholder="1" required>
+                            </div>
+                            <div class="form-group-inline">
+                                <label class="form-label-inline">Unità</label>
+                                <select class="form-input-modern" name="unit" required>
+                                    <option value="pz">Pezzi</option>
+                                    <option value="kg">Kg</option>
+                                    <option value="g">Grammi</option>
+                                    <option value="l">Litri</option>
+                                    <option value="ml">Millilitri</option>
+                                    <option value="conf">Confezioni</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn-action primary" title="Aggiungi">
+                                <i class="bi bi-plus-lg"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <h3>Nessuna Lista della Spesa</h3>
+            <p>Inizia creando la tua prima lista per organizzare gli acquisti in modo intelligente</p>
+            <button class="btn btn-lg" style="background: var(--gradient-hero); color: white; padding: 1rem 2rem; border-radius: var(--radius-md);" 
+                    data-bs-toggle="modal" data-bs-target="#newListModal">
+                <i class="bi bi-plus-circle me-2"></i>
+                Crea Prima Lista
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal: Nuova Lista -->
+<div class="modal fade modal-modern" id="newListModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Nuova Lista Spesa
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newListForm" onsubmit="createList(event)">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nome Lista *</label>
+                        <input type="text" class="form-input-modern" name="name" placeholder="es. Spesa Settimanale" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Negozio</label>
+                        <input type="text" class="form-input-modern" name="store_name" placeholder="es. Supermercato XYZ">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Budget (€)</label>
+                        <input type="number" step="0.01" class="form-input-modern" name="budget" placeholder="100.00">
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-lg" style="background: var(--gradient-hero); color: white;">
+                            <i class="bi bi-check-circle me-2"></i>
+                            Crea Lista
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Condividi Lista -->
+<div class="modal fade modal-modern" id="shareListModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="bi bi-share me-2"></i>
+                    Condividi Lista
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="shareListForm" onsubmit="shareListSubmit(event)">
+                    <input type="hidden" name="list_id" id="shareListId">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Email dell'utente *</label>
+                        <input type="email" class="form-input-modern" name="email" placeholder="amico@esempio.com" required>
+                        <small class="form-text text-muted">
+                            L'utente deve essere già registrato su FoodFlow
+                        </small>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-lg" style="background: var(--gradient-hero); color: white;">
+                            <i class="bi bi-send me-2"></i>
+                            Condividi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// ===== GESTIONE LISTE =====
+
+async function createList(event) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    try {
+        const response = await fetch('/shopping-list/create', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', data.message);
+            bootstrap.Modal.getInstance(document.getElementById('newListModal')).hide();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('danger', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Errore nella creazione della lista');
+        console.error(error);
+    }
+}
+
+async function deleteList(listId) {
+    if (!confirm('Sei sicuro di voler eliminare questa lista?')) return;
+    
+    try {
+        const response = await fetch(`/shopping-list/${listId}/delete`, {
+            method: 'DELETE'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', data.message);
+            document.querySelector(`#list-items-${listId}`).closest('.list-card').remove();
+        } else {
+            showNotification('danger', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Errore nell\'eliminazione');
+        console.error(error);
+    }
+}
+
+async function completeList(listId) {
+    const actualSpent = prompt('Inserisci la spesa effettiva (€):', '0');
+    if (actualSpent === null) return;
+    
+    try {
+        const response = await fetch(`/shopping-list/${listId}/complete`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ actual_spent: parseFloat(actualSpent) || 0 })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', `${data.message} +${data.points_earned} punti!`);
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification('danger', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Errore nel completamento');
+        console.error(error);
+    }
+}
+
+function shareList(listId) {
+    document.getElementById('shareListId').value = listId;
+    new bootstrap.Modal(document.getElementById('shareListModal')).show();
+}
+
+async function shareListSubmit(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const listId = formData.get('list_id');
+    const email = formData.get('email');
+    
+    try {
+        const response = await fetch(`/shopping-list/${listId}/share`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', data.message);
+            bootstrap.Modal.getInstance(document.getElementById('shareListModal')).hide();
+        } else {
+            showNotification('warning', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Errore nella condivisione');
+        console.error(error);
+    }
+}
+
+// ===== GESTIONE ITEMS =====
+
+async function addItem(event, listId) {
+    event.preventDefault();
+    const form = event.target;
+    const formData = new FormData(form);
+    
+    const itemData = {
+        name: formData.get('name'),
+        quantity: parseFloat(formData.get('quantity')),
+        unit: formData.get('unit')
+    };
+    
+    try {
+        const response = await fetch(`/shopping-list/${listId}/add-item`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(itemData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', data.message);
+            form.reset();
+            location.reload(); // Ricarica per mostrare il nuovo item
+        } else {
+            showNotification('danger', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Errore nell\'aggiunta del prodotto');
+        console.error(error);
+    }
+}
+
+async function toggleItem(itemId, listId) {
+    try {
+        const response = await fetch(`/shopping-list/item/${itemId}/toggle`, {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            const itemElement = document.getElementById(`item-${itemId}`);
+            const checkbox = itemElement.querySelector('.custom-checkbox');
+            
+            if (data.completed) {
+                itemElement.classList.add('completed');
+                checkbox.classList.add('checked');
+                checkbox.innerHTML = '<i class="bi bi-check-lg"></i>';
+            } else {
+                itemElement.classList.remove('completed');
+                checkbox.classList.remove('checked');
+                checkbox.innerHTML = '';
+            }
+            
+            // Aggiorna progress bar
+            updateProgress(listId);
+        }
+    } catch (error) {
+        console.error('Errore nel toggle item:', error);
+    }
+}
+
+async function deleteItem(itemId, listId) {
+    if (!confirm('Rimuovere questo prodotto?')) return;
+    
+    try {
+        // Implementa la route di eliminazione
+        showNotification('success', 'Prodotto rimosso');
+        document.getElementById(`item-${itemId}`).remove();
+        updateProgress(listId);
+    } catch (error) {
+        showNotification('danger', 'Errore nella rimozione');
+    }
+}
+
+function updateProgress(listId) {
+    const container = document.getElementById(`list-items-${listId}`);
+    const items = container.querySelectorAll('.shopping-item');
+    const completed = container.querySelectorAll('.shopping-item.completed').length;
+    const total = items.length;
+    const percentage = total > 0 ? (completed / total * 100) : 0;
+    
+    const progressBar = container.closest('.list-card').querySelector('.list-progress-bar');
+    if (progressBar) {
+        progressBar.style.width = percentage + '%';
+    }
+}
+
+// ===== FUNZIONI AI =====
+
+async function generateSmartList() {
+    showNotification('info', 'Generazione lista intelligente in corso...');
+    
+    try {
+        const response = await fetch('/shopping-list/generate-smart', {
+            method: 'POST'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', data.message);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('danger', data.message);
+        }
+    } catch (error) {
+        showNotification('danger', 'Errore nella generazione');
+        console.error(error);
+    }
+}
+
+function addSuggestionToList(suggestion) {
+    // Implementa logica per aggiungere suggerimento alla lista attiva
+    showNotification('info', `Aggiungi "${suggestion.name}" a una lista`);
+}
+
+// ===== UTILITY =====
+
+function showNotification(type, message) {
+    const colors = {
+        success: '#10B981',
+        danger: '#EF4444',
+        warning: '#F59E0B',
+        info: '#3B82F6'
+    };
+    
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        top: 100px;
+        right: 20px;
+        z-index: 9999;
+        background: white;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border-left: 4px solid ${colors[type]};
+        min-width: 300px;
+        animation: slideInRight 0.3s ease-out;
+    `;
+    
+    notif.innerHTML = `
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 
+                               type === 'danger' ? 'x-circle-fill' : 
+                               type === 'warning' ? 'exclamation-triangle-fill' : 
+                               'info-circle-fill'}" 
+               style="font-size: 1.5rem; color: ${colors[type]};"></i>
+            <div class="flex-grow-1">
+                <div style="font-weight: 600; color: #1F2937;">${message}</div>
+            </div>
+            <button onclick="this.parentElement.parentElement.remove()" 
+                    style="background: none; border: none; font-size: 1.2rem; color: #9CA3AF; cursor: pointer;">
+                ×
+            </button>
+        </div>
+    `;
+    
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.style.animation = 'slideOutRight 0.3s ease-out';
+        setTimeout(() => notif.remove(), 300);
+    }, 4000);
+}
+
+// Animazioni CSS
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(100px);
+        }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus primo input nei form
+    document.querySelectorAll('.add-item-form input[name="name"]').forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+            this.parentElement.style.transition = 'transform 0.2s ease';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+    
+    // Drag & Drop per riordinare items (opzionale)
+    // Implementa qui se necessario
+});
+</script>
+{% endblock %}

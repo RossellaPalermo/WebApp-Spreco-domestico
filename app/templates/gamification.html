@@ -1,0 +1,590 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Gamification - FoodFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.gamification-hero {
+    background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(245,158,11,0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+.gamification-hero::before {
+    content: '🏆';
+    position: absolute;
+    top: -20px;
+    right: -20px;
+    font-size: 10rem;
+    opacity: 0.1;
+}
+
+.stat-card-game {
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card-game:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.stat-card-game::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+}
+
+.stat-card-game.primary::before { background: #3B82F6; }
+.stat-card-game.success::before { background: #10B981; }
+.stat-card-game.warning::before { background: #F59E0B; }
+.stat-card-game.purple::before { background: #9C27B0; }
+
+.level-display {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.4);
+    margin: 0 auto 1rem;
+    position: relative;
+}
+
+.level-display::after {
+    content: '';
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #F59E0B;
+    animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+    to { transform: rotate(360deg); }
+}
+
+.progress-ring {
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+}
+
+.progress-ring-circle {
+    transition: stroke-dashoffset 0.5s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+}
+
+.badge-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.badge-item {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s;
+    cursor: pointer;
+}
+
+.badge-item:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.badge-item.earned {
+    background: linear-gradient(145deg, #FEF3C7 0%, #FDE68A 100%);
+}
+
+.badge-item.locked {
+    opacity: 0.5;
+    filter: grayscale(100%);
+}
+
+.badge-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    margin: 0 auto 1rem;
+    background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+}
+
+.badge-item.earned .badge-icon {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.leaderboard-row {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s;
+}
+
+.leaderboard-row:hover {
+    transform: translateX(10px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.leaderboard-row.current-user {
+    background: linear-gradient(145deg, #DBEAFE 0%, #BFDBFE 100%);
+    border: 2px solid #3B82F6;
+}
+
+.rank-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.rank-badge.gold {
+    background: linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%);
+    color: white;
+}
+
+.rank-badge.silver {
+    background: linear-gradient(135deg, #CBD5E1 0%, #94A3B8 100%);
+    color: white;
+}
+
+.rank-badge.bronze {
+    background: linear-gradient(135deg, #FDBA74 0%, #F97316 100%);
+    color: white;
+}
+
+.rank-badge.default {
+    background: #F1F5F9;
+    color: #64748B;
+}
+
+.achievement-unlock {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    z-index: 9999;
+    min-width: 300px;
+    transform: translateX(400px);
+    transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+.achievement-unlock.show {
+    transform: translateX(0);
+}
+
+.streak-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: linear-gradient(135deg, #EF4444 0%, #F97316 100%);
+    color: white;
+    border-radius: 20px;
+    font-weight: 700;
+}
+
+.challenge-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 1rem;
+}
+
+.challenge-progress {
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 1rem;
+}
+
+.challenge-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10B981 0%, #059669 100%);
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+@media (max-width: 768px) {
+    .badge-grid {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+    
+    .achievement-unlock {
+        right: 10px;
+        left: 10px;
+        min-width: auto;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero -->
+    <div class="gamification-hero">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="bi bi-trophy-fill me-2"></i>
+                    Centro Gamification
+                </h1>
+                <p class="mb-0 opacity-75">Raggiungi obiettivi, sblocca badge e scala la classifica!</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div class="level-display">
+                    {{ stats.level }}
+                </div>
+                <div class="text-center">
+                    <small class="opacity-75">Livello Attuale</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card-game warning">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 60px; height: 60px; background: rgba(245,158,11,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-star-fill" style="font-size: 1.75rem; color: #F59E0B;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ stats.points }}</h3>
+                        <small class="text-muted">Punti Totali</small>
+                    </div>
+                </div>
+                
+                <!-- Progress to next level -->
+                {% set level_thresholds = [0, 100, 250, 500, 1000, 2000, 4000, 8000] %}
+                {% set current_threshold = level_thresholds[stats.level - 1] if stats.level <= level_thresholds|length else level_thresholds[-1] %}
+                {% set next_threshold = level_thresholds[stats.level] if stats.level < level_thresholds|length else current_threshold + 10000 %}
+                {% set progress = ((stats.points - current_threshold) / (next_threshold - current_threshold) * 100)|round %}
+                
+                <div class="mt-3">
+                    <div class="d-flex justify-content-between text-muted mb-1">
+                        <small>Livello {{ stats.level }}</small>
+                        <small>Livello {{ stats.level + 1 }}</small>
+                    </div>
+                    <div class="progress" style="height: 8px; border-radius: 10px;">
+                        <div class="progress-bar" style="width: {{ progress }}%; background: linear-gradient(90deg, #F59E0B, #EF4444);"></div>
+                    </div>
+                    <small class="text-muted">{{ next_threshold - stats.points }} punti al prossimo livello</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card-game success">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 60px; height: 60px; background: rgba(16,185,129,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-recycle" style="font-size: 1.75rem; color: #10B981;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ waste_score }}</h3>
+                        <small class="text-muted">Score Anti-Spreco</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card-game primary">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 60px; height: 60px; background: rgba(59,130,246,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-award-fill" style="font-size: 1.75rem; color: #3B82F6;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ badges|length }}</h3>
+                        <small class="text-muted">Badge Sbloccati</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card-game purple">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 60px; height: 60px; background: rgba(156,39,176,0.1); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-fire" style="font-size: 1.75rem; color: #9C27B0;"></i>
+                    </div>
+                    <div>
+                        <h3 class="mb-0">{{ stats.current_streak|default(0) }}</h3>
+                        <small class="text-muted">Giorni di Streak</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenges Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 1.5rem;">
+                <h5 class="mb-4">
+                    <i class="bi bi-lightning-fill text-warning me-2"></i>
+                    Sfide Attive
+                </h5>
+
+                <div class="challenge-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6>Riduci gli Sprechi</h6>
+                            <p class="text-muted small mb-0">Usa tutti i prodotti in scadenza questa settimana</p>
+                        </div>
+                        <span class="badge bg-warning">+50 Punti</span>
+                    </div>
+                    <div class="challenge-progress">
+                        <div class="challenge-progress-fill" style="width: 65%"></div>
+                    </div>
+                    <small class="text-muted">65% completata</small>
+                </div>
+
+                <div class="challenge-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6>Maestro dell'AI</h6>
+                            <p class="text-muted small mb-0">Usa 10 ricette suggerite dall'AI</p>
+                        </div>
+                        <span class="badge bg-info">+30 Punti</span>
+                    </div>
+                    <div class="challenge-progress">
+                        <div class="challenge-progress-fill" style="width: 40%"></div>
+                    </div>
+                    <small class="text-muted">4/10 ricette utilizzate</small>
+                </div>
+
+                <div class="challenge-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6>Organizzatore Perfetto</h6>
+                            <p class="text-muted small mb-0">Mantieni la dispensa aggiornata per 7 giorni</p>
+                        </div>
+                        <span class="badge bg-success">+20 Punti</span>
+                    </div>
+                    <div class="challenge-progress">
+                        <div class="challenge-progress-fill" style="width: 85%"></div>
+                    </div>
+                    <small class="text-muted">6/7 giorni</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Badges -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card" style="background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 1.5rem;">
+                <h5 class="mb-4">
+                    <i class="bi bi-award-fill text-primary me-2"></i>
+                    I Tuoi Badge ({{ badges|length }}/{{ all_badges_count|default(20) }})
+                </h5>
+
+                {% if badges %}
+                <div class="badge-grid">
+                    {% for badge in badges %}
+                    <div class="badge-item earned" onclick="showBadgeDetails('{{ badge.name }}', '{{ badge.description }}')">
+                        <div class="badge-icon">
+                            <i class="bi bi-award-fill" style="color: white;"></i>
+                        </div>
+                        <h6 class="mb-1">{{ badge.name }}</h6>
+                        <small class="text-muted d-block mb-2">{{ badge.description }}</small>
+                        <span class="badge bg-success">Ottenuto!</span>
+                    </div>
+                    {% endfor %}
+
+                    <!-- Locked badges -->
+                    {% for i in range(3) %}
+                    <div class="badge-item locked">
+                        <div class="badge-icon" style="background: #E2E8F0;">
+                            <i class="bi bi-lock-fill" style="color: #94A3B8;"></i>
+                        </div>
+                        <h6 class="mb-1">???</h6>
+                        <small class="text-muted d-block mb-2">Badge misterioso</small>
+                        <span class="badge bg-secondary">Bloccato</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-award" style="font-size: 4rem; color: #CBD5E1;"></i>
+                    <h6 class="text-muted mt-3">Nessun badge ancora</h6>
+                    <p class="text-muted">Completa sfide e obiettivi per sbloccare badge!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card" style="background: white; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); padding: 1.5rem;">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="mb-0">
+                        <i class="bi bi-trophy-fill text-warning me-2"></i>
+                        Classifica Globale
+                    </h5>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary active" onclick="loadLeaderboard('weekly')">Settimana</button>
+                        <button class="btn btn-outline-primary" onclick="loadLeaderboard('monthly')">Mese</button>
+                        <button class="btn btn-outline-primary" onclick="loadLeaderboard('all')">Sempre</button>
+                    </div>
+                </div>
+
+                {% if leaderboard %}
+                <div id="leaderboardContainer">
+                    {% for entry in leaderboard.leaderboard %}
+                    <div class="leaderboard-row {% if entry.user_id == current_user.id %}current-user{% endif %}">
+                        <div class="rank-badge {% if entry.rank == 1 %}gold{% elif entry.rank == 2 %}silver{% elif entry.rank == 3 %}bronze{% else %}default{% endif %}">
+                            {% if entry.rank == 1 %}
+                                <i class="bi bi-trophy-fill"></i>
+                            {% elif entry.rank == 2 %}
+                                <i class="bi bi-award-fill"></i>
+                            {% elif entry.rank == 3 %}
+                                <i class="bi bi-award"></i>
+                            {% else %}
+                                {{ entry.rank }}
+                            {% endif %}
+                        </div>
+
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">
+                                {{ entry.username }}
+                                {% if entry.user_id == current_user.id %}
+                                <span class="badge bg-primary ms-2">Tu</span>
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Livello {{ entry.level }} • {{ entry.badges_count }} Badge</small>
+                        </div>
+
+                        <div class="text-end">
+                            <div class="fw-bold">{{ entry.points }}</div>
+                            <small class="text-muted">punti</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-people" style="font-size: 4rem; color: #CBD5E1;"></i>
+                    <h6 class="text-muted mt-3">Classifica vuota</h6>
+                    <p class="text-muted">Sii il primo a guadagnare punti!</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Badge Details Modal -->
+<div class="modal fade" id="badgeModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="badgeModalTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <div class="badge-icon mx-auto mb-3" style="width: 100px; height: 100px; font-size: 3rem;">
+                    <i class="bi bi-award-fill" style="color: white;"></i>
+                </div>
+                <p id="badgeModalDescription"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showBadgeDetails(name, description) {
+    document.getElementById('badgeModalTitle').textContent = name;
+    document.getElementById('badgeModalDescription').textContent = description;
+    new bootstrap.Modal(document.getElementById('badgeModal')).show();
+}
+
+function loadLeaderboard(period) {
+    // Update active button
+    document.querySelectorAll('.btn-group button').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    // Fetch leaderboard (implement API call)
+    console.log('Loading leaderboard for:', period);
+}
+
+// Simulate achievement unlock
+function showAchievement(badgeName) {
+    const notification = document.createElement('div');
+    notification.className = 'achievement-unlock';
+    notification.innerHTML = `
+        <div class="text-center">
+            <div class="badge-icon mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;">
+                <i class="bi bi-award-fill" style="color: white;"></i>
+            </div>
+            <h5>Achievement Sbloccato!</h5>
+            <p class="mb-0">${badgeName}</p>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => notification.classList.add('show'), 100);
+    setTimeout(() => {
+        notification.classList.remove('show');
+        setTimeout(() => notification.remove(), 500);
+    }, 3000);
+}
+
+// Example: Show achievement on page load (remove in production)
+// setTimeout(() => showAchievement('Primo Badge!'), 1000);
+</script>
+{% endblock %}

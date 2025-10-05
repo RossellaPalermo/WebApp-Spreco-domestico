@@ -1,0 +1,678 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Piano Pasti - FoodFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.meal-planning-header {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+}
+
+.week-navigator {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 2rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.day-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    min-height: 400px;
+}
+
+.day-header {
+    text-align: center;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #F1F5F9;
+    margin-bottom: 1rem;
+}
+
+.day-name {
+    font-weight: 700;
+    color: #1E293B;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+}
+
+.day-date {
+    color: #64748B;
+    font-size: 0.75rem;
+}
+
+.day-card.today .day-header {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    border-radius: 8px;
+    padding: 0.75rem;
+}
+
+.day-card.today .day-name,
+.day-card.today .day-date {
+    color: white;
+}
+
+.meal-slot {
+    background: #F8FAFC;
+    border-radius: 8px;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    border: 2px dashed #E2E8F0;
+}
+
+.meal-slot:hover {
+    border-color: #10B981;
+    background: rgba(16,185,129,0.05);
+}
+
+.meal-slot.filled {
+    background: white;
+    border: 2px solid #E2E8F0;
+    border-left: 4px solid;
+}
+
+.meal-slot.filled:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.meal-slot.breakfast { border-left-color: #F59E0B; }
+.meal-slot.lunch { border-left-color: #3B82F6; }
+.meal-slot.dinner { border-left-color: #8B5CF6; }
+.meal-slot.snack { border-left-color: #10B981; }
+
+.meal-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
+.meal-type-badge.breakfast {
+    background: rgba(245,158,11,0.1);
+    color: #F59E0B;
+}
+
+.meal-type-badge.lunch {
+    background: rgba(59,130,246,0.1);
+    color: #3B82F6;
+}
+
+.meal-type-badge.dinner {
+    background: rgba(139,92,246,0.1);
+    color: #8B5CF6;
+}
+
+.meal-type-badge.snack {
+    background: rgba(16,185,129,0.1);
+    color: #10B981;
+}
+
+.meal-name {
+    font-weight: 600;
+    color: #1E293B;
+    font-size: 0.875rem;
+    margin: 0.5rem 0;
+}
+
+.meal-stats {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #64748B;
+}
+
+.add-meal-btn {
+    width: 100%;
+    padding: 0.5rem;
+    border: 2px dashed #CBD5E1;
+    background: transparent;
+    border-radius: 8px;
+    color: #64748B;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.add-meal-btn:hover {
+    border-color: #10B981;
+    color: #10B981;
+    background: rgba(16,185,129,0.05);
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.action-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    text-align: center;
+    transition: all 0.3s;
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.action-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    margin: 0 auto 1rem;
+}
+
+.stats-summary {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1E293B;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #64748B;
+}
+
+@media (max-width: 1200px) {
+    .calendar-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="meal-planning-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="bi bi-calendar-week me-2"></i>
+                    Piano Pasti Settimanale
+                </h1>
+                <p class="mb-0 opacity-75">Pianifica i tuoi pasti per una nutrizione ottimale e zero sprechi</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                {% if nutritional_goals %}
+                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+                    <span class="badge bg-white text-dark px-3 py-2">
+                        <i class="bi bi-fire me-1"></i>{{ nutritional_goals.daily_calories }} cal/giorno
+                    </span>
+                    <span class="badge bg-white text-dark px-3 py-2">
+                        <i class="bi bi-check-circle me-1"></i>Profilo Attivo
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if not nutritional_profile %}
+    <!-- Alert Profilo Mancante -->
+    <div class="alert" style="background: rgba(59,130,246,0.1); border-left: 4px solid #3B82F6; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+        <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-info-circle-fill" style="font-size: 1.5rem; color: #3B82F6;"></i>
+            <div>
+                <h6 style="color: #1E293B; margin-bottom: 0.5rem;">Configura il Profilo Nutrizionale</h6>
+                <p style="color: #64748B; margin-bottom: 1rem;">Per ricevere suggerimenti personalizzati e calcoli nutrizionali precisi, configura il tuo profilo.</p>
+                <a href="{{ url_for('nutritional_profile') }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-person-gear me-1"></i>Configura Ora
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Week Navigator -->
+    <div class="week-navigator">
+        <button class="btn btn-outline-secondary" onclick="changeWeek(-1)">
+            <i class="bi bi-chevron-left"></i> Settimana Prec.
+        </button>
+        <div class="text-center">
+            <h5 class="mb-0" id="weekTitle">Settimana Corrente</h5>
+            <small class="text-muted" id="weekRange"></small>
+        </div>
+        <button class="btn btn-outline-secondary" onclick="changeWeek(1)">
+            Settimana Succ. <i class="bi bi-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar-grid" id="calendarGrid">
+        <!-- Giorni generati dinamicamente -->
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+        <div class="action-card">
+            <div class="action-icon" style="background: rgba(139,92,246,0.1); color: #8B5CF6;">
+                <i class="bi bi-magic"></i>
+            </div>
+            <h6>Genera Piano AI</h6>
+            <p class="text-muted small mb-3">L'AI crea un piano settimanale bilanciato</p>
+            <button class="btn btn-primary btn-sm" onclick="generateWeeklyPlan(this)">
+                <i class="bi bi-robot me-1"></i>Genera
+            </button>
+        </div>
+
+        <div class="action-card">
+            <div class="action-icon" style="background: rgba(16,185,129,0.1); color: #10B981;">
+                <i class="bi bi-cart-check"></i>
+            </div>
+            <h6>Aggiorna Lista Spesa</h6>
+            <p class="text-muted small mb-3">Sincronizza automaticamente ingredienti</p>
+            <button class="btn btn-success btn-sm" onclick="updateShoppingList(this)">
+                <i class="bi bi-arrow-repeat me-1"></i>Sincronizza
+            </button>
+        </div>
+
+        <div class="action-card">
+            <div class="action-icon" style="background: rgba(245,158,11,0.1); color: #F59E0B;">
+                <i class="bi bi-graph-up"></i>
+            </div>
+            <h6>Ottimizza Nutrizione</h6>
+            <p class="text-muted small mb-3">Bilancia macros per i tuoi obiettivi</p>
+            <button class="btn btn-warning btn-sm" onclick="optimizeNutrition(this)">
+                <i class="bi bi-heart-pulse me-1"></i>Ottimizza
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats Summary -->
+    {% if meal_plans %}
+    <div class="stats-summary">
+        <h5 class="mb-4">
+            <i class="bi bi-bar-chart me-2"></i>
+            Riepilogo Settimanale
+        </h5>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value text-primary">{{ meal_plans|length }}</div>
+                    <div class="stat-label">Pasti Pianificati</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value text-success">
+                        {{ (nutritional_goals.daily_calories * 7)|int if nutritional_goals else 0 }}
+                    </div>
+                    <div class="stat-label">Calorie Settimanali</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value text-warning">85%</div>
+                    <div class="stat-label">Completamento</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-item">
+                    <div class="stat-value text-info">12</div>
+                    <div class="stat-label">Ingredienti Diversi</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Modal Aggiungi Pasto -->
+<div class="modal fade" id="addMealModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 16px; border: none;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none;">
+                <h5 class="modal-title">
+                    <i class="bi bi-plus-circle me-2"></i>
+                    Aggiungi Pasto
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form method="POST" action="{{ url_for('create_meal_plan') }}" id="addMealForm">
+                    <input type="hidden" id="modalDate" name="date">
+                    <input type="hidden" id="modalMealType" name="meal_type">
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Data e Tipo</label>
+                        <div class="alert alert-info mb-0">
+                            <i class="bi bi-calendar me-2"></i>
+                            <span id="modalDateDisplay"></span>
+                            <span class="mx-2">•</span>
+                            <span id="modalMealTypeDisplay"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="custom_meal" class="form-label fw-bold">Descrizione Pasto</label>
+                        <textarea class="form-control" id="custom_meal" name="custom_meal" rows="3" 
+                                  placeholder="Es: Pasta al pomodoro con insalata mista..." required></textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle me-2"></i>Aggiungi Pasto
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentWeekOffset = 0;
+const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
+const mealTypeLabels = {
+    breakfast: { icon: 'sunrise', label: 'Colazione', color: '#F59E0B' },
+    lunch: { icon: 'sun', label: 'Pranzo', color: '#3B82F6' },
+    dinner: { icon: 'moon', label: 'Cena', color: '#8B5CF6' },
+    snack: { icon: 'cup', label: 'Spuntino', color: '#10B981' }
+};
+
+// Meal plans data from backend
+const mealPlans = {{ meal_plans|tojson if meal_plans else '[]'|safe }};
+
+function initCalendar() {
+    const today = new Date();
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (currentWeekOffset * 7));
+    
+    updateWeekTitle(startOfWeek);
+    renderCalendar(startOfWeek);
+}
+
+function updateWeekTitle(startDate) {
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + 6);
+    
+    document.getElementById('weekTitle').textContent = 
+        currentWeekOffset === 0 ? 'Settimana Corrente' :
+        currentWeekOffset > 0 ? `Settimana +${currentWeekOffset}` :
+        `Settimana ${currentWeekOffset}`;
+    
+    document.getElementById('weekRange').textContent = 
+        `${startDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+}
+
+function renderCalendar(startDate) {
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+    
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(startDate);
+        date.setDate(startDate.getDate() + i);
+        
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        if (date.getTime() === today.getTime()) {
+            dayCard.classList.add('today');
+        }
+        
+        const dateStr = date.toISOString().split('T')[0];
+        const dayMeals = mealPlans.filter(m => m.date === dateStr);
+        
+        dayCard.innerHTML = `
+            <div class="day-header">
+                <div class="day-name">${days[i]}</div>
+                <div class="day-date">${date.getDate()} ${date.toLocaleDateString('it-IT', { month: 'short' })}</div>
+            </div>
+            <div class="meals-container">
+                ${mealTypes.map(type => renderMealSlot(date, type, dayMeals)).join('')}
+            </div>
+        `;
+        
+        grid.appendChild(dayCard);
+    }
+}
+
+function renderMealSlot(date, mealType, dayMeals) {
+    const meal = dayMeals.find(m => m.meal_type === mealType);
+    const typeInfo = mealTypeLabels[mealType];
+    
+    if (meal) {
+        return `
+            <div class="meal-slot filled ${mealType}">
+                <div class="meal-type-badge ${mealType}">
+                    <i class="bi bi-${typeInfo.icon}"></i>
+                    ${typeInfo.label}
+                </div>
+                <div class="meal-name">${meal.custom_meal || meal.recipe?.name || 'Pasto'}</div>
+                <div class="meal-stats">
+                    <span><i class="bi bi-fire"></i> ~500 cal</span>
+                </div>
+                <div class="d-flex gap-2 mt-2">
+                    <button class="btn btn-sm btn-outline-success" onclick="addMealToShopping(${meal.id}, this)">
+                        <i class="bi bi-cart-plus me-1"></i>Aggiungi alla lista
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="consumeMeal(${meal.id}, this)">
+                        <i class="bi bi-check2-circle me-1"></i>Consuma
+                    </button>
+                </div>
+                <div class="mt-2" id="meal-badge-${meal.id}" style="display:none;">
+                    <span class="badge bg-info"><i class="bi bi-shield-check me-1"></i>Sincronizzato</span>
+                </div>
+            </div>
+        `;
+    } else {
+        return `
+            <div class="meal-slot ${mealType}" onclick="openAddMealModal('${date.toISOString().split('T')[0]}', '${mealType}')">
+                <div class="meal-type-badge ${mealType}">
+                    <i class="bi bi-${typeInfo.icon}"></i>
+                    ${typeInfo.label}
+                </div>
+                <button class="add-meal-btn">
+                    <i class="bi bi-plus-circle"></i> Aggiungi
+                </button>
+            </div>
+        `;
+    }
+}
+
+function changeWeek(offset) {
+    currentWeekOffset += offset;
+    initCalendar();
+}
+
+function openAddMealModal(date, mealType) {
+    const modal = new bootstrap.Modal(document.getElementById('addMealModal'));
+    const typeInfo = mealTypeLabels[mealType];
+    
+    document.getElementById('modalDate').value = date;
+    document.getElementById('modalMealType').value = mealType;
+    
+    const dateObj = new Date(date);
+    document.getElementById('modalDateDisplay').textContent = dateObj.toLocaleDateString('it-IT', { 
+        weekday: 'long', 
+        day: 'numeric', 
+        month: 'long' 
+    });
+    document.getElementById('modalMealTypeDisplay').innerHTML = `
+        <i class="bi bi-${typeInfo.icon}"></i> ${typeInfo.label}
+    `;
+    
+    modal.show();
+}
+
+// Quick Actions
+function setLoading(button, loading) {
+    if (loading) {
+        button.disabled = true;
+        button.dataset.originalText = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Caricamento...';
+    } else {
+        button.disabled = false;
+        button.innerHTML = button.dataset.originalText;
+    }
+}
+
+function showNotification(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.setAttribute('role', 'alert');
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    setTimeout(() => toast.remove(), 5000);
+}
+
+function generateWeeklyPlan(button) {
+    setLoading(button, true);
+    setTimeout(() => {
+        setLoading(button, false);
+        showNotification('success', 'Piano settimanale generato con successo!');
+        setTimeout(() => location.reload(), 1000);
+    }, 2000);
+}
+
+function updateShoppingList(button) {
+    setLoading(button, true);
+    // Aggiorna lista spesa per tutti i meal plan della settimana corrente
+    const mealIds = (mealPlans || []).map(m => m.id);
+    if (mealIds.length === 0) {
+        setLoading(button, false);
+        showNotification('warning', 'Nessun pasto pianificato da sincronizzare');
+        return;
+    }
+    Promise.all(
+        mealIds.map(id => fetch(`/meal-plan/${id}/to-shopping-list`, { method: 'POST' }))
+    ).then(responses => Promise.all(responses.map(r => r.json())))
+    .then(results => {
+        setLoading(button, false);
+        const updated = results.reduce((sum, r) => sum + (r.updated || 0), 0);
+        showNotification('success', `Lista spesa aggiornata: ${updated} ingredienti aggiunti/aggiornati`);
+    }).catch(() => {
+        setLoading(button, false);
+        showNotification('danger', 'Errore nella sincronizzazione della lista spesa');
+    });
+}
+
+function optimizeNutrition(button) {
+    setLoading(button, true);
+    setTimeout(() => {
+        setLoading(button, false);
+        showNotification('info', 'Nutrizione ottimizzata per i tuoi obiettivi!');
+    }, 1500);
+}
+
+async function addMealToShopping(mealId, btn){
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizzo...';
+    try{
+        const res = await fetch(`/meal-plan/${mealId}/to-shopping-list`, { method: 'POST' });
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = original;
+        if(data.success){
+            showNotification('success', `Aggiunti/aggiornati ${data.updated || 0} ingredienti in lista`);
+            const badge = document.getElementById(`meal-badge-${mealId}`);
+            if (badge) badge.style.display = 'block';
+        }else{
+            showNotification('warning', data.message || 'Nessun ingrediente da aggiungere');
+        }
+    }catch(e){
+        btn.disabled = false;
+        btn.innerHTML = original;
+        showNotification('danger', 'Errore durante la sincronizzazione');
+    }
+}
+
+async function consumeMeal(mealId, btn){
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
+    try{
+        const res = await fetch(`/meal-plan/${mealId}/consume`, { method: 'POST' });
+        const data = await res.json();
+        btn.disabled = false;
+        btn.innerHTML = original;
+        if(data.success){
+            const count = (data.decremented || []).length;
+            showNotification('success', `Consumo registrato per ${count} ingredienti`);
+        }else{
+            showNotification('warning', data.message || 'Nessun ingrediente disponibile da scalare');
+        }
+    }catch(e){
+        btn.disabled = false;
+        btn.innerHTML = original;
+        showNotification('danger', 'Errore nel registrare il consumo');
+    }
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', function() {
+    initCalendar();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggiungi Prodotto - FoodFlow</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #00D563;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        body {
+            background: linear-gradient(135deg, #F0FDF4 0%, #DBEAFE 100%);
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wizard-container {
+            max-width: 800px;
+            margin: 2rem auto;
+        }
+
+        .wizard-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .wizard-header {
+            background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .wizard-progress {
+            display: flex;
+            justify-content: space-between;
+            padding: 2rem;
+            background: #F8FAFC;
+            border-bottom: 2px solid #E2E8F0;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step::after {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            width: 100%;
+            height: 2px;
+            background: #E2E8F0;
+            z-index: -1;
+        }
+
+        .step:last-child::after {
+            display: none;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #E2E8F0;
+            color: #94A3B8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            transition: all 0.3s;
+        }
+
+        .step.active .step-circle {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.2);
+        }
+
+        .step.completed .step-circle {
+            background: var(--success);
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.875rem;
+            color: #64748B;
+        }
+
+        .step.active .step-label {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .wizard-body {
+            padding: 2rem;
+        }
+
+        .form-step {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-floating label {
+            color: #64748B;
+        }
+
+        .form-control:focus, .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(0,213,99,0.25);
+        }
+
+        .btn-wizard {
+            padding: 0.75rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-wizard:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .quick-select {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .quick-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid #E2E8F0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            border-color: var(--primary);
+            background: rgba(0,213,99,0.1);
+            transform: scale(1.05);
+        }
+
+        .quick-btn.selected {
+            border-color: var(--primary);
+            background: var(--primary);
+            color: white;
+        }
+
+        .autocomplete-suggestions {
+            position: absolute;
+            background: white;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .autocomplete-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .autocomplete-item:hover {
+            background: rgba(0,213,99,0.1);
+            color: var(--primary);
+        }
+
+        .duplicate-alert {
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            border-left: 4px solid var(--warning);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .reward-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="wizard-container">
+        <div class="wizard-card">
+            <!-- Header -->
+            <div class="wizard-header">
+                <h2 class="mb-2">
+                    <i class="bi bi-plus-circle-fill me-2"></i>
+                    Aggiungi Prodotto
+                </h2>
+                <p class="mb-0 opacity-75">Monitora la tua dispensa e riduci gli sprechi</p>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="wizard-progress">
+                <div class="step active" data-step="1">
+                    <div class="step-circle">1</div>
+                    <div class="step-label">Prodotto</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-circle">2</div>
+                    <div class="step-label">Quantità</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-circle">3</div>
+                    <div class="step-label">Scadenza</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-circle">4</div>
+                    <div class="step-label">Dettagli</div>
+                </div>
+            </div>
+
+            <!-- Form -->
+            <form id="addProductForm" class="wizard-body">
+                <!-- Step 1: Prodotto -->
+                <div class="form-step active" data-step="1">
+                    <h4 class="mb-4">Che prodotto vuoi aggiungere?</h4>
+                    
+                    <div class="mb-4 position-relative">
+                        <div class="form-floating">
+                            <input type="text" class="form-control form-control-lg" id="name" name="name" 
+                                   placeholder="Nome prodotto" required autocomplete="off">
+                            <label for="name">
+                                <i class="bi bi-box-seam me-2"></i>Nome Prodotto
+                            </label>
+                        </div>
+                        <div id="autocompleteSuggestions" class="autocomplete-suggestions" style="display: none;"></div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-tags me-2"></i>Categoria
+                        </label>
+                        <div class="quick-select" id="categoryQuickSelect">
+                            <button type="button" class="quick-btn" data-value="frutta">
+                                <i class="bi bi-apple"></i> Frutta
+                            </button>
+                            <button type="button" class="quick-btn" data-value="verdura">
+                                <i class="bi bi-flower1"></i> Verdura
+                            </button>
+                            <button type="button" class="quick-btn" data-value="latticini">
+                                <i class="bi bi-egg"></i> Latticini
+                            </button>
+                            <button type="button" class="quick-btn" data-value="carne">
+                                <i class="bi bi-cart4"></i> Carne
+                            </button>
+                            <button type="button" class="quick-btn" data-value="pesce">
+                                <i class="bi bi-water"></i> Pesce
+                            </button>
+                            <button type="button" class="quick-btn" data-value="cereali">
+                                <i class="bi bi-basket"></i> Cereali
+                            </button>
+                            <button type="button" class="quick-btn" data-value="bevande">
+                                <i class="bi bi-cup-straw"></i> Bevande
+                            </button>
+                            <button type="button" class="quick-btn" data-value="altro">
+                                <i class="bi bi-three-dots"></i> Altro
+                            </button>
+                        </div>
+                        <input type="hidden" id="category" name="category" required>
+                    </div>
+                </div>
+
+                <!-- Step 2: Quantità -->
+                <div class="form-step" data-step="2">
+                    <h4 class="mb-4">Quanto ne hai?</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="form-floating">
+                                <input type="number" class="form-control form-control-lg" id="quantity" 
+                                       name="quantity" step="0.1" min="0.1" placeholder="Quantità" required>
+                                <label for="quantity">
+                                    <i class="bi bi-123 me-2"></i>Quantità
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="form-floating">
+                                <select class="form-select form-select-lg" id="unit" name="unit" required>
+                                    <option value="">Seleziona</option>
+                                    <option value="kg">Chilogrammi (kg)</option>
+                                    <option value="g">Grammi (g)</option>
+                                    <option value="l">Litri (l)</option>
+                                    <option value="ml">Millilitri (ml)</option>
+                                    <option value="pezzi">Pezzi</option>
+                                    <option value="confezioni">Confezioni</option>
+                                </select>
+                                <label for="unit">
+                                    <i class="bi bi-rulers me-2"></i>Unità di Misura
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-lightbulb-fill me-3 fs-4"></i>
+                        <div>
+                            <strong>Suggerimento:</strong> Inserisci quantità precise per un monitoraggio accurato
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3: Scadenza -->
+                <div class="form-step" data-step="3">
+                    <h4 class="mb-4">Quando scade?</h4>
+                    
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            <input type="date" class="form-control form-control-lg" id="expiry_date" name="expiry_date">
+                            <label for="expiry_date">
+                                <i class="bi bi-calendar-event me-2"></i>Data di Scadenza
+                            </label>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Lascia vuoto se il prodotto non ha scadenza</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">
+                            <i class="bi bi-clock-history me-2"></i>Scadenza rapida
+                        </label>
+                        <div class="quick-select" id="expiryQuickSelect">
+                            <button type="button" class="quick-btn" data-days="3">3 giorni</button>
+                            <button type="button" class="quick-btn" data-days="7">1 settimana</button>
+                            <button type="button" class="quick-btn" data-days="14">2 settimane</button>
+                            <button type="button" class="quick-btn" data-days="30">1 mese</button>
+                            <button type="button" class="quick-btn" data-days="90">3 mesi</button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="bi bi-lightbulb-fill me-3 fs-4"></i>
+                        <div>
+                            <strong>Prodotti in scadenza:</strong> Se aggiungi un prodotto che scade entro 7 giorni, riceverai +10 punti bonus per aiutarci a ridurre gli sprechi!
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 4: Dettagli -->
+                <div class="form-step" data-step="4">
+                    <h4 class="mb-4">Dettagli aggiuntivi (opzionale)</h4>
+                    
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="allergens" name="allergens" 
+                                   placeholder="Allergeni" maxlength="100">
+                            <label for="allergens">
+                                <i class="bi bi-exclamation-diamond me-2"></i>Allergeni
+                            </label>
+                        </div>
+                        <small class="text-muted mt-2 d-block">Es: glutine, lattosio, frutta a guscio</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <div class="form-floating">
+                            <textarea class="form-control" id="notes" name="notes" 
+                                      placeholder="Note" maxlength="200" style="height: 100px"></textarea>
+                            <label for="notes">
+                                <i class="bi bi-journal-text me-2"></i>Note
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="fridge" name="fridge">
+                                <label class="form-check-label" for="fridge">
+                                    <i class="bi bi-snow me-2"></i>Conservare in frigorifero
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch mb-3">
+                                <input class="form-check-input" type="checkbox" id="freezer" name="freezer">
+                                <label class="form-check-label" for="freezer">
+                                    <i class="bi bi-snow2 me-2"></i>Conservare nel congelatore
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="reward-badge">
+                        <i class="bi bi-trophy-fill"></i>
+                        <span>+5 punti bonus per compilazione completa!</span>
+                    </div>
+                </div>
+
+                <!-- Navigation -->
+                <div class="d-flex justify-content-between mt-4">
+                    <button type="button" class="btn btn-outline-secondary btn-wizard" id="prevBtn" style="display: none;">
+                        <i class="bi bi-arrow-left me-2"></i>Indietro
+                    </button>
+                    <div class="ms-auto">
+                        <button type="button" class="btn btn-success btn-wizard" id="nextBtn">
+                            Avanti<i class="bi bi-arrow-right ms-2"></i>
+                        </button>
+                        <button type="submit" class="btn btn-primary btn-wizard" id="submitBtn" style="display: none;">
+                            <i class="bi bi-check-circle-fill me-2"></i>Aggiungi Prodotto
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 4;
+
+        // Category Quick Select
+        document.querySelectorAll('#categoryQuickSelect .quick-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#categoryQuickSelect .quick-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('category').value = this.dataset.value;
+            });
+        });
+
+        // Expiry Quick Select
+        document.querySelectorAll('#expiryQuickSelect .quick-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('#expiryQuickSelect .quick-btn').forEach(b => b.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                const days = parseInt(this.dataset.days);
+                const date = new Date();
+                date.setDate(date.getDate() + days);
+                document.getElementById('expiry_date').value = date.toISOString().split('T')[0];
+            });
+        });
+
+        // Autocomplete for product names
+        const nameInput = document.getElementById('name');
+        const suggestionsDiv = document.getElementById('autocompleteSuggestions');
+        let debounceTimer;
+
+        nameInput.addEventListener('input', function() {
+            clearTimeout(debounceTimer);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => {
+                // Mock suggestions - in production, fetch from API
+                const mockSuggestions = [
+                    'Latte', 'Latte Intero', 'Latte Parzialmente Scremato',
+                    'Pane', 'Pane Integrale', 'Pasta', 'Riso', 'Uova',
+                    'Mele', 'Banane', 'Arance', 'Pomodori', 'Patate'
+                ].filter(s => s.toLowerCase().includes(query.toLowerCase()));
+
+                if (mockSuggestions.length > 0) {
+                    suggestionsDiv.innerHTML = mockSuggestions.map(s => 
+                        `<div class="autocomplete-item">${s}</div>`
+                    ).join('');
+                    suggestionsDiv.style.display = 'block';
+
+                    // Add click handlers
+                    document.querySelectorAll('.autocomplete-item').forEach(item => {
+                        item.addEventListener('click', function() {
+                            nameInput.value = this.textContent;
+                            suggestionsDiv.style.display = 'none';
+                        });
+                    });
+                } else {
+                    suggestionsDiv.style.display = 'none';
+                }
+            }, 300);
+        });
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!nameInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+                suggestionsDiv.style.display = 'none';
+            }
+        });
+
+        // Wizard Navigation
+        function updateWizard() {
+            // Update steps
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+
+            // Update progress
+            document.querySelectorAll('.step').forEach(step => {
+                const stepNum = parseInt(step.dataset.step);
+                step.classList.remove('active', 'completed');
+                
+                if (stepNum < currentStep) {
+                    step.classList.add('completed');
+                } else if (stepNum === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentStep === 1 ? 'none' : 'inline-block';
+            document.getElementById('nextBtn').style.display = currentStep === totalSteps ? 'none' : 'inline-block';
+            document.getElementById('submitBtn').style.display = currentStep === totalSteps ? 'inline-block' : 'none';
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', function() {
+            if (validateStep(currentStep)) {
+                if (currentStep < totalSteps) {
+                    currentStep++;
+                    updateWizard();
+                }
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', function() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizard();
+            }
+        });
+
+        function validateStep(step) {
+            const currentStepDiv = document.querySelector(`.form-step[data-step="${step}"]`);
+            const inputs = currentStepDiv.querySelectorAll('input[required], select[required]');
+            
+            for (let input of inputs) {
+                if (!input.value) {
+                    input.classList.add('is-invalid');
+                    showNotification('warning', `Per favore completa tutti i campi obbligatori`);
+                    return false;
+                }
+                input.classList.remove('is-invalid');
+            }
+            
+            // Special validation for step 1
+            if (step === 1) {
+                const category = document.getElementById('category').value;
+                if (!category) {
+                    showNotification('warning', 'Seleziona una categoria');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // Form submission
+        document.getElementById('addProductForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateStep(totalSteps)) {
+                return;
+            }
+
+            const formData = new FormData(this);
+            const submitBtn = document.getElementById('submitBtn');
+            
+            // Show loading
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Aggiungendo...';
+
+            try {
+                // In production, this would be an actual POST request
+                // For demo purposes, we'll simulate success
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                showNotification('success', '✅ Prodotto aggiunto con successo! (+10 punti)');
+                
+                setTimeout(() => {
+                    window.location.href = '/products'; // Adjust URL as needed
+                }, 1500);
+                
+            } catch (error) {
+                showNotification('danger', 'Errore nell\'aggiunta del prodotto');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i>Aggiungi Prodotto';
+            }
+        });
+
+        function showNotification(type, message) {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-3`;
+            notification.style.zIndex = '9999';
+            notification.style.minWidth = '300px';
+            notification.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-triangle-fill'} me-2"></i>
+                    ${message}
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.3s';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Set minimum date for expiry
+        const today = new Date();
+        today.setDate(today.getDate() + 1);
+        document.getElementById('expiry_date').min = today.toISOString().split('T')[0];
+
+        // Initialize
+        updateWizard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,769 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Registrazione - FoodFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === STILI SPECIFICI PER REGISTRAZIONE === */
+    .register-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 0;
+    }
+
+    .register-card {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(20px);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-2xl);
+        overflow: hidden;
+        border: none;
+        animation: slideInUp 0.6s ease-out;
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(50px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .register-header {
+        background: var(--gradient-hero);
+        padding: 2.5rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .register-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 30px 30px;
+        animation: backgroundMove 20s linear infinite;
+    }
+
+    @keyframes backgroundMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(30px, 30px); }
+    }
+
+    .register-header h2 {
+        position: relative;
+        z-index: 1;
+        color: white;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .register-header p {
+        position: relative;
+        z-index: 1;
+        color: rgba(255,255,255,0.9);
+        font-size: 0.95rem;
+    }
+
+    .register-body {
+        padding: 2.5rem;
+    }
+
+    /* Form Controls Migliorati */
+    .form-group-modern {
+        margin-bottom: 1.5rem;
+        position: relative;
+    }
+
+    .form-label-modern {
+        font-weight: 600;
+        color: var(--neutral-700);
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
+    }
+
+    .form-label-modern i {
+        color: var(--primary-green);
+        margin-right: 0.5rem;
+        font-size: 1.1rem;
+    }
+
+    .form-control-modern {
+        width: 100%;
+        padding: 0.875rem 1rem;
+        border: 2px solid var(--neutral-200);
+        border-radius: var(--radius-md);
+        font-size: 0.95rem;
+        transition: var(--transition-normal);
+        background: white;
+    }
+
+    .form-control-modern:focus {
+        outline: none;
+        border-color: var(--primary-green);
+        box-shadow: 0 0 0 4px rgba(0,213,99,0.1);
+        transform: translateY(-2px);
+    }
+
+    .form-control-modern.is-valid {
+        border-color: var(--success);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='%2310b981' d='M12.736 3.97a.733.733 0 0 1 1.047 0c.286.289.29.756.01 1.05L7.88 12.01a.733.733 0 0 1-1.065.02L3.217 8.384a.757.757 0 0 1 0-1.06.733.733 0 0 1 1.047 0l3.052 3.093 5.4-6.425a.247.247 0 0 1 .02-.022Z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.875rem center;
+        background-size: 1rem;
+        padding-right: 2.75rem;
+    }
+
+    .form-control-modern.is-invalid {
+        border-color: var(--danger);
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='%23ef4444' d='M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z'/%3e%3cpath fill='%23ef4444' d='M7.002 11a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 4.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 4.995z'/%3e%3c/svg%3e");
+        background-repeat: no-repeat;
+        background-position: right 0.875rem center;
+        background-size: 1rem;
+        padding-right: 2.75rem;
+    }
+
+    /* Password Strength Indicator */
+    .password-strength {
+        height: 4px;
+        background: var(--neutral-200);
+        border-radius: var(--radius-full);
+        margin-top: 0.5rem;
+        overflow: hidden;
+        transition: var(--transition-normal);
+    }
+
+    .password-strength-bar {
+        height: 100%;
+        width: 0%;
+        transition: var(--transition-normal);
+        border-radius: var(--radius-full);
+    }
+
+    .strength-weak { 
+        width: 33%; 
+        background: var(--danger); 
+    }
+
+    .strength-medium { 
+        width: 66%; 
+        background: var(--warning); 
+    }
+
+    .strength-strong { 
+        width: 100%; 
+        background: var(--success); 
+    }
+
+    .password-requirements {
+        margin-top: 0.75rem;
+        padding: 1rem;
+        background: var(--neutral-50);
+        border-radius: var(--radius-md);
+        font-size: 0.85rem;
+    }
+
+    .requirement {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.4rem;
+        color: var(--neutral-600);
+        transition: var(--transition-fast);
+    }
+
+    .requirement i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .requirement.met {
+        color: var(--success);
+    }
+
+    .requirement.met i {
+        color: var(--success);
+    }
+
+    /* Checkbox Moderno */
+    .form-check-modern {
+        display: flex;
+        align-items: center;
+        padding: 1rem;
+        background: var(--neutral-50);
+        border-radius: var(--radius-md);
+        margin-bottom: 1.5rem;
+        cursor: pointer;
+        transition: var(--transition-normal);
+    }
+
+    .form-check-modern:hover {
+        background: var(--neutral-100);
+    }
+
+    .form-check-modern input[type="checkbox"] {
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.75rem;
+        cursor: pointer;
+        accent-color: var(--primary-green);
+    }
+
+    .form-check-modern label {
+        cursor: pointer;
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--neutral-700);
+    }
+
+    /* Bottone Registrazione */
+    .btn-register {
+        width: 100%;
+        padding: 1rem;
+        background: var(--gradient-hero);
+        border: none;
+        border-radius: var(--radius-md);
+        color: white;
+        font-weight: 700;
+        font-size: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        transition: var(--transition-normal);
+        box-shadow: var(--shadow-md);
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-register::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--gradient-shine);
+        transition: var(--transition-normal);
+    }
+
+    .btn-register:hover::before {
+        left: 100%;
+    }
+
+    .btn-register:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl), var(--shadow-glow);
+    }
+
+    .btn-register:active {
+        transform: scale(0.98);
+    }
+
+    /* Link Login */
+    .login-link {
+        text-align: center;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--neutral-200);
+    }
+
+    .login-link a {
+        color: var(--primary-green);
+        font-weight: 600;
+        text-decoration: none;
+        transition: var(--transition-fast);
+    }
+
+    .login-link a:hover {
+        color: var(--primary-green-dark);
+        text-decoration: underline;
+    }
+
+    /* Features Cards */
+    .features-section {
+        margin-top: 3rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--neutral-200);
+    }
+
+    .feature-card {
+        text-align: center;
+        padding: 1.5rem;
+        background: var(--gradient-glass);
+        border-radius: var(--radius-md);
+        transition: var(--transition-normal);
+        border: 1px solid var(--neutral-200);
+    }
+
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-green);
+    }
+
+    .feature-card i {
+        font-size: 2.5rem;
+        background: var(--gradient-hero);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 1rem;
+    }
+
+    .feature-card h6 {
+        font-weight: 700;
+        color: var(--neutral-800);
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-card p {
+        font-size: 0.85rem;
+        color: var(--neutral-600);
+        margin: 0;
+    }
+
+    /* Loading State */
+    .btn-register.loading {
+        pointer-events: none;
+        opacity: 0.7;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid rgba(255,255,255,0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .register-body {
+            padding: 1.5rem;
+        }
+
+        .register-header {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <div class="card register-card">
+                    <!-- Header -->
+                    <div class="register-header">
+                        <h2>
+                            <i class="bi bi-heart-pulse-fill me-2"></i>
+                            Unisciti a FoodFlow
+                        </h2>
+                        <p>Inizia il tuo viaggio verso una gestione intelligente della dispensa</p>
+                    </div>
+
+                    <!-- Body -->
+                    <div class="register-body">
+                        <form method="POST" id="registerForm" novalidate>
+                            <!-- Username -->
+                            <div class="form-group-modern">
+                                <label for="username" class="form-label-modern">
+                                    <i class="bi bi-person-fill"></i>
+                                    Username
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-control-modern" 
+                                    id="username" 
+                                    name="username" 
+                                    required
+                                    minlength="3"
+                                    maxlength="20"
+                                    pattern="[a-zA-Z0-9_]+"
+                                    autocomplete="username"
+                                    placeholder="scegli_un_username"
+                                >
+                                <small class="form-text text-muted">
+                                    3-20 caratteri, solo lettere, numeri e underscore
+                                </small>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="form-group-modern">
+                                <label for="email" class="form-label-modern">
+                                    <i class="bi bi-envelope-fill"></i>
+                                    Email
+                                </label>
+                                <input 
+                                    type="email" 
+                                    class="form-control-modern" 
+                                    id="email" 
+                                    name="email" 
+                                    required
+                                    autocomplete="email"
+                                    placeholder="tuaemail@esempio.com"
+                                >
+                                <small class="form-text text-muted">
+                                    Riceverai notifiche importanti su questa email
+                                </small>
+                            </div>
+
+                            <!-- Password -->
+                            <div class="form-group-modern">
+                                <label for="password" class="form-label-modern">
+                                    <i class="bi bi-lock-fill"></i>
+                                    Password
+                                </label>
+                                <input 
+                                    type="password" 
+                                    class="form-control-modern" 
+                                    id="password" 
+                                    name="password" 
+                                    required
+                                    minlength="8"
+                                    autocomplete="new-password"
+                                    placeholder="••••••••"
+                                >
+                                <!-- Barra forza password -->
+                                <div class="password-strength">
+                                    <div class="password-strength-bar" id="strengthBar"></div>
+                                </div>
+                                
+                                <!-- Requisiti password -->
+                                <div class="password-requirements" id="passwordRequirements">
+                                    <div class="requirement" id="req-length">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Almeno 8 caratteri</span>
+                                    </div>
+                                    <div class="requirement" id="req-uppercase">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Una lettera maiuscola</span>
+                                    </div>
+                                    <div class="requirement" id="req-lowercase">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Una lettera minuscola</span>
+                                    </div>
+                                    <div class="requirement" id="req-number">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Un numero</span>
+                                    </div>
+                                    <div class="requirement" id="req-special">
+                                        <i class="bi bi-circle"></i>
+                                        <span>Un carattere speciale (!@#$%...)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Conferma Password -->
+                            <div class="form-group-modern">
+                                <label for="confirm_password" class="form-label-modern">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                    Conferma Password
+                                </label>
+                                <input 
+                                    type="password" 
+                                    class="form-control-modern" 
+                                    id="confirm_password" 
+                                    name="confirm_password" 
+                                    required
+                                    minlength="8"
+                                    autocomplete="new-password"
+                                    placeholder="••••••••"
+                                >
+                                <small class="form-text text-muted" id="passwordMatch"></small>
+                            </div>
+
+                            <!-- Accettazione Termini -->
+                            <div class="form-check-modern">
+                                <input 
+                                    type="checkbox" 
+                                    id="accept_terms" 
+                                    name="accept_terms" 
+                                    required
+                                >
+                                <label for="accept_terms">
+                                    Accetto i <a href="#" target="_blank">Termini e Condizioni</a> 
+                                    e la <a href="#" target="_blank">Privacy Policy</a>
+                                </label>
+                            </div>
+
+                            <!-- Bottone Registrazione -->
+                            <button type="submit" class="btn-register" id="submitBtn">
+                                <i class="bi bi-person-plus-fill"></i>
+                                <span>Crea Account</span>
+                            </button>
+                        </form>
+
+                        <!-- Link Login -->
+                        <div class="login-link">
+                            <p class="text-muted mb-0">
+                                Hai già un account? 
+                                <a href="{{ url_for('login') }}">Accedi ora</a>
+                            </p>
+                        </div>
+
+                        <!-- Features Cards -->
+                        <div class="features-section">
+                            <div class="row g-3">
+                                <div class="col-4">
+                                    <div class="feature-card">
+                                        <i class="bi bi-shield-check"></i>
+                                        <h6>Sicuro</h6>
+                                        <p>I tuoi dati sono protetti</p>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="feature-card">
+                                        <i class="bi bi-lightning-charge-fill"></i>
+                                        <h6>Veloce</h6>
+                                        <p>Inizia in 30 secondi</p>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="feature-card">
+                                        <i class="bi bi-star-fill"></i>
+                                        <h6>Gratis</h6>
+                                        <p>100% gratuito</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
+    const passwordInput = document.getElementById('password');
+    const confirmPasswordInput = document.getElementById('confirm_password');
+    const strengthBar = document.getElementById('strengthBar');
+    const submitBtn = document.getElementById('submitBtn');
+    const usernameInput = document.getElementById('username');
+    const emailInput = document.getElementById('email');
+
+    // Validazione in tempo reale per Username
+    usernameInput.addEventListener('input', function() {
+        const value = this.value;
+        const isValid = /^[a-zA-Z0-9_]{3,20}$/.test(value);
+        
+        if (value.length === 0) {
+            this.classList.remove('is-valid', 'is-invalid');
+        } else if (isValid) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+
+    // Validazione in tempo reale per Email
+    emailInput.addEventListener('input', function() {
+        const value = this.value;
+        const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+        
+        if (value.length === 0) {
+            this.classList.remove('is-valid', 'is-invalid');
+        } else if (isValid) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+
+    // Validazione Robustezza Password
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        let strength = 0;
+        const requirements = {
+            length: password.length >= 8,
+            uppercase: /[A-Z]/.test(password),
+            lowercase: /[a-z]/.test(password),
+            number: /\d/.test(password),
+            special: /[!@#$%^&*(),.?":{}|<>]/.test(password)
+        };
+
+        // Aggiorna indicatori requisiti
+        updateRequirement('req-length', requirements.length);
+        updateRequirement('req-uppercase', requirements.uppercase);
+        updateRequirement('req-lowercase', requirements.lowercase);
+        updateRequirement('req-number', requirements.number);
+        updateRequirement('req-special', requirements.special);
+
+        // Calcola forza
+        Object.values(requirements).forEach(met => {
+            if (met) strength++;
+        });
+
+        // Aggiorna barra forza
+        strengthBar.className = 'password-strength-bar';
+        if (strength <= 2) {
+            strengthBar.classList.add('strength-weak');
+        } else if (strength <= 4) {
+            strengthBar.classList.add('strength-medium');
+        } else {
+            strengthBar.classList.add('strength-strong');
+        }
+
+        // Validazione campo
+        const allMet = Object.values(requirements).every(met => met);
+        if (password.length === 0) {
+            this.classList.remove('is-valid', 'is-invalid');
+        } else if (allMet) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+        }
+    });
+
+    // Validazione Match Password
+    confirmPasswordInput.addEventListener('input', function() {
+        const password = passwordInput.value;
+        const confirmPassword = this.value;
+        const matchText = document.getElementById('passwordMatch');
+
+        if (confirmPassword.length === 0) {
+            this.classList.remove('is-valid', 'is-invalid');
+            matchText.textContent = '';
+        } else if (password === confirmPassword) {
+            this.classList.remove('is-invalid');
+            this.classList.add('is-valid');
+            matchText.textContent = '✓ Le password coincidono';
+            matchText.style.color = 'var(--success)';
+        } else {
+            this.classList.remove('is-valid');
+            this.classList.add('is-invalid');
+            matchText.textContent = '✗ Le password non coincidono';
+            matchText.style.color = 'var(--danger)';
+        }
+    });
+
+    // Helper: Aggiorna stato requisito
+    function updateRequirement(id, met) {
+        const element = document.getElementById(id);
+        const icon = element.querySelector('i');
+        
+        if (met) {
+            element.classList.add('met');
+            icon.className = 'bi bi-check-circle-fill';
+        } else {
+            element.classList.remove('met');
+            icon.className = 'bi bi-circle';
+        }
+    }
+
+    // Validazione Form Submit
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Controlla se tutti i campi sono validi
+        const isValid = form.checkValidity();
+        const passwordsMatch = passwordInput.value === confirmPasswordInput.value;
+        const termsAccepted = document.getElementById('accept_terms').checked;
+        
+        // Validazione visiva
+        form.classList.add('was-validated');
+        
+        if (!isValid) {
+            showNotification('danger', '⚠️ Compila correttamente tutti i campi richiesti');
+            return;
+        }
+        
+        if (!passwordsMatch) {
+            showNotification('danger', '⚠️ Le password non coincidono');
+            confirmPasswordInput.focus();
+            return;
+        }
+        
+        if (!termsAccepted) {
+            showNotification('danger', '⚠️ Devi accettare i Termini e Condizioni');
+            return;
+        }
+        
+        // Mostra loading state
+        const btnText = submitBtn.querySelector('span');
+        const btnIcon = submitBtn.querySelector('i');
+        
+        submitBtn.classList.add('loading');
+        btnIcon.className = 'spinner';
+        btnText.textContent = 'Creazione account in corso...';
+        
+        // Submit form
+        form.submit();
+    });
+
+    // Funzione notifiche
+    function showNotification(type, message) {
+        const notif = document.createElement('div');
+        notif.className = `alert alert-modern alert-${type}-modern alert-dismissible fade show position-fixed`;
+        notif.style.cssText = 'top: 100px; right: 20px; z-index: 9999; min-width: 300px;';
+        notif.innerHTML = `
+            <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 
+                              type === 'danger' ? 'exclamation-triangle-fill' : 
+                              'info-circle-fill'} me-2"></i>
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(notif);
+        
+        setTimeout(() => {
+            notif.remove();
+        }, 5000);
+    }
+
+    // Animazione focus inputs
+    const inputs = form.querySelectorAll('.form-control-modern');
+    inputs.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.style.transform = 'scale(1.02)';
+            this.parentElement.style.transition = 'transform 0.2s ease';
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.style.transform = 'scale(1)';
+        });
+    });
+
+    // Previeni spazi negli username
+    usernameInput.addEventListener('keydown', function(e) {
+        if (e.key === ' ') {
+            e.preventDefault();
+        }
+    });
+
+    // Auto-focus sul primo campo
+    usernameInput.focus();
+});
+</script>
+{% endblock %}

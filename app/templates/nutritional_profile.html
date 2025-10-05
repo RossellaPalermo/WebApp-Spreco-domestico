@@ -1,0 +1,570 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Profilo Nutrizionale - FoodFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+.nutrition-header {
+    background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    color: white;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(239,68,68,0.3);
+}
+
+.profile-card {
+    background: white;
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-bottom: 1.5rem;
+}
+
+.metric-display {
+    text-align: center;
+    padding: 1.5rem;
+    background: #F8FAFC;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1E293B;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.metric-label {
+    font-size: 0.875rem;
+    color: #64748B;
+    font-weight: 600;
+}
+
+.metric-sublabel {
+    font-size: 0.75rem;
+    color: #94A3B8;
+}
+
+.macro-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    text-align: center;
+}
+
+.macro-value {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.macro-bar {
+    height: 8px;
+    background: #E2E8F0;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 0.75rem;
+}
+
+.macro-fill {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.5s ease;
+}
+
+.health-warning {
+    background: linear-gradient(145deg, #FEF3C7 0%, #FDE68A 100%);
+    border-left: 4px solid #F59E0B;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.bmi-indicator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #F8FAFC;
+    border-radius: 12px;
+    margin-top: 1rem;
+}
+
+.bmi-gauge {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+}
+
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 2px solid #F1F5F9;
+}
+
+.form-section:last-child {
+    border-bottom: none;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1E293B;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.diet-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #F8FAFC;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.diet-checkbox:hover {
+    background: #F1F5F9;
+}
+
+.diet-checkbox input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+.calculator-result {
+    background: linear-gradient(145deg, #DBEAFE 0%, #BFDBFE 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+}
+
+@media (max-width: 768px) {
+    .metric-value {
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Header -->
+    <div class="nutrition-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h1 class="mb-2">
+                    <i class="bi bi-heart-pulse-fill me-2"></i>
+                    Profilo Nutrizionale
+                </h1>
+                <p class="mb-0 opacity-75">Configura il tuo profilo per suggerimenti personalizzati e sicuri</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                {% if profile %}
+                <span class="badge bg-white text-dark px-3 py-2">
+                    <i class="bi bi-check-circle me-1"></i>Profilo Completo
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Health Disclaimer -->
+    <div class="health-warning">
+        <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-exclamation-triangle-fill" style="font-size: 1.5rem; color: #F59E0B;"></i>
+            <div>
+                <h6 style="color: #1E293B; margin-bottom: 0.5rem;">Importante - Consulta un Professionista</h6>
+                <p style="color: #64748B; margin-bottom: 0; font-size: 0.875rem;">
+                    I calcoli forniti sono stime generali. Per un piano nutrizionale personalizzato e sicuro, 
+                    consulta sempre un dietologo o nutrizionista qualificato, specialmente se hai condizioni mediche preesistenti.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <!-- Left Column - Form -->
+        <div class="col-lg-7 mb-4">
+            <div class="profile-card">
+                <form method="POST" action="{{ url_for('nutritional_profile') }}" id="profileForm">
+                    <!-- Dati Antropometrici -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-person-fill text-primary"></i>
+                            Dati Personali
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="age" class="form-label fw-bold">Età *</label>
+                                <input type="number" class="form-control" id="age" name="age" 
+                                       value="{{ profile.age if profile else '' }}" 
+                                       min="16" max="100" required>
+                                <small class="text-muted">Anni</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="gender" class="form-label fw-bold">Sesso Biologico *</label>
+                                <select class="form-select" id="gender" name="gender" required>
+                                    <option value="">Seleziona</option>
+                                    <option value="male" {% if profile and profile.gender == 'male' %}selected{% endif %}>Maschio</option>
+                                    <option value="female" {% if profile and profile.gender == 'female' %}selected{% endif %}>Femmina</option>
+                                </select>
+                                <small class="text-muted">Per calcoli metabolici</small>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="weight" class="form-label fw-bold">Peso *</label>
+                                <input type="number" class="form-control" id="weight" name="weight" 
+                                       value="{{ profile.weight if profile else '' }}" 
+                                       min="30" max="200" step="0.1" required>
+                                <small class="text-muted">Chilogrammi (kg)</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="height" class="form-label fw-bold">Altezza *</label>
+                                <input type="number" class="form-control" id="height" name="height" 
+                                       value="{{ profile.height if profile else '' }}" 
+                                       min="120" max="220" required>
+                                <small class="text-muted">Centimetri (cm)</small>
+                            </div>
+                        </div>
+
+                        <!-- Real-time BMI Display -->
+                        <div class="bmi-indicator" id="bmiDisplay" style="display: none;">
+                            <div class="bmi-gauge" id="bmiGauge"></div>
+                            <div>
+                                <div class="fw-bold">BMI: <span id="bmiValue"></span></div>
+                                <small class="text-muted" id="bmiCategory"></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Attività e Obiettivi -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-activity text-success"></i>
+                            Attività e Obiettivi
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="activity_level" class="form-label fw-bold">Livello di Attività *</label>
+                            <select class="form-select" id="activity_level" name="activity_level" required>
+                                <option value="">Seleziona</option>
+                                <option value="sedentary" {% if profile and profile.activity_level == 'sedentary' %}selected{% endif %}>
+                                    Sedentario (poco/nessun esercizio)
+                                </option>
+                                <option value="light" {% if profile and profile.activity_level == 'light' %}selected{% endif %}>
+                                    Leggero (esercizio 1-3 giorni/settimana)
+                                </option>
+                                <option value="moderate" {% if profile and profile.activity_level == 'moderate' %}selected{% endif %}>
+                                    Moderato (esercizio 3-5 giorni/settimana)
+                                </option>
+                                <option value="active" {% if profile and profile.activity_level == 'active' %}selected{% endif %}>
+                                    Attivo (esercizio 6-7 giorni/settimana)
+                                </option>
+                                <option value="very_active" {% if profile and profile.activity_level == 'very_active' %}selected{% endif %}>
+                                    Molto Attivo (esercizio intenso quotidiano)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="goal" class="form-label fw-bold">Obiettivo *</label>
+                            <select class="form-select" id="goal" name="goal" required>
+                                <option value="">Seleziona</option>
+                                <option value="lose" {% if profile and profile.goal == 'lose' %}selected{% endif %}>
+                                    Perdita Peso Graduale (-0.5kg/settimana)
+                                </option>
+                                <option value="maintain" {% if profile and profile.goal == 'maintain' %}selected{% endif %}>
+                                    Mantenimento Peso
+                                </option>
+                                <option value="gain" {% if profile and profile.goal == 'gain' %}selected{% endif %}>
+                                    Aumento Peso Graduale (+0.5kg/settimana)
+                                </option>
+                            </select>
+                            <small class="text-muted">Cambiamenti graduali sono più sostenibili e sicuri</small>
+                        </div>
+                    </div>
+
+                    <!-- Restrizioni e Preferenze -->
+                    <div class="form-section">
+                        <div class="section-title">
+                            <i class="bi bi-shield-check text-warning"></i>
+                            Restrizioni e Allergie
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Regime Alimentare</label>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="diet-checkbox">
+                                        <input type="checkbox" name="vegetarian" value="1">
+                                        <span>Vegetariano</span>
+                                    </div>
+                                    <div class="diet-checkbox">
+                                        <input type="checkbox" name="vegan" value="1">
+                                        <span>Vegano</span>
+                                    </div>
+                                    <div class="diet-checkbox">
+                                        <input type="checkbox" name="pescatarian" value="1">
+                                        <span>Pescetariano</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="diet-checkbox">
+                                        <input type="checkbox" name="gluten_free" value="1">
+                                        <span>Senza Glutine</span>
+                                    </div>
+                                    <div class="diet-checkbox">
+                                        <input type="checkbox" name="lactose_free" value="1">
+                                        <span>Senza Lattosio</span>
+                                    </div>
+                                    <div class="diet-checkbox">
+                                        <input type="checkbox" name="kosher" value="1">
+                                        <span>Kosher/Halal</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="allergies" class="form-label fw-bold">Allergie Alimentari</label>
+                            <textarea class="form-control" id="allergies" name="allergies" rows="2" 
+                                      placeholder="Es: Noci, Arachidi, Crostacei, Uova...">{{ profile.allergies if profile else '' }}</textarea>
+                            <small class="text-muted">Importante per la sicurezza dei suggerimenti</small>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100">
+                        <i class="bi bi-check-circle me-2"></i>Salva Profilo e Calcola Obiettivi
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Right Column - Metrics -->
+        <div class="col-lg-5 mb-4">
+            <!-- Calculated Metrics -->
+            <div class="profile-card">
+                <h5 class="mb-4">
+                    <i class="bi bi-calculator text-primary me-2"></i>
+                    Metriche Calcolate
+                </h5>
+
+                <div class="metric-display">
+                    <div class="metric-value" id="bmrDisplay">-</div>
+                    <div class="metric-label">BMR (Metabolismo Basale)</div>
+                    <div class="metric-sublabel">Calorie a riposo</div>
+                </div>
+
+                <div class="metric-display">
+                    <div class="metric-value text-primary" id="tdeeDisplay">-</div>
+                    <div class="metric-label">TDEE (Fabbisogno Totale)</div>
+                    <div class="metric-sublabel">Calorie giornaliere con attività</div>
+                </div>
+
+                <div class="metric-display">
+                    <div class="metric-value text-success" id="targetDisplay">-</div>
+                    <div class="metric-label">Obiettivo Calorico</div>
+                    <div class="metric-sublabel" id="targetLabel">Per il tuo obiettivo</div>
+                </div>
+            </div>
+
+            <!-- Macros Breakdown -->
+            {% if goals %}
+            <div class="profile-card">
+                <h5 class="mb-4">
+                    <i class="bi bi-pie-chart text-success me-2"></i>
+                    Ripartizione Macronutrienti
+                </h5>
+
+                <div class="row g-3">
+                    <div class="col-6">
+                        <div class="macro-card">
+                            <i class="bi bi-egg" style="color: #10B981; font-size: 1.5rem;"></i>
+                            <div class="macro-value text-success">{{ goals.daily_protein }}g</div>
+                            <small class="text-muted">Proteine</small>
+                            <div class="macro-bar">
+                                <div class="macro-fill" style="width: 100%; background: #10B981;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="macro-card">
+                            <i class="bi bi-wheat" style="color: #3B82F6; font-size: 1.5rem;"></i>
+                            <div class="macro-value text-info">{{ goals.daily_carbs }}g</div>
+                            <small class="text-muted">Carboidrati</small>
+                            <div class="macro-bar">
+                                <div class="macro-fill" style="width: 100%; background: #3B82F6;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="macro-card">
+                            <i class="bi bi-droplet" style="color: #F59E0B; font-size: 1.5rem;"></i>
+                            <div class="macro-value text-warning">{{ goals.daily_fat }}g</div>
+                            <small class="text-muted">Grassi</small>
+                            <div class="macro-bar">
+                                <div class="macro-fill" style="width: 100%; background: #F59E0B;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-6">
+                        <div class="macro-card">
+                            <i class="bi bi-flower1" style="color: #8B5CF6; font-size: 1.5rem;"></i>
+                            <div class="macro-value" style="color: #8B5CF6;">{{ goals.daily_fiber }}g</div>
+                            <small class="text-muted">Fibre</small>
+                            <div class="macro-bar">
+                                <div class="macro-fill" style="width: 100%; background: #8B5CF6;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Real-time BMI calculation
+const form = document.getElementById('profileForm');
+const weightInput = document.getElementById('weight');
+const heightInput = document.getElementById('height');
+const ageInput = document.getElementById('age');
+const genderInput = document.getElementById('gender');
+const activityInput = document.getElementById('activity_level');
+const goalInput = document.getElementById('goal');
+
+[weightInput, heightInput, ageInput, genderInput, activityInput, goalInput].forEach(input => {
+    if (input) {
+        input.addEventListener('input', calculateMetrics);
+        input.addEventListener('change', calculateMetrics);
+    }
+});
+
+function calculateMetrics() {
+    const weight = parseFloat(weightInput.value);
+    const height = parseFloat(heightInput.value);
+    const age = parseInt(ageInput.value);
+    const gender = genderInput.value;
+    const activity = activityInput.value;
+    const goal = goalInput.value;
+
+    if (!weight || !height || !age || !gender || !activity) return;
+
+    // Calculate BMI
+    const bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
+    updateBMI(bmi);
+
+    // Calculate BMR (Mifflin-St Jeor)
+    let bmr;
+    if (gender === 'male') {
+        bmr = (10 * weight) + (6.25 * height) - (5 * age) + 5;
+    } else {
+        bmr = (10 * weight) + (6.25 * height) - (5 * age) - 161;
+    }
+
+    // Calculate TDEE
+    const activityMultipliers = {
+        sedentary: 1.2,
+        light: 1.375,
+        moderate: 1.55,
+        active: 1.725,
+        very_active: 1.9
+    };
+    const tdee = bmr * (activityMultipliers[activity] || 1.55);
+
+    // Calculate Target based on goal (SAFE ranges)
+    let target;
+    let targetLabel;
+    if (goal === 'lose') {
+        target = tdee - 500; // -0.5kg/week (safe deficit)
+        targetLabel = 'Deficit moderato (-500 cal)';
+    } else if (goal === 'gain') {
+        target = tdee + 300; // +0.5kg/week (safe surplus)
+        targetLabel = 'Surplus moderato (+300 cal)';
+    } else {
+        target = tdee;
+        targetLabel = 'Mantenimento';
+    }
+
+    // Update displays
+    document.getElementById('bmrDisplay').textContent = Math.round(bmr);
+    document.getElementById('tdeeDisplay').textContent = Math.round(tdee);
+    document.getElementById('targetDisplay').textContent = Math.round(target);
+    document.getElementById('targetLabel').textContent = targetLabel;
+}
+
+function updateBMI(bmi) {
+    const display = document.getElementById('bmiDisplay');
+    const gauge = document.getElementById('bmiGauge');
+    const value = document.getElementById('bmiValue');
+    const category = document.getElementById('bmiCategory');
+
+    display.style.display = 'flex';
+    value.textContent = bmi;
+
+    let color, text;
+    if (bmi < 18.5) {
+        color = '#3B82F6';
+        text = 'Sottopeso';
+    } else if (bmi < 25) {
+        color = '#10B981';
+        text = 'Normopeso';
+    } else if (bmi < 30) {
+        color = '#F59E0B';
+        text = 'Sovrappeso';
+    } else {
+        color = '#EF4444';
+        text = 'Obesità';
+    }
+
+    gauge.style.background = color;
+    gauge.textContent = bmi;
+    category.textContent = text;
+}
+
+// Initialize if profile exists
+{% if profile %}
+calculateMetrics();
+{% endif %}
+</script>
+{% endblock %}
