@@ -4,6 +4,7 @@ Gestisce tutte le routes dell'applicazione
 """
 
 import re
+import json
 from flask import render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -231,10 +232,9 @@ def register_routes(app):
                     password_hash=generate_password_hash(password, method='pbkdf2:sha256')
                 )
                 db.session.add(user)
-                db.session.flush()
                 
-                # Crea stats iniziali
-                stats = UserStats(user_id=user.id)
+                # Crea stats iniziali senza flush esplicito (relazione gestita da SQLAlchemy)
+                stats = UserStats(user=user)
                 db.session.add(stats)
                 
                 db.session.commit()
@@ -341,8 +341,7 @@ def register_routes(app):
                 db.session.add(product)
                 db.session.commit()
                 
-                # Gamification
-                award_points(current_user.id, 'product_added', 10)
+                # Gamification: no points for product addition per new policy
                 
                 # Aggiorna stats
                 stats = UserStats.query.filter_by(user_id=current_user.id).first()
@@ -380,7 +379,8 @@ def register_routes(app):
                 product.name = request.form['name'].strip().title()
                 product.quantity = float(request.form['quantity'])
                 product.unit = request.form['unit']
-                product.expiry_date = datetime.strptime(request.form['expiry_date'], '%Y-%m-%d').date()
+                expiry_date_str = (request.form.get('expiry_date') or '').strip()
+                product.expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date() if expiry_date_str else None
                 product.category = request.form['category']
                 product.min_quantity = float(request.form.get('min_quantity', 1))
                 product.allergens = request.form.get('allergens', '').strip()
@@ -411,10 +411,7 @@ def register_routes(app):
         try:
             db.session.delete(product)
             db.session.commit()
-            
-            flash('Prodotto eliminato con successo', 'success')
-            return jsonify({'success': True})
-            
+            return jsonify({'success': True, 'message': 'Prodotto eliminato con successo'})
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'message': str(e)}), 500
@@ -468,12 +465,6 @@ def register_routes(app):
             ShoppingList.created_at.desc()
         ).all()
         
-        # Arricchisci con statistiche
-        for lst in lists:
-            lst.total_items = lst.items.count()
-            lst.completed_items = lst.items.filter_by(completed=True).count()
-            lst.completion_percentage = (lst.completed_items / lst.total_items * 100) if lst.total_items > 0 else 0
-        
         return render_template('shopping_list.html', lists=lists)
     
     
@@ -509,6 +500,56 @@ def register_routes(app):
             db.session.rollback()
             return jsonify({'success': False, 'message': str(e)}), 500
     
+    @app.route('/shopping-list/generate-smart', methods=['POST'])
+    @login_required
+    def generate_smart_shopping_list():
+        """Genera automaticamente una lista spesa usando suggerimenti AI e prodotti in esaurimento/scadenza."""
+        try:
+            # Ottieni suggerimenti AI (expiring + low stock)
+            ai_data = ai_suggest_shopping_list(current_user.id)
+            suggestions = ai_data.get('suggestions', []) if ai_data else []
+
+            if not suggestions:
+                return jsonify({'success': False, 'message': 'Nessun suggerimento disponibile al momento'}), 200
+
+            # Crea una nuova lista
+            list_name = f"Lista AI {datetime.now().strftime('%d/%m/%Y')}"
+            shopping_list = ShoppingList(
+                user_id=current_user.id,
+                name=list_name,
+                is_smart=True
+            )
+            db.session.add(shopping_list)
+            db.session.flush()  # per ottenere l'id
+
+            # Aggiungi items suggeriti con quantità/unità di default
+            created = 0
+            for name in suggestions:
+                if not name:
+                    continue
+                item = ShoppingItem(
+                    shopping_list_id=shopping_list.id,
+                    name=name,
+                    quantity=1.0,
+                    unit='pz',
+                    priority=1
+                )
+                db.session.add(item)
+                created += 1
+
+            db.session.commit()
+
+            return jsonify({
+                'success': True,
+                'message': f'Lista "{list_name}" creata con {created} suggerimenti',
+                'list_id': shopping_list.id,
+                'items_created': created
+            })
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)}), 500
+
     
     @app.route('/shopping-list/<int:list_id>/add-item', methods=['POST'])
     @login_required
@@ -581,6 +622,36 @@ def register_routes(app):
             'success': True,
             'completed': item.completed
         })
+
+    @app.route('/shopping-list/item/<int:item_id>/delete', methods=['DELETE'])
+    @login_required
+    def delete_shopping_item(item_id):
+        """Elimina un item dalla lista spesa"""
+        item = ShoppingItem.query.get_or_404(item_id)
+        if item.shopping_list.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Accesso negato'}), 403
+        try:
+            db.session.delete(item)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Elemento rimosso'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/shopping-list/<int:list_id>/delete', methods=['DELETE'])
+    @login_required
+    def delete_shopping_list(list_id):
+        """Elimina una lista spesa."""
+        shopping_list = ShoppingList.query.get_or_404(list_id)
+        if shopping_list.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Accesso negato'}), 403
+        try:
+            db.session.delete(shopping_list)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Lista eliminata'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)}), 500
     
     
     @app.route('/shopping-list/<int:list_id>/complete', methods=['POST'])
@@ -739,32 +810,53 @@ def register_routes(app):
         """Piano pasti"""
         if request.method == 'POST':
             try:
+                raw_date = (request.form.get('date') or '').strip()
+                meal_type = (request.form.get('meal_type') or 'lunch').strip()
+                custom_meal = (request.form.get('custom_meal') or '').strip()
+
+                if not raw_date or not meal_type or not custom_meal:
+                    flash('Compila data, tipo pasto e descrizione', 'warning')
+                    return redirect(url_for('meal_planning'))
+
+                parsed_date = datetime.strptime(raw_date, '%Y-%m-%d').date()
+
                 meal_plan = MealPlan(
                     user_id=current_user.id,
-                    date=datetime.strptime(request.form['date'], '%Y-%m-%d').date(),
-                    meal_type=request.form.get('meal_type', 'lunch'),
-                    custom_meal=request.form.get('custom_meal', '')
+                    date=parsed_date,
+                    meal_type=meal_type,
+                    custom_meal=custom_meal
                 )
-                
                 db.session.add(meal_plan)
                 db.session.commit()
-                
-                flash('Piano pasti creato!', 'success')
+                flash('Pasto aggiunto al piano!', 'success')
                 return redirect(url_for('meal_planning'))
-                
+
             except Exception as e:
                 db.session.rollback()
-                flash('Errore nella creazione', 'danger')
+                current_app.logger.error(f"meal_planning POST error: {e}")
+                flash('Errore nella creazione del pasto', 'danger')
+                return redirect(url_for('meal_planning'))
         
         profile = NutritionalProfile.query.filter_by(user_id=current_user.id).first()
         goals = NutritionalGoal.query.filter_by(user_id=current_user.id).first()
         meal_plans = MealPlan.query.filter_by(user_id=current_user.id).order_by(MealPlan.date.desc()).all()
+        # Serialize meal plans for frontend JSON usage
+        meal_plans_json = [
+            {
+                'id': mp.id,
+                'date': mp.date.isoformat() if mp.date else None,
+                'meal_type': mp.meal_type,
+                'custom_meal': mp.custom_meal
+            }
+            for mp in meal_plans
+        ]
         
         return render_template(
             'meal_planning.html',
             nutritional_profile=profile,
             nutritional_goals=goals,
             meal_plans=meal_plans,
+            meal_plans_json=meal_plans_json,
             today=datetime.now().date()
         )
     
@@ -779,6 +871,55 @@ def register_routes(app):
         """Pagina analytics"""
         analytics_data = get_comprehensive_analytics(current_user.id, days=30)
         return render_template('analytics.html', analytics=analytics_data)
+
+    @app.route('/api/analytics')
+    @login_required
+    def api_analytics():
+        """API per aggiornare KPI/chart in base al periodo."""
+        try:
+            days = request.args.get('days', default=30, type=int)
+            data = get_comprehensive_analytics(current_user.id, days=days)
+
+            # Mappa KPI nell'ordine delle card
+            kpis = [
+                data.get('nutrition', {}).get('goal_completion', 0),
+                data.get('waste', {}).get('total_kg_wasted', 0),
+                data.get('shopping', {}).get('total_items_purchased', 0),
+                data.get('waste', {}).get('total_cost', 0),
+            ]
+
+            # Non ricalcoliamo i dataset Chart.js qui; lasciamo vuoto per non aggiornare i grafici
+            return jsonify({'success': True, 'kpis': kpis, 'charts': {}})
+        except Exception as e:
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/api/analytics/export')
+    @login_required
+    def api_analytics_export():
+        """Esporta dati analytics base in CSV."""
+        import csv
+        from io import StringIO
+
+        days = request.args.get('days', default=30, type=int)
+        data = get_comprehensive_analytics(current_user.id, days=days)
+
+        output = StringIO()
+        writer = csv.writer(output, delimiter=';')
+
+        writer.writerow(['Section', 'Metric', 'Value'])
+        for key, val in (data.get('nutrition') or {}).items():
+            writer.writerow(['nutrition', key, val])
+        for key, val in (data.get('waste') or {}).items():
+            writer.writerow(['waste', key, val])
+        for key, val in (data.get('shopping') or {}).items():
+            writer.writerow(['shopping', key, val])
+
+        csv_bytes = output.getvalue().encode('utf-8')
+        return current_app.response_class(
+            csv_bytes,
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=analytics.csv'}
+        )
     
     
     # ========================================

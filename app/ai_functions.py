@@ -48,6 +48,9 @@ def suggest_recipes(user_id, max_recipes=5, servings=None):
         
         # Genera ricette con AI
         recipes = ai_generate_recipe_suggestions(ingredients, user_id, max_recipes)
+        # Fallback se AI non restituisce nulla
+        if not recipes:
+            return _generate_fallback_recipes(products[:5], max_recipes)
 
         # Filtra per allergie e restrizioni utente
         try:
@@ -82,7 +85,10 @@ def suggest_recipes(user_id, max_recipes=5, servings=None):
         
     except Exception as e:
         current_app.logger.error(f"suggest_recipes error: {e}")
-        return _generate_fallback_recipes(products[:5], max_recipes)
+        try:
+            return _generate_fallback_recipes(products[:5], max_recipes)
+        except Exception:
+            return []
 
 
 def ai_generate_recipe_suggestions(ingredients, user_id=None, max_recipes=5):
@@ -185,11 +191,19 @@ Rispondi SOLO con JSON valido."""
         )
         
         if response.status_code != 200:
-            current_app.logger.error(f"Groq API error: {response.status_code}")
+            current_app.logger.error(f"Groq API error: {response.status_code} - {response.text}")
             return []
         
         # Parse response
-        content = response.json()["choices"][0]["message"]["content"]
+        try:
+            payload = response.json()
+        except Exception as e:
+            current_app.logger.error(f"Groq API invalid JSON: {e}; body={response.text[:500]}")
+            return []
+        content = (payload.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        if not content:
+            current_app.logger.warning("Groq API empty content")
+            return []
         
         # Estrai JSON (gestisce markdown code blocks)
         content = content.strip()
@@ -202,7 +216,19 @@ Rispondi SOLO con JSON valido."""
         content = content.strip()
         
         # Parse JSON
-        data = json.loads(content)
+        try:
+            data = json.loads(content)
+        except json.JSONDecodeError:
+            # Prova a trovare un blocco JSON tra backticks o parentesi
+            start = content.find('{')
+            end = content.rfind('}')
+            if start != -1 and end != -1 and end > start:
+                try:
+                    data = json.loads(content[start:end+1])
+                except Exception as e:
+                    raise e
+            else:
+                raise
         
         # Estrai ricette
         if isinstance(data, dict) and "recipes" in data:

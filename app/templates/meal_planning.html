@@ -374,7 +374,7 @@
 </div>
 
 <!-- Modal Aggiungi Pasto -->
-<div class="modal fade" id="addMealModal" tabindex="-1">
+<div class="modal fade" id="addMealModal" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 16px; border: none;">
             <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none;">
@@ -385,9 +385,9 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <form method="POST" action="{{ url_for('create_meal_plan') }}" id="addMealForm">
-                    <input type="hidden" id="modalDate" name="date">
-                    <input type="hidden" id="modalMealType" name="meal_type">
+                <form method="POST" action="{{ url_for('meal_planning') }}" id="addMealForm" onsubmit="return validateAddMealForm()">
+                    <input type="hidden" id="modalDate" name="date" required>
+                    <input type="hidden" id="modalMealType" name="meal_type" required>
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold">Data e Tipo</label>
@@ -429,7 +429,7 @@ const mealTypeLabels = {
 };
 
 // Meal plans data from backend
-const mealPlans = {{ meal_plans|tojson if meal_plans else '[]'|safe }};
+const mealPlans = {{ meal_plans_json|tojson if meal_plans_json else '[]'|safe }};
 
 function initCalendar() {
     const today = new Date();
@@ -538,7 +538,12 @@ function changeWeek(offset) {
 }
 
 function openAddMealModal(date, mealType) {
-    const modal = new bootstrap.Modal(document.getElementById('addMealModal'));
+    const modalEl = document.getElementById('addMealModal');
+    // Pulisci eventuali backdrop orfani prima di aprire
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('padding-right');
+    const modal = new bootstrap.Modal(modalEl, { backdrop: false, keyboard: true });
     const typeInfo = mealTypeLabels[mealType];
     
     document.getElementById('modalDate').value = date;
@@ -673,6 +678,40 @@ async function consumeMeal(mealId, btn){
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     initCalendar();
+    // Cleanup backdrop alla chiusura della modale
+    const addEl = document.getElementById('addMealModal');
+    if (addEl) {
+        addEl.addEventListener('hidden.bs.modal', function(){
+            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            // reset campi
+            const btn = document.querySelector('#addMealForm button[type="submit"]');
+            if (btn) btn.disabled = false;
+        });
+    }
 });
+
+function validateAddMealForm(){
+    const date = document.getElementById('modalDate').value;
+    const type = document.getElementById('modalMealType').value;
+    const desc = document.getElementById('custom_meal').value.trim();
+    if(!date || !type || !desc){
+        showNotification('warning', 'Compila data, tipo pasto e descrizione');
+        return false;
+    }
+    // Mostra spinner e chiudi subito la modale per evitare blocchi visuali
+    const btn = document.querySelector('#addMealForm button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvataggio...';
+    }
+    const modalEl = document.getElementById('addMealModal');
+    try { bootstrap.Modal.getOrCreateInstance(modalEl).hide(); } catch(_) {}
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('padding-right');
+    return true;
+}
 </script>
 {% endblock %}

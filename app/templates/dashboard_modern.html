@@ -349,7 +349,7 @@
                         <i class="bi bi-box-seam me-2"></i>Gestisci Dispensa
                     </a>
                     {% if expiring_products %}
-                    <button class="btn btn-outline-success" onclick="loadRecipes()">
+                    <button class="btn btn-outline-success" onclick="loadRecipes(this)">
                         <i class="bi bi-magic me-2"></i>Suggerisci Ricette
                     </button>
                     {% endif %}
@@ -456,17 +456,21 @@
 {% block extra_js %}
 <script>
 // Carica ricette AI
-function loadRecipes() {
-    const btn = event.target;
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Caricamento...';
+function loadRecipes(btn) {
+    const buttonEl = btn || document.querySelector('button[onclick*="loadRecipes"]');
+    const originalText = buttonEl ? buttonEl.innerHTML : '';
+    if (buttonEl) {
+        buttonEl.disabled = true;
+        buttonEl.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Caricamento...';
+    }
 
     fetch('/api/ai-recipes')
         .then(response => response.json())
         .then(data => {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            if (buttonEl) {
+                buttonEl.disabled = false;
+                buttonEl.innerHTML = originalText;
+            }
             
             if (data.expiring_based && data.expiring_based.length > 0) {
                 displayRecipes(data.expiring_based);
@@ -476,8 +480,10 @@ function loadRecipes() {
             }
         })
         .catch(error => {
-            btn.disabled = false;
-            btn.innerHTML = originalText;
+            if (buttonEl) {
+                buttonEl.disabled = false;
+                buttonEl.innerHTML = originalText;
+            }
             console.error('Error:', error);
             showNotification('danger', 'Errore nel caricamento delle ricette');
         });
@@ -494,8 +500,8 @@ function displayRecipes(recipes) {
                 <h6 class="mb-3">${recipe.name}</h6>
                 
                 <div class="d-flex justify-content-between text-muted small mb-3">
-                    <span><i class="bi bi-clock me-1"></i>${recipe.prep_time + recipe.cooking_time} min</span>
-                    <span><i class="bi bi-people me-1"></i>${recipe.servings} porz.</span>
+                    <span><i class="bi bi-clock me-1"></i>${Number(recipe.prep_time || 0) + Number(recipe.cooking_time || 0)} min</span>
+                    <span><i class="bi bi-people me-1"></i>${recipe.servings || 1} porz.</span>
                     <span class="badge bg-${recipe.difficulty === 'easy' ? 'success' : recipe.difficulty === 'medium' ? 'warning' : 'danger'}">
                         ${recipe.difficulty}
                     </span>
@@ -518,7 +524,7 @@ function displayRecipes(recipes) {
                 </div>
                 ` : ''}
 
-                <button class="btn btn-outline-primary btn-sm w-100" onclick='showRecipeModal(${JSON.stringify(recipe)})'>
+                <button class="btn btn-outline-primary btn-sm w-100" onclick='showRecipeModal(${JSON.stringify(recipe).replace(/</g,"\\u003c").replace(/>/g,"\\u003e").replace(/&/g,"\\u0026")})'>
                     <i class="bi bi-eye me-1"></i>Vedi Dettagli
                 </button>
             </div>
@@ -572,7 +578,7 @@ function showRecipeModal(recipe) {
         <div class="mb-4">
             <h6 class="mb-3">Istruzioni</h6>
             <ol class="list-group list-group-numbered">
-                ${recipe.instructions.map(step => `
+                ${(recipe.instructions || []).map(step => `
                     <li class="list-group-item">${step}</li>
                 `).join('')}
             </ol>
@@ -594,7 +600,7 @@ function showRecipeModal(recipe) {
         <div class="mt-4">
             <h6 class="mb-3">Informazioni Nutrizionali (per porzione)</h6>
             <div class="row text-center">
-                ${Object.entries(recipe.nutritional_info.per_serving).map(([key, value]) => `
+                ${Object.entries((recipe.nutritional_info && recipe.nutritional_info.per_serving) || {}).map(([key, value]) => `
                     <div class="col-4 mb-3">
                         <h5 class="mb-0">${value}${key === 'calories' ? '' : 'g'}</h5>
                         <small class="text-muted">${key}</small>

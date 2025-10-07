@@ -632,11 +632,11 @@
                         <!-- Progress -->
                         {% if list.items %}
                         <div class="list-progress">
-                            <div class="list-progress-bar" style="width: {{ list.completion_percentage }}%"></div>
+                            <div class="list-progress-bar" style="width: {{ list.progress_percentage|default(0) }}%"></div>
                         </div>
                         <small class="text-muted d-block mt-2">
                             {{ list.completed_items }}/{{ list.total_items }} completati 
-                            ({{ list.completion_percentage|round(1) }}%)
+                            ({{ list.progress_percentage|default(0) }}%)
                         </small>
                         {% endif %}
 
@@ -696,7 +696,7 @@
                                 </div>
 
                                 <div class="d-flex gap-1">
-                                    <button class="btn-action secondary" onclick="editItem({{ item.id }}, {{ item|tojson }})" title="Modifica">
+                                    <button class="btn-action secondary" onclick="editItem({{ item.id }}, {{ item.to_dict()|tojson }})" title="Modifica">
                                         <i class="bi bi-pencil"></i>
                                     </button>
                                     <button class="btn-action danger" onclick="deleteItem({{ item.id }}, {{ list.id }})" title="Elimina">
@@ -1009,12 +1009,17 @@ async function toggleItem(itemId, listId) {
 
 async function deleteItem(itemId, listId) {
     if (!confirm('Rimuovere questo prodotto?')) return;
-    
     try {
-        // Implementa la route di eliminazione
-        showNotification('success', 'Prodotto rimosso');
-        document.getElementById(`item-${itemId}`).remove();
-        updateProgress(listId);
+        const res = await fetch(`/shopping-list/item/${itemId}/delete`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) {
+            showNotification('success', data.message || 'Prodotto rimosso');
+            const el = document.getElementById(`item-${itemId}`);
+            if (el) el.remove();
+            updateProgress(listId);
+        } else {
+            showNotification('danger', data.message || 'Errore nella rimozione');
+        }
     } catch (error) {
         showNotification('danger', 'Errore nella rimozione');
     }

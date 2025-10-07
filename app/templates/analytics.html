@@ -327,7 +327,7 @@
                 <div class="metric-icon" style="background: rgba(16,185,129,0.1); color: #10B981;">
                     <i class="bi bi-heart-pulse-fill"></i>
                 </div>
-                <div class="metric-value text-success">{{ analytics.nutrition.goal_completion }}%</div>
+                <div class="metric-value text-success">{{ analytics.nutrition.goal_completion|default(0) }}%</div>
                 <div class="metric-label">Obiettivi Nutrizionali</div>
                 <span class="metric-trend up">
                     <i class="bi bi-arrow-up"></i>+5% vs precedente
@@ -340,7 +340,7 @@
                 <div class="metric-icon" style="background: rgba(239,68,68,0.1); color: #EF4444;">
                     <i class="bi bi-trash3-fill"></i>
                 </div>
-                <div class="metric-value text-danger">{{ analytics.waste.total_kg_wasted }}</div>
+                <div class="metric-value text-danger">{{ analytics.waste.total_kg_wasted|default(0) }}</div>
                 <div class="metric-label">Kg Sprecati</div>
                 <span class="metric-trend {% if analytics.waste.waste_trend == 'decreasing' %}down{% else %}up{% endif %}">
                     <i class="bi bi-arrow-{% if analytics.waste.waste_trend == 'decreasing' %}down{% else %}up{% endif %}"></i>
@@ -354,7 +354,7 @@
                 <div class="metric-icon" style="background: rgba(59,130,246,0.1); color: #3B82F6;">
                     <i class="bi bi-cart-check-fill"></i>
                 </div>
-                <div class="metric-value text-info">{{ analytics.shopping.total_items }}</div>
+                <div class="metric-value text-info">{{ analytics.shopping.total_items_purchased|default(0) }}</div>
                 <div class="metric-label">Prodotti Acquistati</div>
                 <span class="metric-trend stable">
                     <i class="bi bi-dash"></i>Stabile
@@ -367,7 +367,7 @@
                 <div class="metric-icon" style="background: rgba(245,158,11,0.1); color: #F59E0B;">
                     <i class="bi bi-currency-euro"></i>
                 </div>
-                <div class="metric-value text-warning">{{ analytics.waste.total_cost_wasted }}€</div>
+                <div class="metric-value text-warning">{{ analytics.waste.total_cost|default(0) }}€</div>
                 <div class="metric-label">Costo Sprechi</div>
                 <span class="metric-trend down">
                     <i class="bi bi-arrow-down"></i>-12% vs precedente
@@ -415,7 +415,7 @@
                     </div>
                 </div>
 
-                <canvas id="nutritionChart" height="250"></canvas>
+                <div style="height: 220px"><canvas id="nutritionChart"></canvas></div>
             </div>
         </div>
 
@@ -448,7 +448,7 @@
                     </div>
                 </div>
 
-                <canvas id="wasteChart" height="250"></canvas>
+                <div style="height: 220px"><canvas id="wasteChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -475,7 +475,7 @@
                     </div>
                 </div>
 
-                <canvas id="shoppingChart" height="200"></canvas>
+                <div style="height: 180px"><canvas id="shoppingChart"></canvas></div>
             </div>
         </div>
 
@@ -488,7 +488,7 @@
                         Distribuzione Categorie
                     </div>
                 </div>
-                <canvas id="categoryChart" height="200"></canvas>
+                <div style="height: 180px"><canvas id="categoryChart"></canvas></div>
             </div>
         </div>
 
@@ -503,11 +503,11 @@
                 </div>
 
                 <div class="text-center mb-3">
-                    <h2 class="text-success mb-0">{{ (analytics.shopping.total_cost - analytics.waste.total_cost_wasted)|round(2) }}€</h2>
+                    <h2 class="text-success mb-0">{{ (analytics.shopping.total_cost|default(0) - analytics.waste.total_cost|default(0))|round(2) }}€</h2>
                     <small class="text-muted">Risparmiati grazie a FoodFlow</small>
                 </div>
 
-                <canvas id="savingsChart" height="200"></canvas>
+                <div style="height: 180px"><canvas id="savingsChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -529,7 +529,7 @@
                         </div>
                     </div>
                 </div>
-                <canvas id="timelineChart" height="100"></canvas>
+                <div style="height: 140px"><canvas id="timelineChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -577,6 +577,12 @@ const charts = {};
 
 // Initialize all charts
 document.addEventListener('DOMContentLoaded', function() {
+    // Prevent any auto-scroll by focusing a non-focusable area
+    const main = document.getElementById('mainContent');
+    if (main) {
+        main.setAttribute('tabindex', '-1');
+        main.focus({ preventScroll: true });
+    }
     initNutritionChart();
     initWasteChart();
     initShoppingChart();
@@ -636,7 +642,7 @@ function initWasteChart() {
     
     const labels = [
         {% for week in analytics.trends.waste_trend %}
-            '{{ week.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
+            '{{ week.date[8:10] }}/{{ week.date[5:7] }}'{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     
@@ -750,8 +756,8 @@ function initSavingsChart() {
             labels: ['Risparmiato', 'Sprecato'],
             datasets: [{
                 data: [
-                    {{ (analytics.shopping.total_cost - analytics.waste.total_cost_wasted)|default(0) }},
-                    {{ analytics.waste.total_cost_wasted|default(0) }}
+                    {{ (analytics.shopping.total_cost|default(0) - analytics.waste.total_cost|default(0))|default(0) }},
+                    {{ analytics.waste.total_cost|default(0) }}
                 ],
                 backgroundColor: [chartColors.success, chartColors.danger],
                 borderWidth: 0
@@ -772,7 +778,7 @@ function initTimelineChart() {
     
     const labels = [
         {% for day in analytics.trends.products_trend %}
-            '{{ day.date.strftime("%d/%m") }}'{% if not loop.last %},{% endif %}
+            '{{ day.date[8:10] }}/{{ day.date[5:7] }}'{% if not loop.last %},{% endif %}
         {% endfor %}
     ];
     

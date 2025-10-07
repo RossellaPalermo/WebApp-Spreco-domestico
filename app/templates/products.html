@@ -337,7 +337,7 @@
 </div>
 
 <!-- Waste Modal -->
-<div class="modal fade" id="wasteModal" tabindex="-1">
+<div class="modal fade" id="wasteModal" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 16px;">
             <div class="modal-header" style="background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%); color: white; border: none;">
@@ -409,24 +409,31 @@ function clearFilters() {
 // Consume Product
 function consumeProduct(productId) {
     if (!confirm('Confermi di aver consumato questo prodotto?')) return;
-    
-    fetch(`/products/delete/${productId}`, {
-        method: 'GET'
-    })
-    .then(() => {
-        showNotification('success', 'Prodotto consumato!');
-        setTimeout(() => location.reload(), 1000);
-    })
-    .catch(err => {
-        console.error(err);
-        showNotification('danger', 'Errore durante l\'operazione');
-    });
+    fetch(`/products/delete/${productId}`, { method: 'DELETE' })
+        .then(r => r.json())
+        .then(data => {
+            if (data && data.success) {
+                showNotification('success', 'Prodotto consumato!');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                showNotification('danger', data && data.message ? data.message : 'Errore durante l\'operazione');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showNotification('danger', 'Errore durante l\'operazione');
+        });
 }
 
 // Waste Product
 function wasteProduct(productId) {
     document.getElementById('wasteProductId').value = productId;
-    const modal = new bootstrap.Modal(document.getElementById('wasteModal'));
+    const el = document.getElementById('wasteModal');
+    // Ensure any previous backdrops are cleared
+    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('padding-right');
+    const modal = new bootstrap.Modal(el, { backdrop: false, keyboard: true });
     modal.show();
 }
 
@@ -439,28 +446,60 @@ wasteSlider.addEventListener('input', function() {
 });
 
 // Waste form submit
-document.getElementById('wasteForm').addEventListener('submit', function(e) {
+document.getElementById('wasteForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     
     const productId = document.getElementById('wasteProductId').value;
     const percentage = document.getElementById('wastePercentage').value;
     
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvataggio...';
+
     const formData = new FormData();
     formData.append('waste_percentage', percentage);
     
-    fetch(`/products/waste/${productId}`, {
-        method: 'POST',
-        body: formData
-    })
-    .then(() => {
-        bootstrap.Modal.getInstance(document.getElementById('wasteModal')).hide();
-        showNotification('success', `Prodotto segnato come sprecato (${percentage}%)`);
-        setTimeout(() => location.reload(), 1000);
-    })
-    .catch(err => {
+    try {
+        const res = await fetch(`/products/waste/${productId}`, { method: 'POST', body: formData });
+        let data = {};
+        try { data = await res.json(); } catch (_) {}
+        if (res.ok && data && data.success) {
+            showNotification('success', `Prodotto segnato come sprecato (${percentage}%)`);
+            setTimeout(() => location.reload(), 500);
+        } else {
+            showNotification('danger', (data && (data.error || data.message)) || 'Errore durante l\'operazione');
+        }
+    } catch (err) {
         console.error(err);
-        showNotification('danger', 'Errore durante l\'operazione');
-    });
+        showNotification('danger', 'Errore di rete durante l\'operazione');
+    } finally {
+        const modalEl = document.getElementById('wasteModal');
+        try { bootstrap.Modal.getOrCreateInstance(modalEl).hide(); } catch(_) {}
+        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Conferma Spreco';
+    }
+});
+
+// Ensure backdrop is cleaned up to avoid blocking UI
+document.addEventListener('DOMContentLoaded', function(){
+    const wasteEl = document.getElementById('wasteModal');
+    if (wasteEl) {
+        wasteEl.addEventListener('hidden.bs.modal', function(){
+            // Remove any stray backdrops and modal-open class
+            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            // Reset slider/button state
+            const slider = document.getElementById('wastePercentage');
+            const disp = document.getElementById('wastePercentageDisplay');
+            if (slider && disp) { slider.value = 100; disp.textContent = '100%'; }
+            const btn = document.querySelector('#wasteForm button[type="submit"]');
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bi bi-check-circle me-2"></i>Conferma Spreco'; }
+        });
+    }
 });
 
 // Load Recipes

@@ -577,7 +577,7 @@
     </nav>
 
     <!-- === MAIN CONTENT === -->
-    <main class="main-content">
+    <main class="main-content" id="mainContent">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="container mt-3">
@@ -653,7 +653,7 @@
             </div>
             
             <div class="footer-bottom">
-                <p class="mb-0">© 2024 FoodFlow. Tutti i diritti riservati. Made with <i class="bi bi-heart-fill text-danger"></i> for the planet</p>
+                <p class="mb-0">© 2025 FoodFlow. Tutti i diritti riservati.</p>
             </div>
         </div>
     </footer>
@@ -694,6 +694,22 @@
                     this.style.transform = 'translateY(0)';
                 });
             });
+
+            // Global safety: clear orphan Bootstrap backdrops that can block clicks
+            function clearOrphanBackdrops() {
+                const anyOpenModal = document.querySelector('.modal.show');
+                if (!anyOpenModal) {
+                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                }
+            }
+            // Run on load and periodically for safety
+            clearOrphanBackdrops();
+            setInterval(clearOrphanBackdrops, 1500);
+            // Also on any click or ESC
+            document.addEventListener('click', clearOrphanBackdrops, true);
+            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') clearOrphanBackdrops(); });
         });
 
         // Navbar scroll effect
