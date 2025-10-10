@@ -1,0 +1,20 @@
+FoodFlow – Progetto di tesi
+Copyright (c) 2025 Rossella Palermo
+
+Tutti i diritti riservati.
+
+Questo software e tutti i contenuti correlati (testi, grafica, codice sorgente, design, logo, dati) sono di proprietà dell’autore e protetti dalla Legge n. 633/1941 sul diritto d’autore e successive modifiche.
+
+È vietata la copia, distribuzione, modifica o utilizzo del software e dei contenuti per fini commerciali senza autorizzazione scritta dell’autore.
+
+Finalità del progetto:
+- Prototipo accademico per la riduzione dello spreco alimentare domestico.
+- Ricerca e dimostrazione nell’ambito della tesi di laurea.
+
+Per richieste di utilizzo o autorizzazione, contattare:
+Rossella Palermo – Email: s329788@studenti.polito.it
+
+--------------------------------------------------------------
+NOTE AGGIUNTIVE:
+- L’uso del software a scopi personali o accademici è consentito, purché venga citata la paternità dell’autore.
+- Qualsiasi uso commerciale senza autorizzazione costituisce violazione dei diritti d’autore.
