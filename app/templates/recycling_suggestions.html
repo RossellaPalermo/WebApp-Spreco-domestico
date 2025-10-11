@@ -1,0 +1,878 @@
+{% extends "base_modern.html" %}
+
+{% block title %}Suggerimenti di Riciclo - FoodFlow{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* === HERO SECTION === */
+    .recycling-hero {
+        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+        background-size: 200% 200%;
+        animation: gradientShift 15s ease infinite;
+        color: white;
+        padding: 4rem 0;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .recycling-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: float 8s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50% { transform: translateY(-30px) scale(1.1); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .hero-icon {
+        font-size: 5rem;
+        opacity: 0.2;
+        position: absolute;
+        right: 2rem;
+        bottom: 1rem;
+        animation: spin 20s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* === FILTER BAR === */
+    .filter-bar {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-group label {
+        font-weight: 600;
+        color: #374151;
+        margin: 0;
+    }
+
+    .filter-group select,
+    .filter-group input {
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+    }
+
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    .filter-chips {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-chip {
+        background: #f0fdf4;
+        color: #047857;
+        border: 1px solid #86efac;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .filter-chip:hover,
+    .filter-chip.active {
+        background: #10b981;
+        color: white;
+        border-color: #10b981;
+    }
+
+    /* === STATS SECTION === */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.75rem;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(16, 185, 129, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(16, 185, 129, 0.3);
+    }
+
+    .stat-number {
+        font-size: 2.75rem;
+        font-weight: 800;
+        margin: 0 0 0.5rem 0;
+        display: block;
+    }
+
+    .stat-label {
+        font-size: 0.95rem;
+        opacity: 0.95;
+        margin: 0;
+        font-weight: 500;
+    }
+
+    /* === RECYCLING CARD === */
+    .recycling-card {
+        background: white;
+        border-radius: 15px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        transition: all 0.3s ease;
+        margin-bottom: 1.5rem;
+        border: 1px solid #f3f4f6;
+    }
+
+    .recycling-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.12);
+    }
+
+    .product-header {
+        background: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 100%);
+        padding: 1.75rem;
+        border-bottom: 2px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+
+    .product-info h3 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0 0 0.5rem 0;
+    }
+
+    .product-meta {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 0.75rem;
+    }
+
+    .meta-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #4b5563;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .urgency-badge {
+        background: #fecaca;
+        color: #7f1d1d;
+        font-weight: 600;
+    }
+
+    .urgency-countdown {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    .countdown-text {
+        text-align: center;
+    }
+
+    .countdown-days {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #ef4444;
+        line-height: 1;
+    }
+
+    .countdown-label {
+        font-size: 0.7rem;
+        color: #6b7280;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    /* === RECYCLING OPTIONS === */
+    .recycling-options {
+        padding: 1.75rem;
+    }
+
+    .options-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .recycling-option {
+        background: #f9fafb;
+        border: 2px solid #e5e7eb;
+        border-radius: 12px;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+
+    .recycling-option:hover {
+        background: white;
+        border-color: #10b981;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+    }
+
+    .recycling-option.high-priority {
+        border-left: 5px solid #10b981;
+        background: #f0fdf4;
+    }
+
+    .recycling-option.medium-priority {
+        border-left: 5px solid #f59e0b;
+        background: #fffbeb;
+    }
+
+    .recycling-option.low-priority {
+        border-left: 5px solid #9ca3af;
+        background: #f3f4f6;
+    }
+
+    .option-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .option-title-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .option-icon {
+        font-size: 1.5rem;
+        min-width: 30px;
+        text-align: center;
+    }
+
+    .option-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .priority-badge {
+        display: inline-block;
+        padding: 0.375rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .priority-high {
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .priority-medium {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .priority-low {
+        background: #f3f4f6;
+        color: #374151;
+    }
+
+    .option-description {
+        color: #4b5563;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .option-collapse-btn {
+        background: none;
+        border: none;
+        color: #10b981;
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 0;
+        transition: transform 0.2s;
+    }
+
+    .option-collapse-btn.collapsed::after {
+        content: '▼';
+        display: inline-block;
+        transform: rotate(-90deg);
+    }
+
+    .option-details {
+        display: none;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .option-details.show {
+        display: block;
+    }
+
+    .detail-section {
+        margin-bottom: 1rem;
+    }
+
+    .detail-section:last-child {
+        margin-bottom: 0;
+    }
+
+    .detail-title {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .instructions-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .instructions-list li {
+        padding: 0.5rem 0 0.5rem 1.75rem;
+        color: #4b5563;
+        position: relative;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    .instructions-list li::before {
+        content: "✓";
+        position: absolute;
+        left: 0;
+        color: #10b981;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .benefits-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .benefits-list li {
+        padding: 0.375rem 0 0.375rem 1.5rem;
+        color: #4b5563;
+        position: relative;
+        font-size: 0.95rem;
+    }
+
+    .benefits-list li::before {
+        content: "★";
+        position: absolute;
+        left: 0;
+        color: #10b981;
+        font-weight: bold;
+    }
+
+    .info-box {
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    .info-box.contact {
+        background: #dbeafe;
+        border-color: #93c5fd;
+        color: #1e40af;
+    }
+
+    .info-box.requirements {
+        background: #fef3c7;
+        border-color: #fbbf24;
+        color: #92400e;
+    }
+
+    /* === EMPTY STATE === */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .empty-state-icon {
+        font-size: 4.5rem;
+        color: #d1d5db;
+        margin-bottom: 1rem;
+        opacity: 0.6;
+    }
+
+    .empty-state h3 {
+        font-size: 1.75rem;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: #6b7280;
+        margin-bottom: 1.5rem;
+        max-width: 500px;
+        margin-left: auto;
+        margin-right: auto;
+        line-height: 1.6;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+        .recycling-hero {
+            padding: 2.5rem 0;
+        }
+
+        .hero-icon {
+            font-size: 3rem;
+            right: -1rem;
+        }
+
+        .product-header {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .urgency-countdown {
+            width: 70px;
+            height: 70px;
+        }
+
+        .countdown-days {
+            font-size: 1.5rem;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .filter-group {
+            width: 100%;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+        }
+
+        .option-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Hero Section -->
+    <div class="recycling-hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="display-4 fw-bold mb-3">
+                    <i class="bi bi-recycle me-3"></i>
+                    Suggerimenti di Riciclo
+                </h1>
+                <p class="lead mb-0">
+                    Trasforma il cibo scaduto in risorse preziose. Scopri come donare, compostare e riutilizzare creativamente i tuoi prodotti per un impatto positivo sull'ambiente.
+                </p>
+            </div>
+            <i class="bi bi-leaf hero-icon"></i>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Filter Bar -->
+        <div class="filter-bar" id="filterBar">
+            <div class="filter-group">
+                <label for="categoryFilter">Categoria:</label>
+                <select id="categoryFilter">
+                    <option value="">Tutte</option>
+                    <option value="verdura">Verdura</option>
+                    <option value="frutta">Frutta</option>
+                    <option value="pane">Pane</option>
+                    <option value="altro">Altro</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="priorityFilter">Priorità:</label>
+                <select id="priorityFilter">
+                    <option value="">Tutte</option>
+                    <option value="high">Alta</option>
+                    <option value="medium">Media</option>
+                    <option value="low">Bassa</option>
+                </select>
+            </div>
+
+            <div class="filter-group flex-grow-1">
+                <label for="searchInput">Cerca:</label>
+                <input type="text" id="searchInput" placeholder="Cerca prodotto...">
+            </div>
+
+            <button class="btn btn-outline-success" id="resetBtn">
+                <i class="bi bi-arrow-clockwise me-2"></i>
+                Ripristina
+            </button>
+        </div>
+
+        <!-- Stats -->
+        {% if total_products > 0 %}
+        <div class="stats-container">
+            <div class="stat-card">
+                <span class="stat-number">{{ total_products }}</span>
+                <p class="stat-label">Prodotti Scaduti</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">{{ recycling_suggestions|length }}</span>
+                <p class="stat-label">Con Suggerimenti</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">
+                    {% set total_options = 0 %}
+                    {% for suggestion in recycling_suggestions %}
+                        {% set total_options = total_options + suggestion.recycling_options|length %}
+                    {% endfor %}
+                    {{ total_options }}
+                </span>
+                <p class="stat-label">Opzioni di Riciclo</p>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number">
+                    {% set high_priority = 0 %}
+                    {% for suggestion in recycling_suggestions %}
+                        {% for option in suggestion.recycling_options %}
+                            {% if option.priority == 'high' %}
+                                {% set high_priority = high_priority + 1 %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    {{ high_priority }}
+                </span>
+                <p class="stat-label">Urgenti</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Recycling Suggestions -->
+        {% if recycling_suggestions %}
+            <div id="recyclingSuggestions">
+                {% for suggestion in recycling_suggestions %}
+                <div class="recycling-card" data-category="{{ suggestion.product.category|lower }}" data-product="{{ suggestion.product_name|lower }}">
+                    <div class="product-header">
+                        <div class="product-info">
+                            <h3>{{ suggestion.product_name }}</h3>
+                            <div class="product-meta">
+                                <span class="meta-badge">
+                                    <i class="bi bi-tag-fill"></i>
+                                    {{ suggestion.product.category }}
+                                </span>
+                                <span class="meta-badge">
+                                    <i class="bi bi-box-fill"></i>
+                                    {{ suggestion.product.quantity }} {{ suggestion.product.unit }}
+                                </span>
+                                <span class="meta-badge">
+                                    <i class="bi bi-calendar-x"></i>
+                                    {{ suggestion.product.expiry_date.strftime('%d/%m/%Y') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Urgency Countdown -->
+                        {% set days_overdue = (today - suggestion.product.expiry_date).days %}
+                        <div class="urgency-countdown">
+                            <div class="countdown-text">
+                                <div class="countdown-days">{{ days_overdue }}</div>
+                                <div class="countdown-label">giorni fa</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recycling-options">
+                        <div class="options-title">
+                            <i class="bi bi-lightbulb-fill"></i>
+                            Opzioni di Riciclo ({{ suggestion.recycling_options|length }})
+                        </div>
+
+                        {% for option in suggestion.recycling_options %}
+                        <div class="recycling-option {{ option.priority }}-priority" data-priority="{{ option.priority }}">
+                            <div class="option-header">
+                                <div class="option-title-group">
+                                    <i class="bi {{ option.icon }} option-icon"></i>
+                                    <h6 class="option-title">{{ option.title }}</h6>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span class="priority-badge priority-{{ option.priority }}">
+                                        {{ option.priority }}
+                                    </span>
+                                    <button class="option-collapse-btn collapsed" data-option="{{ loop.index0 }}">▼</button>
+                                </div>
+                            </div>
+
+                            <p class="option-description">{{ option.description }}</p>
+
+                            <div class="option-details" id="option-{{ loop.index0 }}">
+                                {% if option.instructions %}
+                                <div class="detail-section">
+                                    <div class="detail-title">
+                                        <i class="bi bi-list-ol"></i>
+                                        Istruzioni
+                                    </div>
+                                    <ul class="instructions-list">
+                                        {% for instruction in option.instructions %}
+                                        <li>{{ instruction }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if option.benefits %}
+                                <div class="detail-section">
+                                    <div class="detail-title">
+                                        <i class="bi bi-star-fill"></i>
+                                        Benefici
+                                    </div>
+                                    <ul class="benefits-list">
+                                        {% for benefit in option.benefits %}
+                                        <li>{{ benefit }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                {% if option.contact_info %}
+                                <div class="detail-section">
+                                    <div class="detail-title">
+                                        <i class="bi bi-telephone-fill"></i>
+                                        Contatti
+                                    </div>
+                                    <div class="info-box contact">
+                                        {{ option.contact_info }}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                {% if option.requirements %}
+                                <div class="detail-section">
+                                    <div class="detail-title">
+                                        <i class="bi bi-info-circle-fill"></i>
+                                        Requisiti
+                                    </div>
+                                    <div class="info-box requirements">
+                                        {{ option.requirements }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="empty-state">
+                <i class="bi bi-check-circle empty-state-icon"></i>
+                <h3>Nessun Prodotto Scaduto</h3>
+                <p>
+                    Ottimo lavoro! Non hai prodotti scaduti da riciclare al momento.
+                    <br>
+                    Continua così per ridurre gli sprechi alimentari!
+                </p>
+                <a href="{{ url_for('products') }}" class="btn btn-success btn-lg">
+                    <i class="bi bi-box-seam me-2"></i>
+                    Vai alla Dispensa
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // === FILTER LOGIC ===
+    const categoryFilter = document.getElementById('categoryFilter');
+    const priorityFilter = document.getElementById('priorityFilter');
+    const searchInput = document.getElementById('searchInput');
+    const resetBtn = document.getElementById('resetBtn');
+    const recyclingSuggestions = document.getElementById('recyclingSuggestions');
+
+    function filterSuggestions() {
+        if (!recyclingSuggestions) return;
+
+        const cards = recyclingSuggestions.querySelectorAll('.recycling-card');
+        const category = categoryFilter ? categoryFilter.value.toLowerCase() : '';
+        const priority = priorityFilter ? priorityFilter.value.toLowerCase() : '';
+        const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
+
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const cardCategory = card.dataset.category || '';
+            const cardProduct = card.dataset.product || '';
+            const options = card.querySelectorAll('.recycling-option');
+            let hasPriorityMatch = !priority;
+
+            options.forEach(option => {
+                if (priority && option.dataset.priority === priority) {
+                    hasPriorityMatch = true;
+                }
+            });
+
+            const categoryMatch = !category || cardCategory.includes(category);
+            const productMatch = !searchTerm || cardProduct.includes(searchTerm);
+            const priorityMatch = hasPriorityMatch;
+
+            const isVisible = categoryMatch && productMatch && priorityMatch;
+            card.style.display = isVisible ? 'block' : 'none';
+
+            if (isVisible) visibleCount++;
+        });
+
+        if (visibleCount === 0) {
+            if (!document.getElementById('noResultsMsg')) {
+                const msg = document.createElement('div');
+                msg.id = 'noResultsMsg';
+                msg.className = 'empty-state';
+                msg.innerHTML = `
+                    <i class="bi bi-search empty-state-icon"></i>
+                    <h3>Nessun risultato trovato</h3>
+                    <p>Prova a modificare i filtri</p>
+                `;
+                recyclingSuggestions.appendChild(msg);
+            }
+        } else {
+            const noResultsMsg = document.getElementById('noResultsMsg');
+            if (noResultsMsg) noResultsMsg.remove();
+        }
+    }
+
+    if (categoryFilter) categoryFilter.addEventListener('change', filterSuggestions);
+    if (priorityFilter) priorityFilter.addEventListener('change', filterSuggestions);
+    if (searchInput) searchInput.addEventListener('keyup', filterSuggestions);
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            if (categoryFilter) categoryFilter.value = '';
+            if (priorityFilter) priorityFilter.value = '';
+            if (searchInput) searchInput.value = '';
+            filterSuggestions();
+        });
+    }
+
+    // === OPTION COLLAPSE LOGIC ===
+    document.querySelectorAll('.option-collapse-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const optionIdx = this.dataset.option;
+            const detailsEl = document.getElementById(`option-${optionIdx}`);
+
+            if (detailsEl) {
+                detailsEl.classList.toggle('show');
+                this.classList.toggle('collapsed');
+            }
+        });
+    });
+
+    // === AUTO EXPAND HIGH PRIORITY ===
+    document.querySelectorAll('.recycling-option.high-priority').forEach(option => {
+        const btn = option.querySelector('.option-collapse-btn');
+        if (btn) {
+            const optionIdx = btn.dataset.option;
+            const detailsEl = document.getElementById(`option-${optionIdx}`);
+            if (detailsEl) {
+                detailsEl.classList.add('show');
+                btn.classList.remove('collapsed');
+            }
+        }
+    });
+
+    // === SMOOTH SCROLL ON FILTER ===
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', function() {
+            if (recyclingSuggestions) {
+                recyclingSuggestions.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

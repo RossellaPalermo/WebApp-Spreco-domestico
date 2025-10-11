@@ -17,17 +17,9 @@ class Config:
 
     # ===== DATABASE =====
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'mysql+pymysql://root:root@localhost/food_waste_app?charset=utf8mb4'
+        'sqlite:///foodflow.db'
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-
-    # Pool di connessioni per performance migliori
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        'pool_size': 10,
-        'pool_recycle': 3600,
-        'pool_pre_ping': True,
-        'max_overflow': 20
-    }
 
     # ===== API KEYS =====
     GROQ_API_KEY = os.environ.get('GROQ_API_KEY')  # La chiave deve essere impostata come variabile d'ambiente

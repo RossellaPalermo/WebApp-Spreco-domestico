@@ -4,7 +4,11 @@ Funzioni intelligenti per logica business
 """
 
 from datetime import datetime, timedelta
-from sqlalchemy import func
+try:
+    from sqlalchemy import func
+except ImportError:
+    # Fallback per compatibilità
+    from flask_sqlalchemy import func
 from . import db
 from .models import (
     User, UserStats, Product, ShoppingList, ShoppingItem,
@@ -38,6 +42,7 @@ POINTS_TABLE = {
     'achieve_nutrition_goal': 20,
     'create_recipe': 5,
     'first_product': 50,  # Badge milestone
+    'meal_plan_generated': 25,  # Generazione piano pasti AI
 }
 
 
@@ -63,6 +68,65 @@ def get_expiring_products(user_id, days=7):
         Product.expiry_date <= cutoff_date,
         Product.wasted == False
     ).order_by(Product.expiry_date.asc()).all()
+
+
+def get_expired_products(user_id, days_overdue=0):
+    """
+    Recupera prodotti scaduti (oltre la data di scadenza)
+    
+    Args:
+        user_id: ID utente
+        days_overdue: Giorni oltre la scadenza (default 0 = scaduti oggi)
+    
+    Returns:
+        Lista di Product objects scaduti
+    """
+    cutoff_date = datetime.now().date() - timedelta(days=days_overdue)
+    
+    return Product.query.filter(
+        Product.user_id == user_id,
+        Product.expiry_date < cutoff_date,
+        Product.wasted == False
+    ).order_by(Product.expiry_date.desc()).all()
+
+
+def get_recycling_suggestions(user_id):
+    """
+    Ottiene suggerimenti di riciclo per prodotti scaduti
+    
+    Args:
+        user_id: ID utente
+    
+    Returns:
+        dict: Suggerimenti di riciclo con AI
+    """
+    try:
+        # Recupera prodotti scaduti (ultimi 7 giorni)
+        expired_products = get_expired_products(user_id, days_overdue=7)
+        
+        if not expired_products:
+            return {
+                'success': True,
+                'suggestions': [],
+                'total_products': 0,
+                'message': 'Nessun prodotto scaduto trovato'
+            }
+        
+        # Genera suggerimenti con AI
+        from .ai_functions import ai_suggest_food_recycling
+        suggestions = ai_suggest_food_recycling(expired_products, user_id)
+        
+        return suggestions
+        
+    except Exception as e:
+        from flask import current_app
+        current_app.logger.error(f"get_recycling_suggestions error: {e}")
+        return {
+            'success': False,
+            'suggestions': [],
+            'total_products': 0,
+            'message': 'Errore nel recupero dei suggerimenti'
+        }
 
 
 def get_low_stock_products(user_id, threshold_multiplier=1.0):
@@ -611,7 +675,21 @@ def smart_notification_system(user_id):
                 'count': len(low_stock)
             })
         
-        # 4. Profilo nutrizionale incompleto
+        # 4. Prodotti scaduti con suggerimenti di riciclo
+        expired_products = get_expired_products(user_id, days_overdue=7)
+        if expired_products:
+            recycling_data = get_recycling_suggestions(user_id)
+            if recycling_data.get('success') and recycling_data.get('total_products', 0) > 0:
+                notifications.append({
+                    'type': 'info',
+                    'title': 'Suggerimenti di Riciclo Disponibili',
+                    'message': f'{len(expired_products)} prodotti scaduti con opzioni di riciclo',
+                    'action': 'view_recycling',
+                    'priority': 'medium',
+                    'count': len(expired_products)
+                })
+        
+        # 5. Profilo nutrizionale incompleto
         profile = NutritionalProfile.query.filter_by(user_id=user_id).first()
         if not profile:
             notifications.append({

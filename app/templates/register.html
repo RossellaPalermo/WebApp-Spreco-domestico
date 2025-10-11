@@ -685,8 +685,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Validazione Form Submit
     form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        
         // Controlla se tutti i campi sono validi
         const isValid = form.checkValidity();
         const passwordsMatch = passwordInput.value === confirmPasswordInput.value;
@@ -696,31 +694,35 @@ document.addEventListener('DOMContentLoaded', function() {
         form.classList.add('was-validated');
         
         if (!isValid) {
+            e.preventDefault();
             showNotification('danger', '⚠️ Compila correttamente tutti i campi richiesti');
-            return;
+            return false;
         }
         
         if (!passwordsMatch) {
+            e.preventDefault();
             showNotification('danger', '⚠️ Le password non coincidono');
             confirmPasswordInput.focus();
-            return;
+            return false;
         }
         
         if (!termsAccepted) {
+            e.preventDefault();
             showNotification('danger', '⚠️ Devi accettare i Termini e Condizioni');
-            return;
+            return false;
         }
         
-        // Mostra loading state
+        // Se tutto è valido, mostra loading state e procedi
         const btnText = submitBtn.querySelector('span');
         const btnIcon = submitBtn.querySelector('i');
         
+        submitBtn.disabled = true;
         submitBtn.classList.add('loading');
         btnIcon.className = 'spinner';
         btnText.textContent = 'Creazione account in corso...';
         
-        // Submit form
-        form.submit();
+        // Permetti l'invio del form
+        return true;
     });
 
     // Funzione notifiche

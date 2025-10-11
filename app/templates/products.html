@@ -132,7 +132,13 @@
     font-weight: 600;
     border: none;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    text-decoration: none;
+    color: inherit;
 }
 
 .btn-edit {
@@ -142,24 +148,56 @@
 
 .btn-edit:hover {
     background: #E2E8F0;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 }
 
 .btn-consume {
-    background: rgba(16,185,129,0.1);
+    background: rgba(16,185,129,0.15);
     color: #10B981;
+    border: 1px solid rgba(16,185,129,0.3);
 }
 
 .btn-consume:hover {
-    background: rgba(16,185,129,0.2);
+    background: #10B981;
+    color: white;
+    border-color: #10B981;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16,185,129,0.3);
 }
 
 .btn-waste {
-    background: rgba(239,68,68,0.1);
+    background: rgba(239,68,68,0.15);
     color: #EF4444;
+    border: 1px solid rgba(239,68,68,0.3);
 }
 
 .btn-waste:hover {
-    background: rgba(239,68,68,0.2);
+    background: #EF4444;
+    color: white;
+    border-color: #EF4444;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239,68,68,0.3);
+}
+
+.btn-recycle {
+    background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(5,150,105,0.15) 100%);
+    color: #10B981;
+    border: 2px solid #10B981;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.btn-recycle:hover {
+    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    color: white;
+    border-color: #10B981;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16,185,129,0.4);
+}
+
+.btn-recycle i {
+    font-size: 1rem;
 }
 
 .empty-state {
@@ -187,6 +225,10 @@
     .product-details {
         grid-template-columns: 1fr;
     }
+    
+    .btn-action {
+        padding: 0.65rem 0.5rem;
+    }
 }
 </style>
 {% endblock %}
@@ -204,9 +246,14 @@
                 <p class="mb-0 opacity-75">{{ products|length }} prodotti monitorati • Gestisci e riduci gli sprechi</p>
             </div>
             <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <a href="{{ url_for('add_product') }}" class="btn btn-light btn-lg">
-                    <i class="bi bi-plus-circle me-2"></i>Aggiungi Prodotto
-                </a>
+                <div class="d-flex gap-2 justify-content-md-end">
+                    <a href="{{ url_for('recycling_suggestions') }}" class="btn btn-success btn-lg">
+                        <i class="bi bi-recycle me-2"></i>Suggerimenti Riciclo
+                    </a>
+                    <a href="{{ url_for('add_product') }}" class="btn btn-light btn-lg">
+                        <i class="bi bi-plus-circle me-2"></i>Aggiungi Prodotto
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -294,9 +341,17 @@
                     <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn-action btn-edit" title="Modifica">
                         <i class="bi bi-pencil"></i>
                     </a>
+                    {% if days_left <= 0 %}
+                    <a href="{{ url_for('recycling_suggestions') }}" class="btn-action btn-recycle" title="Suggerimenti Riciclo">
+                        <i class="bi bi-recycle"></i>
+                        <span>Ricicla</span>
+                    </a>
+                    {% else %}
                     <button class="btn-action btn-consume" onclick="consumeProduct({{ product.id }})" title="Consuma">
-                        <i class="bi bi-check-circle"></i> Usa
+                        <i class="bi bi-check-circle"></i> 
+                        <span>Usa</span>
                     </button>
+                    {% endif %}
                     <button class="btn-action btn-waste" onclick="wasteProduct({{ product.id }})" title="Spreca">
                         <i class="bi bi-trash"></i>
                     </button>
@@ -488,11 +543,9 @@ document.addEventListener('DOMContentLoaded', function(){
     const wasteEl = document.getElementById('wasteModal');
     if (wasteEl) {
         wasteEl.addEventListener('hidden.bs.modal', function(){
-            // Remove any stray backdrops and modal-open class
             document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
             document.body.classList.remove('modal-open');
             document.body.style.removeProperty('padding-right');
-            // Reset slider/button state
             const slider = document.getElementById('wastePercentage');
             const disp = document.getElementById('wastePercentageDisplay');
             if (slider && disp) { slider.value = 100; disp.textContent = '100%'; }

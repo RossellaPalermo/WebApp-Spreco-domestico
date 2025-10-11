@@ -19,8 +19,8 @@ from .models import (
 )
 
 from .smart_functions import (
-    get_expiring_products, get_low_stock_products,
-    award_points, calculate_waste_reduction_score,
+    get_expiring_products, get_low_stock_products, get_expired_products,
+    get_recycling_suggestions, award_points, calculate_waste_reduction_score,
     calculate_nutritional_goals, smart_notification_system,
     auto_update_shopping_from_meal_plan, upsert_missing_ingredients_to_shopping_list
 )
@@ -29,7 +29,8 @@ from .ai_functions import (
     suggest_recipes,
     ai_optimize_meal_planning,
     ai_suggest_shopping_list,
-    ai_generate_recipe_suggestions
+    ai_generate_recipe_suggestions,
+    ai_chatbot_response
 )
 
 from .analytics import get_comprehensive_analytics
@@ -89,6 +90,8 @@ def register_routes(app):
             # Recupera dati dashboard
             expiring_products = get_expiring_products(current_user.id)
             low_stock_products = get_low_stock_products(current_user.id)
+            expired_products = get_expired_products(current_user.id, days_overdue=7)
+            recycling_suggestions = get_recycling_suggestions(current_user.id)
             
             # User stats (crea se non esiste)
             stats = UserStats.query.filter_by(user_id=current_user.id).first()
@@ -124,6 +127,8 @@ def register_routes(app):
                 'dashboard_modern.html',
                 expiring_products=expiring_products,
                 low_stock_products=low_stock_products,
+                expired_products=expired_products,
+                recycling_suggestions=recycling_suggestions,
                 stats=stats,
                 waste_score=waste_score,
                 badges=badges,
@@ -784,7 +789,11 @@ def register_routes(app):
                             tokens.append(token)
                     return json.dumps(tokens)
 
-                profile.dietary_restrictions = _to_json_array_string(request.form.get('dietary_restrictions', ''))
+                # Gestisci restrizioni alimentari (checkbox multiple)
+                dietary_restrictions = request.form.getlist('dietary_restrictions')
+                profile.dietary_restrictions = json.dumps(dietary_restrictions) if dietary_restrictions else '[]'
+                
+                # Gestisci allergie
                 profile.allergies = _to_json_array_string(request.form.get('allergies', ''))
                 
                 db.session.commit()
@@ -827,6 +836,18 @@ def register_routes(app):
                     custom_meal=custom_meal
                 )
                 db.session.add(meal_plan)
+                db.session.flush()  # Per ottenere l'ID
+                
+                # Calcola valori nutrizionali con AI
+                from .ai_functions import ai_estimate_meal_calories
+                nutrition = ai_estimate_meal_calories(custom_meal, meal_type)
+                
+                meal_plan.calories = nutrition['calories']
+                meal_plan.protein = nutrition['protein']
+                meal_plan.carbs = nutrition['carbs']
+                meal_plan.fat = nutrition['fat']
+                meal_plan.fiber = nutrition['fiber']
+                
                 db.session.commit()
                 flash('Pasto aggiunto al piano!', 'success')
                 return redirect(url_for('meal_planning'))
@@ -846,7 +867,12 @@ def register_routes(app):
                 'id': mp.id,
                 'date': mp.date.isoformat() if mp.date else None,
                 'meal_type': mp.meal_type,
-                'custom_meal': mp.custom_meal
+                'custom_meal': mp.custom_meal,
+                'calories': mp.calories,
+                'protein': mp.protein,
+                'carbs': mp.carbs,
+                'fat': mp.fat,
+                'fiber': mp.fiber
             }
             for mp in meal_plans
         ]
@@ -920,6 +946,95 @@ def register_routes(app):
             mimetype='text/csv',
             headers={'Content-Disposition': 'attachment; filename=analytics.csv'}
         )
+
+
+    # ========================================
+    # RICICLO E SUGGERIMENTI
+    # ========================================
+    
+    @app.route('/recycling-suggestions')
+    @login_required
+    def recycling_suggestions():
+        """Pagina suggerimenti di riciclo per prodotti scaduti"""
+        try:
+            # Recupera prodotti scaduti
+            expired_products = get_expired_products(current_user.id, days_overdue=7)
+            
+            # Recupera suggerimenti di riciclo
+            recycling_data = get_recycling_suggestions(current_user.id)
+            
+            return render_template(
+                'recycling_suggestions.html',
+                expired_products=expired_products,
+                recycling_suggestions=recycling_data.get('suggestions', []),
+                total_products=recycling_data.get('total_products', 0),
+                today=datetime.now().date()
+            )
+            
+        except Exception as e:
+            app.logger.error(f"Error loading recycling suggestions: {e}")
+            flash('Errore nel caricamento dei suggerimenti di riciclo', 'danger')
+            return render_template('recycling_suggestions.html', 
+                                expired_products=[], 
+                                recycling_suggestions=[], 
+                                total_products=0)
+    
+    
+    @app.route('/api/recycling-suggestions')
+    @login_required
+    def api_recycling_suggestions():
+        """API per ottenere suggerimenti di riciclo"""
+        try:
+            recycling_data = get_recycling_suggestions(current_user.id)
+            return jsonify(recycling_data)
+            
+        except Exception as e:
+            app.logger.error(f"API recycling suggestions error: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'Errore nel recupero dei suggerimenti',
+                'suggestions': []
+            }), 500
+
+
+    # ========================================
+    # CHATBOT
+    # ========================================
+    
+    @app.route('/chatbot')
+    @login_required
+    def chatbot():
+        """Pagina chatbot"""
+        return render_template('chatbot.html')
+    
+    
+    @app.route('/api/chatbot/message', methods=['POST'])
+    @login_required
+    def api_chatbot_message():
+        """API per inviare messaggi al chatbot"""
+        try:
+            data = request.get_json()
+            user_message = data.get('message', '').strip()
+            conversation_context = data.get('context', '')
+            
+            if not user_message:
+                return jsonify({
+                    'success': False,
+                    'message': 'Messaggio vuoto'
+                }), 400
+            
+            # Genera risposta con AI
+            response = ai_chatbot_response(user_message, current_user.id, conversation_context)
+            
+            return jsonify(response)
+            
+        except Exception as e:
+            app.logger.error(f"Chatbot API error: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'Errore nel chatbot',
+                'response': 'Mi dispiace, si è verificato un errore. Riprova più tardi!'
+            }), 500
     
     
     # ========================================
@@ -956,6 +1071,116 @@ def register_routes(app):
                 'success': False,
                 'ingredients_based': [],
                 'expiring_based': []
+            }), 500
+
+    @app.route('/api/ai-meal-plan', methods=['POST'])
+    @login_required
+    def api_ai_meal_plan():
+        """API generazione piano pasti AI"""
+        try:
+            # Parametri
+            days = request.json.get('days', 7) if request.is_json else 7
+            
+            # Genera piano pasti con AI
+            meal_plan = ai_optimize_meal_planning(current_user.id, days)
+            
+            if not meal_plan:
+                return jsonify({
+                    'success': False,
+                    'message': 'Impossibile generare piano pasti. Verifica di avere ingredienti nella dispensa.'
+                }), 400
+            
+            # Salva piano pasti nel database
+            saved_meals = []
+            today = datetime.now().date()
+            
+            for day_offset, day_meals in meal_plan.items():
+                for meal_data in day_meals:
+                    meal_date = today + timedelta(days=day_offset)
+                    
+                    # Controlla se esiste già un pasto per questa data/tipo
+                    existing = MealPlan.query.filter_by(
+                        user_id=current_user.id,
+                        date=meal_date,
+                        meal_type=meal_data['meal_type']
+                    ).first()
+                    
+                    if existing:
+                        # Aggiorna pasto esistente
+                        existing.custom_meal = meal_data['description']
+                        existing.calories = meal_data.get('calories', 0)
+                        existing.protein = meal_data.get('protein', 0)
+                        existing.carbs = meal_data.get('carbs', 0)
+                        existing.fat = meal_data.get('fat', 0)
+                        saved_meals.append(existing)
+                    else:
+                        # Crea nuovo pasto
+                        meal = MealPlan(
+                            user_id=current_user.id,
+                            date=meal_date,
+                            meal_type=meal_data['meal_type'],
+                            custom_meal=meal_data['description'],
+                            calories=meal_data.get('calories', 0),
+                            protein=meal_data.get('protein', 0),
+                            carbs=meal_data.get('carbs', 0),
+                            fat=meal_data.get('fat', 0)
+                        )
+                        db.session.add(meal)
+                        saved_meals.append(meal)
+            
+            db.session.commit()
+            
+            # Award points per generazione piano
+            award_points(current_user.id, 'meal_plan_generated', 25)
+            
+            return jsonify({
+                'success': True,
+                'message': f'Piano pasti generato con successo! {len(saved_meals)} pasti creati.',
+                'meals_created': len(saved_meals),
+                'meal_plan': meal_plan
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            app.logger.error(f"AI meal plan generation error: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'Errore nella generazione del piano pasti'
+            }), 500
+
+    @app.route('/api/recalculate-calories/<int:meal_id>', methods=['POST'])
+    @login_required
+    def recalculate_calories(meal_id):
+        """Ricalcola le calorie di un pasto con AI"""
+        try:
+            meal_plan = MealPlan.query.filter_by(id=meal_id, user_id=current_user.id).first()
+            
+            if not meal_plan:
+                return jsonify({'success': False, 'message': 'Pasto non trovato'}), 404
+            
+            from .ai_functions import ai_estimate_meal_calories
+            nutrition = ai_estimate_meal_calories(meal_plan.custom_meal, meal_plan.meal_type)
+            
+            meal_plan.calories = nutrition['calories']
+            meal_plan.protein = nutrition['protein']
+            meal_plan.carbs = nutrition['carbs']
+            meal_plan.fat = nutrition['fat']
+            meal_plan.fiber = nutrition['fiber']
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Calorie ricalcolate con successo!',
+                'nutrition': nutrition
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"recalculate_calories error: {e}")
+            return jsonify({
+                'success': False,
+                'message': 'Errore nel ricalcolo delle calorie'
             }), 500
 
     # ========================================
@@ -1006,3 +1231,4 @@ def register_routes(app):
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'message': str(e)}), 500
+        

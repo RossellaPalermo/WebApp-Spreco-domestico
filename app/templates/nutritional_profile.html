@@ -330,30 +330,30 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="diet-checkbox">
-                                        <input type="checkbox" name="vegetarian" value="1">
-                                        <span>Vegetariano</span>
+                                        <input type="checkbox" name="dietary_restrictions" value="vegetarian" id="vegetarian">
+                                        <label for="vegetarian">Vegetariano</label>
                                     </div>
                                     <div class="diet-checkbox">
-                                        <input type="checkbox" name="vegan" value="1">
-                                        <span>Vegano</span>
+                                        <input type="checkbox" name="dietary_restrictions" value="vegan" id="vegan">
+                                        <label for="vegan">Vegano</label>
                                     </div>
                                     <div class="diet-checkbox">
-                                        <input type="checkbox" name="pescatarian" value="1">
-                                        <span>Pescetariano</span>
+                                        <input type="checkbox" name="dietary_restrictions" value="pescatarian" id="pescatarian">
+                                        <label for="pescatarian">Pescetariano</label>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="diet-checkbox">
-                                        <input type="checkbox" name="gluten_free" value="1">
-                                        <span>Senza Glutine</span>
+                                        <input type="checkbox" name="dietary_restrictions" value="gluten_free" id="gluten_free">
+                                        <label for="gluten_free">Senza Glutine</label>
                                     </div>
                                     <div class="diet-checkbox">
-                                        <input type="checkbox" name="lactose_free" value="1">
-                                        <span>Senza Lattosio</span>
+                                        <input type="checkbox" name="dietary_restrictions" value="lactose_free" id="lactose_free">
+                                        <label for="lactose_free">Senza Lattosio</label>
                                     </div>
                                     <div class="diet-checkbox">
-                                        <input type="checkbox" name="kosher" value="1">
-                                        <span>Kosher/Halal</span>
+                                        <input type="checkbox" name="dietary_restrictions" value="kosher" id="kosher">
+                                        <label for="kosher">Kosher/Halal</label>
                                     </div>
                                 </div>
                             </div>
@@ -382,11 +382,15 @@
                     <i class="bi bi-calculator text-primary me-2"></i>
                     Metriche Calcolate
                 </h5>
+                <div class="alert alert-info mb-4" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.2);">
+                    <i class="bi bi-info-circle me-2"></i>
+                    <strong>Nota:</strong> Tutti i valori sono calcolati su base giornaliera e personalizzati in base al tuo profilo nutrizionale.
+                </div>
 
                 <div class="metric-display">
                     <div class="metric-value" id="bmrDisplay">-</div>
                     <div class="metric-label">BMR (Metabolismo Basale)</div>
-                    <div class="metric-sublabel">Calorie a riposo</div>
+                    <div class="metric-sublabel">Calorie a riposo al giorno</div>
                 </div>
 
                 <div class="metric-display">
@@ -397,7 +401,7 @@
 
                 <div class="metric-display">
                     <div class="metric-value text-success" id="targetDisplay">-</div>
-                    <div class="metric-label">Obiettivo Calorico</div>
+                    <div class="metric-label">Obiettivo Calorico Giornaliero</div>
                     <div class="metric-sublabel" id="targetLabel">Per il tuo obiettivo</div>
                 </div>
             </div>
@@ -407,15 +411,19 @@
             <div class="profile-card">
                 <h5 class="mb-4">
                     <i class="bi bi-pie-chart text-success me-2"></i>
-                    Ripartizione Macronutrienti
+                    Ripartizione Macronutrienti Giornalieri
                 </h5>
+                <div class="alert alert-success mb-4" style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <i class="bi bi-lightbulb me-2"></i>
+                    <strong>Obiettivi giornalieri:</strong> Questi valori rappresentano il tuo fabbisogno nutrizionale giornaliero ottimale.
+                </div>
 
                 <div class="row g-3">
                     <div class="col-6">
                         <div class="macro-card">
                             <i class="bi bi-egg" style="color: #10B981; font-size: 1.5rem;"></i>
                             <div class="macro-value text-success">{{ goals.daily_protein }}g</div>
-                            <small class="text-muted">Proteine</small>
+                            <small class="text-muted">Proteine/giorno</small>
                             <div class="macro-bar">
                                 <div class="macro-fill" style="width: 100%; background: #10B981;"></div>
                             </div>
@@ -426,7 +434,7 @@
                         <div class="macro-card">
                             <i class="bi bi-wheat" style="color: #3B82F6; font-size: 1.5rem;"></i>
                             <div class="macro-value text-info">{{ goals.daily_carbs }}g</div>
-                            <small class="text-muted">Carboidrati</small>
+                            <small class="text-muted">Carboidrati/giorno</small>
                             <div class="macro-bar">
                                 <div class="macro-fill" style="width: 100%; background: #3B82F6;"></div>
                             </div>
@@ -437,7 +445,7 @@
                         <div class="macro-card">
                             <i class="bi bi-droplet" style="color: #F59E0B; font-size: 1.5rem;"></i>
                             <div class="macro-value text-warning">{{ goals.daily_fat }}g</div>
-                            <small class="text-muted">Grassi</small>
+                            <small class="text-muted">Grassi/giorno</small>
                             <div class="macro-bar">
                                 <div class="macro-fill" style="width: 100%; background: #F59E0B;"></div>
                             </div>
@@ -448,7 +456,7 @@
                         <div class="macro-card">
                             <i class="bi bi-flower1" style="color: #8B5CF6; font-size: 1.5rem;"></i>
                             <div class="macro-value" style="color: #8B5CF6;">{{ goals.daily_fiber }}g</div>
-                            <small class="text-muted">Fibre</small>
+                            <small class="text-muted">Fibre/giorno</small>
                             <div class="macro-bar">
                                 <div class="macro-fill" style="width: 100%; background: #8B5CF6;"></div>
                             </div>
@@ -561,6 +569,21 @@ function updateBMI(bmi) {
     gauge.textContent = bmi;
     category.textContent = text;
 }
+
+// Pre-popola le checkbox delle restrizioni alimentari
+{% if profile and profile.dietary_restrictions %}
+try {
+    const restrictions = JSON.parse('{{ profile.dietary_restrictions|safe }}');
+    restrictions.forEach(restriction => {
+        const checkbox = document.querySelector(`input[name="dietary_restrictions"][value="${restriction}"]`);
+        if (checkbox) {
+            checkbox.checked = true;
+        }
+    });
+} catch (e) {
+    console.log('Errore nel parsing delle restrizioni:', e);
+}
+{% endif %}
 
 // Initialize if profile exists
 {% if profile %}

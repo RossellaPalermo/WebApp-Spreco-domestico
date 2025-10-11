@@ -305,10 +305,16 @@
                 <i class="bi bi-magic"></i>
             </div>
             <h6>Genera Piano AI</h6>
-            <p class="text-muted small mb-3">L'AI crea un piano settimanale bilanciato</p>
-            <button class="btn btn-primary btn-sm" onclick="generateWeeklyPlan(this)">
-                <i class="bi bi-robot me-1"></i>Genera
+            <p class="text-muted small mb-3">L'AI crea un piano settimanale bilanciato basato sui tuoi ingredienti</p>
+            <button class="btn btn-primary btn-sm" onclick="generateWeeklyPlan(this)" id="generateBtn">
+                <i class="bi bi-robot me-1"></i>Genera Piano
             </button>
+            <div class="mt-2">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Assicurati di avere ingredienti nella dispensa per risultati migliori
+                </small>
+            </div>
         </div>
 
         <div class="action-card">
@@ -502,7 +508,8 @@ function renderMealSlot(date, mealType, dayMeals) {
                 </div>
                 <div class="meal-name">${meal.custom_meal || meal.recipe?.name || 'Pasto'}</div>
                 <div class="meal-stats">
-                    <span><i class="bi bi-fire"></i> ~500 cal</span>
+                    <span><i class="bi bi-fire"></i> ${meal.calories || '~500'} cal</span>
+                    ${meal.protein ? `<span><i class="bi bi-droplet"></i> ${Math.round(meal.protein)}g P</span>` : ''}
                 </div>
                 <div class="d-flex gap-2 mt-2">
                     <button class="btn btn-sm btn-outline-success" onclick="addMealToShopping(${meal.id}, this)">
@@ -510,6 +517,9 @@ function renderMealSlot(date, mealType, dayMeals) {
                     </button>
                     <button class="btn btn-sm btn-outline-secondary" onclick="consumeMeal(${meal.id}, this)">
                         <i class="bi bi-check2-circle me-1"></i>Consuma
+                    </button>
+                    <button class="btn btn-sm btn-outline-info" onclick="recalculateCalories(${meal.id}, this)">
+                        <i class="bi bi-calculator me-1"></i>Ricalcola
                     </button>
                 </div>
                 <div class="mt-2" id="meal-badge-${meal.id}" style="display:none;">
@@ -591,13 +601,43 @@ function showNotification(type, message) {
     setTimeout(() => toast.remove(), 5000);
 }
 
-function generateWeeklyPlan(button) {
+async function generateWeeklyPlan(button) {
     setLoading(button, true);
-    setTimeout(() => {
+    
+    // Mostra notifica di inizio
+    showNotification('info', '🤖 L\'AI sta generando il tuo piano pasti personalizzato...');
+    
+    try {
+        const response = await fetch('/api/ai-meal-plan', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                days: 7
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', `✅ ${data.message}`);
+            // Mostra dettagli del piano generato
+            if (data.meals_created) {
+                showNotification('info', `📅 Creati ${data.meals_created} pasti per la settimana!`);
+            }
+            // Ricarica la pagina per mostrare i nuovi pasti
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification('danger', `❌ ${data.message || 'Errore nella generazione del piano'}`);
+            setLoading(button, false);
+        }
+        
+    } catch (error) {
+        console.error('Error generating meal plan:', error);
+        showNotification('danger', '❌ Errore di connessione. Riprova più tardi.');
         setLoading(button, false);
-        showNotification('success', 'Piano settimanale generato con successo!');
-        setTimeout(() => location.reload(), 1000);
-    }, 2000);
+    }
 }
 
 function updateShoppingList(button) {
@@ -672,6 +712,33 @@ async function consumeMeal(mealId, btn){
         btn.disabled = false;
         btn.innerHTML = original;
         showNotification('danger', 'Errore nel registrare il consumo');
+    }
+}
+
+async function recalculateCalories(mealId, btn) {
+    const original = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Calcolo...';
+    
+    try {
+        const res = await fetch(`/api/recalculate-calories/${mealId}`, { 
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+            showNotification('success', 'Calorie ricalcolate con successo!');
+            // Ricarica la pagina per mostrare i nuovi valori
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('danger', data.message || 'Errore nel ricalcolo');
+        }
+    } catch (e) {
+        showNotification('danger', 'Errore di connessione');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = original;
     }
 }
 

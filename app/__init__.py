@@ -10,10 +10,6 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-import pymysql
-
-# Fix per MySQL/MariaDB con SQLAlchemy
-pymysql.install_as_MySQLdb()
 
 # ===== INIZIALIZZA ESTENSIONI =====
 db = SQLAlchemy()
@@ -85,8 +81,11 @@ def create_app(config_name=None):
     # ===== LOG STARTUP =====
     app.logger.info(f'FoodFlow started in {config_name} mode')
     try:
-        engine_name = db.get_engine(app).name
-    except Exception:
+        with app.app_context():
+            engine = db.get_engine()
+            engine_name = engine.name if hasattr(engine, 'name') else str(engine.url.drivername)
+    except Exception as e:
+        app.logger.warning(f'Could not determine database engine: {e}')
         engine_name = 'Unknown'
     app.logger.info(f'Database engine: {engine_name}')
     
