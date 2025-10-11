@@ -1,4 +1,13 @@
-{% extends "base_modern.html" %}
+.hero-modern {
+    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
+    color: white;
+    padding: 6rem 0 4rem;
+    position: relative;
+    overflow: hidden;
+    min-height: 700px;
+    display: flex;
+    align-items: center;
+}{% extends "base_modern.html" %}
 
 {% block title %}FoodFlow - Gestione Intelligente Della Dispensa | Riduci Sprechi del 70%{% endblock %}
 
@@ -29,6 +38,44 @@
     50% { transform: scale(1.2); opacity: 0.5; }
 }
 
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
 .hero-badge {
     display: inline-flex;
     align-items: center;
@@ -47,6 +94,7 @@
     font-weight: 800;
     line-height: 1.2;
     margin-bottom: 1.5rem;
+    animation: slideInLeft 0.8s ease-out;
 }
 
 .hero-subtitle {
@@ -54,6 +102,7 @@
     opacity: 0.95;
     margin-bottom: 2rem;
     line-height: 1.6;
+    animation: slideInLeft 0.8s ease-out 0.1s backwards;
 }
 
 .cta-primary {
@@ -99,8 +148,9 @@
     border-radius: 20px;
     padding: 2rem;
     box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    transform: perspective(1000px) rotateY(-5deg);
-    transition: all 0.5s;
+    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+    transition: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+    animation: float 6s ease-in-out infinite;
 }
 
 .dashboard-mockup:hover {
@@ -132,7 +182,17 @@
     transition: all 0.3s;
     height: 100%;
     border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+    animation: scaleIn 0.6s ease-out backwards;
 }
+
+.feature-card-modern:nth-child(1) { animation-delay: 0.1s; }
+.feature-card-modern:nth-child(2) { animation-delay: 0.2s; }
+.feature-card-modern:nth-child(3) { animation-delay: 0.3s; }
+.feature-card-modern:nth-child(4) { animation-delay: 0.4s; }
+.feature-card-modern:nth-child(5) { animation-delay: 0.5s; }
+.feature-card-modern:nth-child(6) { animation-delay: 0.6s; }
 
 .feature-card-modern:hover {
     transform: translateY(-8px);
@@ -151,6 +211,11 @@
     margin-bottom: 1.5rem;
     background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
     color: white;
+    transition: all 0.3s ease;
+}
+
+.feature-card-modern:hover .feature-icon-modern {
+    transform: scale(1.15) rotate(10deg);
 }
 
 .feature-card-modern.premium {
@@ -219,6 +284,18 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     position: relative;
     text-align: center;
+    transition: all 0.3s ease;
+    animation: scaleIn 0.6s ease-out backwards;
+}
+
+.step-card:nth-child(1) { animation-delay: 0.1s; }
+.step-card:nth-child(2) { animation-delay: 0.2s; }
+.step-card:nth-child(3) { animation-delay: 0.3s; }
+.step-card:nth-child(4) { animation-delay: 0.4s; }
+
+.step-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
 }
 
 .step-number {
@@ -250,6 +327,307 @@
     display: none;
 }
 
+/* === SPONSORS SECTION === */
+.sponsors-landing-section {
+    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+    padding: 5rem 0;
+    border-top: 1px solid #FCD34D;
+    border-bottom: 1px solid #FCD34D;
+    position: relative;
+    overflow: hidden;
+}
+
+.sponsors-landing-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -200px;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.sponsors-landing-section::after {
+    content: '';
+    position: absolute;
+    bottom: -100px;
+    left: -200px;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.sponsors-landing-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.sponsors-landing-header h2 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    color: #92400E;
+    margin-bottom: 1rem;
+}
+
+.sponsors-landing-header p {
+    font-size: 1.1rem;
+    color: #B45309;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.sponsors-landing-carousel-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin: 2rem 0;
+}
+
+.sponsors-landing-carousel {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 1rem 0;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: #FCD34D #FEF3C7;
+}
+
+.sponsors-landing-carousel::-webkit-scrollbar {
+    height: 6px;
+}
+
+.sponsors-landing-carousel::-webkit-scrollbar-track {
+    background: #FEF3C7;
+    border-radius: 10px;
+}
+
+.sponsors-landing-carousel::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    border-radius: 10px;
+}
+
+/* SPONSOR CARD LANDING */
+.sponsor-card-landing {
+    background: white;
+    border: 2px solid #FCD34D;
+    border-radius: 16px;
+    padding: 1.5rem;
+    min-width: 300px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.1);
+    animation: slideInRight 0.6s ease-out backwards;
+}
+
+.sponsor-card-landing:nth-child(1) { animation-delay: 0.1s; }
+.sponsor-card-landing:nth-child(2) { animation-delay: 0.2s; }
+.sponsor-card-landing:nth-child(3) { animation-delay: 0.3s; }
+.sponsor-card-landing:nth-child(4) { animation-delay: 0.4s; }
+.sponsor-card-landing:nth-child(5) { animation-delay: 0.5s; }
+
+.sponsor-card-landing::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: -100px;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.sponsor-card-landing:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 30px rgba(245,158,11,0.25);
+    border-color: #F59E0B;
+}
+
+.sponsor-badge-landing {
+    position: absolute;
+    top: 1.25rem;
+    right: 1.25rem;
+    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    color: white;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(245,158,11,0.3);
+}
+
+.sponsor-badge-landing.gold {
+    background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
+    color: #92400E;
+}
+
+.sponsor-logo-landing {
+    width: 100%;
+    height: 100px;
+    background: #F9FAFB;
+    border-radius: 12px;
+    padding: 0.75rem;
+    border: 1px solid #F3F4F6;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.sponsor-logo-landing img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.sponsor-content-landing {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    position: relative;
+    z-index: 1;
+    margin-top: 0.5rem;
+}
+
+.sponsor-name-landing {
+    margin: 0;
+    font-weight: 700;
+    color: #92400E;
+    font-size: 1.2rem;
+}
+
+.sponsor-description-landing {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #B45309;
+    line-height: 1.5;
+}
+
+.sponsor-tags-landing {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.sponsor-tag-landing {
+    background: rgba(245,158,11,0.15);
+    color: #92400E;
+    padding: 0.3rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.sponsor-link-landing {
+    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 1;
+    border: none;
+    cursor: pointer;
+}
+
+.sponsor-link-landing:hover {
+    transform: translateX(4px);
+    box-shadow: 0 6px 15px rgba(245,158,11,0.4);
+    color: white;
+    text-decoration: none;
+}
+
+/* CAROUSEL NAVIGATION LANDING */
+.carousel-nav-landing {
+    background: white;
+    border: 2px solid #FCD34D;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #92400E;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+    font-size: 1.3rem;
+}
+
+.carousel-nav-landing:hover {
+    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    border-color: #F59E0B;
+    color: white;
+    transform: scale(1.1);
+}
+
+/* SPONSORS CTA LANDING */
+.sponsors-cta-landing {
+    text-align: center;
+    margin-top: 3rem;
+    padding: 2.5rem;
+    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+    border-radius: 16px;
+    color: white;
+    position: relative;
+    z-index: 2;
+    box-shadow: 0 8px 24px rgba(245,158,11,0.3);
+    animation: scaleIn 0.6s ease-out 0.6s backwards;
+}
+
+.sponsors-cta-landing h5 {
+    margin-bottom: 1rem;
+    font-weight: 700;
+    font-size: 1.4rem;
+}
+
+.sponsors-cta-landing p {
+    margin-bottom: 1.5rem;
+    font-size: 1.05rem;
+    opacity: 0.95;
+}
+
+.sponsors-cta-landing a {
+    background: white;
+    color: #F59E0B;
+    padding: 0.75rem 2rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s;
+}
+
+.sponsors-cta-landing a:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    color: #F59E0B;
+}
+
 /* FAQ */
 .faq-item {
     background: white;
@@ -259,7 +637,12 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     cursor: pointer;
     transition: all 0.3s;
+    animation: slideInLeft 0.6s ease-out backwards;
 }
+
+.faq-item:nth-child(1) { animation-delay: 0.1s; }
+.faq-item:nth-child(2) { animation-delay: 0.2s; }
+.faq-item:nth-child(3) { animation-delay: 0.3s; }
 
 .faq-item:hover {
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
@@ -290,6 +673,13 @@
     padding: 5rem 0;
     position: relative;
     overflow: hidden;
+    background-size: 200% 200%;
+    animation: gradientShift 8s ease infinite;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
 }
 
 .cta-final::before {
@@ -299,6 +689,15 @@
     right: -50px;
     font-size: 15rem;
     opacity: 0.1;
+    animation: float 8s ease-in-out infinite;
+}
+
+.cta-final h2 {
+    animation: slideInLeft 0.8s ease-out;
+}
+
+.cta-final .cta-primary {
+    animation: slideInRight 0.8s ease-out 0.2s backwards;
 }
 
 @media (max-width: 768px) {
@@ -312,6 +711,24 @@
     
     .step-card::after {
         display: none;
+    }
+
+    .sponsor-card-landing {
+        min-width: 280px;
+    }
+
+    .sponsors-landing-header h2 {
+        font-size: 1.75rem;
+    }
+
+    .carousel-nav-landing {
+        width: 44px;
+        height: 44px;
+        font-size: 1.1rem;
+    }
+
+    .sponsors-cta-landing {
+        padding: 1.5rem;
     }
 }
 </style>
@@ -526,7 +943,161 @@
     </div>
 </section>
 
+<!-- === SPONSORS SECTION === -->
+<section class="sponsors-landing-section">
+    <div class="container">
+        <div class="sponsors-landing-header">
+            <h2>I Nostri Partner</h2>
+            <p>Brand affidabili che condividono la nostra missione di sostenibilità e riduzione degli sprechi</p>
+        </div>
 
+        <!-- Sponsors Carousel -->
+        <div class="sponsors-landing-carousel-wrapper">
+            <button class="carousel-nav-landing" onclick="scrollSponsorsLeft()">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+
+            <div class="sponsors-landing-carousel" id="sponsorsLandingCarousel">
+                <!-- SPONSOR 1 -->
+                <div class="sponsor-card-landing">
+                    <div class="sponsor-badge-landing">Sponsor</div>
+                    
+                    <div class="sponsor-logo-landing">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%2300D563' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='20' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3EEcoBrand%3C/text%3E%3C/svg%3E" alt="EcoBrand">
+                    </div>
+
+                    <div class="sponsor-content-landing">
+                        <h5 class="sponsor-name-landing">EcoBrand</h5>
+                        <p class="sponsor-description-landing">Alimenti biologici certificati e sostenibili</p>
+                        
+                        <div class="sponsor-tags-landing">
+                            <span class="sponsor-tag-landing">Biologico</span>
+                            <span class="sponsor-tag-landing">Sostenibile</span>
+                        </div>
+                    </div>
+
+                    <a href="#" class="sponsor-link-landing" target="_blank">
+                        <span>Scopri di più</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+                <!-- SPONSOR 2 -->
+                <div class="sponsor-card-landing">
+                    <div class="sponsor-badge-landing gold">Gold Partner</div>
+                    
+                    <div class="sponsor-logo-landing">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%2300BCD4' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='20' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3EGreenShop%3C/text%3E%3C/svg%3E" alt="GreenShop">
+                    </div>
+
+                    <div class="sponsor-content-landing">
+                        <h5 class="sponsor-name-landing">GreenShop</h5>
+                        <p class="sponsor-description-landing">Negozio online di prodotti eco-friendly</p>
+                        
+                        <div class="sponsor-tags-landing">
+                            <span class="sponsor-tag-landing">E-commerce</span>
+                            <span class="sponsor-tag-landing">Consegna Rapida</span>
+                        </div>
+                    </div>
+
+                    <a href="#" class="sponsor-link-landing" target="_blank">
+                        <span>Scopri di più</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+                <!-- SPONSOR 3 -->
+                <div class="sponsor-card-landing">
+                    <div class="sponsor-badge-landing">Sponsor</div>
+                    
+                    <div class="sponsor-logo-landing">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%239C27B0' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='20' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3ECompostly%3C/text%3E%3C/svg%3E" alt="Compostly">
+                    </div>
+
+                    <div class="sponsor-content-landing">
+                        <h5 class="sponsor-name-landing">Compostly</h5>
+                        <p class="sponsor-description-landing">Servizio di compostaggio domestico intelligente</p>
+                        
+                        <div class="sponsor-tags-landing">
+                            <span class="sponsor-tag-landing">Compostaggio</span>
+                            <span class="sponsor-tag-landing">Sostenibilità</span>
+                        </div>
+                    </div>
+
+                    <a href="#" class="sponsor-link-landing" target="_blank">
+                        <span>Scopri di più</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+                <!-- SPONSOR 4 -->
+                <div class="sponsor-card-landing">
+                    <div class="sponsor-badge-landing">Sponsor</div>
+                    
+                    <div class="sponsor-logo-landing">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%23FF6B35' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='18' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3ENutriFlow%3C/text%3E%3C/svg%3E" alt="NutriFlow">
+                    </div>
+
+                    <div class="sponsor-content-landing">
+                        <h5 class="sponsor-name-landing">NutriFlow</h5>
+                        <p class="sponsor-description-landing">App di tracking nutrizionale avanzata</p>
+                        
+                        <div class="sponsor-tags-landing">
+                            <span class="sponsor-tag-landing">Nutrizione</span>
+                            <span class="sponsor-tag-landing">Tracking</span>
+                        </div>
+                    </div>
+
+                    <a href="#" class="sponsor-link-landing" target="_blank">
+                        <span>Scopri di più</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+                <!-- SPONSOR 5 -->
+                <div class="sponsor-card-landing">
+                    <div class="sponsor-badge-landing">Sponsor</div>
+                    
+                    <div class="sponsor-logo-landing">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%2310B981' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='18' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3ELocalFresh%3C/text%3E%3C/svg%3E" alt="LocalFresh">
+                    </div>
+
+                    <div class="sponsor-content-landing">
+                        <h5 class="sponsor-name-landing">LocalFresh</h5>
+                        <p class="sponsor-description-landing">Piattaforma di ordini da aziende agricole locali</p>
+                        
+                        <div class="sponsor-tags-landing">
+                            <span class="sponsor-tag-landing">Agricoltura</span>
+                            <span class="sponsor-tag-landing">Locale</span>
+                        </div>
+                    </div>
+
+                    <a href="#" class="sponsor-link-landing" target="_blank">
+                        <span>Scopri di più</span>
+                        <i class="bi bi-arrow-right-short"></i>
+                    </a>
+                </div>
+
+            </div>
+
+            <button class="carousel-nav-landing" onclick="scrollSponsorsRight()">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Sponsors CTA -->
+        <div class="sponsors-cta-landing">
+            <h5>
+                <i class="bi bi-handshake me-2"></i>
+                Diventa Nostro Partner
+            </h5>
+            <p>Raggiungi una community consapevole e sostenibile</p>
+            <a href="/sponsor">
+                <i class="bi bi-info-circle me-1"></i>Scopri le Partnership
+            </a>
+        </div>
+    </div>
+</section>
 
 <!-- FAQ -->
 <section class="py-5">
@@ -590,4 +1161,26 @@
         </div>
     </div>
 </section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// === CAROUSEL SPONSORS LANDING ===
+function scrollSponsorsLeft() {
+    const carousel = document.getElementById('sponsorsLandingCarousel');
+    carousel.scrollBy({
+        left: -340,
+        behavior: 'smooth'
+    });
+}
+
+function scrollSponsorsRight() {
+    const carousel = document.getElementById('sponsorsLandingCarousel');
+    carousel.scrollBy({
+        left: 340,
+        behavior: 'smooth'
+    });
+}
+</script>
 {% endblock %}
