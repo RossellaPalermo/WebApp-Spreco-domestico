@@ -1,736 +1,651 @@
-.hero-modern {
-    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
-    color: white;
-    padding: 6rem 0 4rem;
-    position: relative;
-    overflow: hidden;
-    min-height: 700px;
-    display: flex;
-    align-items: center;
-}{% extends "base_modern.html" %}
+{% extends "base_modern.html" %}
 
 {% block title %}FoodFlow - Gestione Intelligente Della Dispensa | Riduci Sprechi del 70%{% endblock %}
 
 {% block extra_css %}
 <style>
-/* Hero Section */
-.hero-modern {
-    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
-    color: white;
-    padding: 6rem 0 4rem;
-    position: relative;
-    overflow: hidden;
-}
-
-.hero-modern::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    right: -20%;
-    width: 600px;
-    height: 600px;
-    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-    animation: pulse 8s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 0.3; }
-    50% { transform: scale(1.2); opacity: 0.5; }
-}
-
-@keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-20px); }
-}
-
-@keyframes slideInLeft {
-    from {
-        opacity: 0;
-        transform: translateX(-60px);
+    /* === HERO SECTION === */
+    .hero-modern {
+        background: var(--gradient-hero);
+        color: white;
+        padding: 6rem 0 4rem;
+        position: relative;
+        overflow: hidden;
+        min-height: 700px;
+        display: flex;
+        align-items: center;
     }
-    to {
-        opacity: 1;
-        transform: translateX(0);
+
+    .hero-modern::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -20%;
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: pulse 8s ease-in-out infinite;
     }
-}
 
-@keyframes slideInRight {
-    from {
-        opacity: 0;
-        transform: translateX(60px);
+    .hero-modern::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+        animation: pulse 10s ease-in-out infinite 1s;
     }
-    to {
-        opacity: 1;
-        transform: translateX(0);
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.2); opacity: 0.5; }
     }
-}
 
-@keyframes scaleIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
     }
-    to {
-        opacity: 1;
-        transform: scale(1);
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
-}
 
-.hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: rgba(255,255,255,0.2);
-    border-radius: 50px;
-    font-size: 0.875rem;
-    font-weight: 600;
-    margin-bottom: 1.5rem;
-    backdrop-filter: blur(10px);
-}
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(60px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes scaleIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.25rem;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.3);
+        animation: slideInLeft 0.8s ease-out;
+    }
 
-.hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.2;
-    margin-bottom: 1.5rem;
-    animation: slideInLeft 0.8s ease-out;
-}
-
-.hero-subtitle {
-    font-size: 1.25rem;
-    opacity: 0.95;
-    margin-bottom: 2rem;
-    line-height: 1.6;
-    animation: slideInLeft 0.8s ease-out 0.1s backwards;
-}
-
-.cta-primary {
-    background: white;
-    color: #00D563;
-    padding: 1rem 2.5rem;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    border: none;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-    transition: all 0.3s;
-}
-
-.cta-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.2);
-    color: #00B350;
-}
-
-.cta-secondary {
-    background: transparent;
-    color: white;
-    padding: 1rem 2.5rem;
-    border: 2px solid white;
-    border-radius: 12px;
-    font-weight: 700;
-    font-size: 1.1rem;
-    transition: all 0.3s;
-}
-
-.cta-secondary:hover {
-    background: white;
-    color: #00D563;
-}
-
-.hero-visual {
-    position: relative;
-}
-
-.dashboard-mockup {
-    background: white;
-    border-radius: 20px;
-    padding: 2rem;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-    transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
-    transition: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
-    animation: float 6s ease-in-out infinite;
-}
-
-.dashboard-mockup:hover {
-    transform: perspective(1000px) rotateY(0deg);
-}
-
-.trust-badges {
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    flex-wrap: wrap;
-    margin-top: 2rem;
-    opacity: 0.9;
-}
-
-.trust-badge {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    font-size: 0.875rem;
-}
-
-/* Features Section */
-.feature-card-modern {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    transition: all 0.3s;
-    height: 100%;
-    border: 2px solid transparent;
-    position: relative;
-    overflow: hidden;
-    animation: scaleIn 0.6s ease-out backwards;
-}
-
-.feature-card-modern:nth-child(1) { animation-delay: 0.1s; }
-.feature-card-modern:nth-child(2) { animation-delay: 0.2s; }
-.feature-card-modern:nth-child(3) { animation-delay: 0.3s; }
-.feature-card-modern:nth-child(4) { animation-delay: 0.4s; }
-.feature-card-modern:nth-child(5) { animation-delay: 0.5s; }
-.feature-card-modern:nth-child(6) { animation-delay: 0.6s; }
-
-.feature-card-modern:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-    border-color: #00D563;
-}
-
-.feature-icon-modern {
-    width: 70px;
-    height: 70px;
-    border-radius: 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 2rem;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
-    color: white;
-    transition: all 0.3s ease;
-}
-
-.feature-card-modern:hover .feature-icon-modern {
-    transform: scale(1.15) rotate(10deg);
-}
-
-.feature-card-modern.premium {
-    background: linear-gradient(145deg, #FEF3C7 0%, #FDE68A 100%);
-    border-color: #F59E0B;
-}
-
-.feature-card-modern.premium .feature-icon-modern {
-    background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
-}
-
-/* Social Proof */
-.social-proof {
-    background: #F8FAFC;
-    padding: 4rem 0;
-}
-
-.testimonial-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.testimonial-avatar {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: white;
-}
-
-.rating {
-    color: #F59E0B;
-}
-
-/* Stats Section */
-.stats-highlight {
-    background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-    color: white;
-    padding: 4rem 0;
-}
-
-.stat-number {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1;
-    margin-bottom: 0.5rem;
-}
-
-.stat-label {
-    font-size: 1.1rem;
-    opacity: 0.9;
-}
-
-/* How It Works */
-.step-card {
-    background: white;
-    border-radius: 16px;
-    padding: 2rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    position: relative;
-    text-align: center;
-    transition: all 0.3s ease;
-    animation: scaleIn 0.6s ease-out backwards;
-}
-
-.step-card:nth-child(1) { animation-delay: 0.1s; }
-.step-card:nth-child(2) { animation-delay: 0.2s; }
-.step-card:nth-child(3) { animation-delay: 0.3s; }
-.step-card:nth-child(4) { animation-delay: 0.4s; }
-
-.step-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(0,0,0,0.12);
-}
-
-.step-number {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.75rem;
-    font-weight: 700;
-    margin: 0 auto 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,213,99,0.4);
-}
-
-.step-card::after {
-    content: '→';
-    position: absolute;
-    top: 50%;
-    right: -30px;
-    transform: translateY(-50%);
-    font-size: 2rem;
-    color: #CBD5E1;
-}
-
-.step-card:last-child::after {
-    display: none;
-}
-
-/* === SPONSORS SECTION === */
-.sponsors-landing-section {
-    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
-    padding: 5rem 0;
-    border-top: 1px solid #FCD34D;
-    border-bottom: 1px solid #FCD34D;
-    position: relative;
-    overflow: hidden;
-}
-
-.sponsors-landing-section::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -200px;
-    width: 500px;
-    height: 500px;
-    background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.sponsors-landing-section::after {
-    content: '';
-    position: absolute;
-    bottom: -100px;
-    left: -200px;
-    width: 400px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.sponsors-landing-header {
-    text-align: center;
-    margin-bottom: 3rem;
-}
-
-.sponsors-landing-header h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #92400E;
-    margin-bottom: 1rem;
-}
-
-.sponsors-landing-header p {
-    font-size: 1.1rem;
-    color: #B45309;
-    max-width: 600px;
-    margin: 0 auto;
-}
-
-.sponsors-landing-carousel-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 2rem 0;
-}
-
-.sponsors-landing-carousel {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    scroll-behavior: smooth;
-    padding: 1rem 0;
-    flex: 1;
-    scrollbar-width: thin;
-    scrollbar-color: #FCD34D #FEF3C7;
-}
-
-.sponsors-landing-carousel::-webkit-scrollbar {
-    height: 6px;
-}
-
-.sponsors-landing-carousel::-webkit-scrollbar-track {
-    background: #FEF3C7;
-    border-radius: 10px;
-}
-
-.sponsors-landing-carousel::-webkit-scrollbar-thumb {
-    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-    border-radius: 10px;
-}
-
-/* SPONSOR CARD LANDING */
-.sponsor-card-landing {
-    background: white;
-    border: 2px solid #FCD34D;
-    border-radius: 16px;
-    padding: 1.5rem;
-    min-width: 300px;
-    transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    gap: 1.25rem;
-    box-shadow: 0 4px 12px rgba(245,158,11,0.1);
-    animation: slideInRight 0.6s ease-out backwards;
-}
-
-.sponsor-card-landing:nth-child(1) { animation-delay: 0.1s; }
-.sponsor-card-landing:nth-child(2) { animation-delay: 0.2s; }
-.sponsor-card-landing:nth-child(3) { animation-delay: 0.3s; }
-.sponsor-card-landing:nth-child(4) { animation-delay: 0.4s; }
-.sponsor-card-landing:nth-child(5) { animation-delay: 0.5s; }
-
-.sponsor-card-landing::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    right: -100px;
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%);
-    border-radius: 50%;
-    pointer-events: none;
-}
-
-.sponsor-card-landing:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 30px rgba(245,158,11,0.25);
-    border-color: #F59E0B;
-}
-
-.sponsor-badge-landing {
-    position: absolute;
-    top: 1.25rem;
-    right: 1.25rem;
-    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-    color: white;
-    padding: 0.4rem 0.9rem;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.5px;
-    z-index: 2;
-    box-shadow: 0 4px 12px rgba(245,158,11,0.3);
-}
-
-.sponsor-badge-landing.gold {
-    background: linear-gradient(135deg, #FFD700 0%, #FFC700 100%);
-    color: #92400E;
-}
-
-.sponsor-logo-landing {
-    width: 100%;
-    height: 100px;
-    background: #F9FAFB;
-    border-radius: 12px;
-    padding: 0.75rem;
-    border: 1px solid #F3F4F6;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.sponsor-logo-landing img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-}
-
-.sponsor-content-landing {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    position: relative;
-    z-index: 1;
-    margin-top: 0.5rem;
-}
-
-.sponsor-name-landing {
-    margin: 0;
-    font-weight: 700;
-    color: #92400E;
-    font-size: 1.2rem;
-}
-
-.sponsor-description-landing {
-    margin: 0;
-    font-size: 0.9rem;
-    color: #B45309;
-    line-height: 1.5;
-}
-
-.sponsor-tags-landing {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-}
-
-.sponsor-tag-landing {
-    background: rgba(245,158,11,0.15);
-    color: #92400E;
-    padding: 0.3rem 0.8rem;
-    border-radius: 12px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    white-space: nowrap;
-}
-
-.sponsor-link-landing {
-    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-    color: white;
-    padding: 0.75rem 1.25rem;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600;
-    font-size: 0.95rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: all 0.3s ease;
-    position: relative;
-    z-index: 1;
-    border: none;
-    cursor: pointer;
-}
-
-.sponsor-link-landing:hover {
-    transform: translateX(4px);
-    box-shadow: 0 6px 15px rgba(245,158,11,0.4);
-    color: white;
-    text-decoration: none;
-}
-
-/* CAROUSEL NAVIGATION LANDING */
-.carousel-nav-landing {
-    background: white;
-    border: 2px solid #FCD34D;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #92400E;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    flex-shrink: 0;
-    font-size: 1.3rem;
-}
-
-.carousel-nav-landing:hover {
-    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-    border-color: #F59E0B;
-    color: white;
-    transform: scale(1.1);
-}
-
-/* SPONSORS CTA LANDING */
-.sponsors-cta-landing {
-    text-align: center;
-    margin-top: 3rem;
-    padding: 2.5rem;
-    background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
-    border-radius: 16px;
-    color: white;
-    position: relative;
-    z-index: 2;
-    box-shadow: 0 8px 24px rgba(245,158,11,0.3);
-    animation: scaleIn 0.6s ease-out 0.6s backwards;
-}
-
-.sponsors-cta-landing h5 {
-    margin-bottom: 1rem;
-    font-weight: 700;
-    font-size: 1.4rem;
-}
-
-.sponsors-cta-landing p {
-    margin-bottom: 1.5rem;
-    font-size: 1.05rem;
-    opacity: 0.95;
-}
-
-.sponsors-cta-landing a {
-    background: white;
-    color: #F59E0B;
-    padding: 0.75rem 2rem;
-    border-radius: 25px;
-    text-decoration: none;
-    font-weight: 700;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.3s;
-}
-
-.sponsors-cta-landing a:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
-    color: #F59E0B;
-}
-
-/* FAQ */
-.faq-item {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    margin-bottom: 1rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    cursor: pointer;
-    transition: all 0.3s;
-    animation: slideInLeft 0.6s ease-out backwards;
-}
-
-.faq-item:nth-child(1) { animation-delay: 0.1s; }
-.faq-item:nth-child(2) { animation-delay: 0.2s; }
-.faq-item:nth-child(3) { animation-delay: 0.3s; }
-
-.faq-item:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.faq-question {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: 600;
-    color: #1E293B;
-}
-
-.faq-answer {
-    margin-top: 1rem;
-    color: #64748B;
-    display: none;
-}
-
-.faq-item.active .faq-answer {
-    display: block;
-}
-
-/* CTA Final */
-.cta-final {
-    background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
-    color: white;
-    padding: 5rem 0;
-    position: relative;
-    overflow: hidden;
-    background-size: 200% 200%;
-    animation: gradientShift 8s ease infinite;
-}
-
-@keyframes gradientShift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-}
-
-.cta-final::before {
-    content: '🚀';
-    position: absolute;
-    bottom: -50px;
-    right: -50px;
-    font-size: 15rem;
-    opacity: 0.1;
-    animation: float 8s ease-in-out infinite;
-}
-
-.cta-final h2 {
-    animation: slideInLeft 0.8s ease-out;
-}
-
-.cta-final .cta-primary {
-    animation: slideInRight 0.8s ease-out 0.2s backwards;
-}
-
-@media (max-width: 768px) {
     .hero-title {
-        font-size: 2.5rem;
+        font-size: 3.5rem;
+        font-weight: 800;
+        line-height: 1.2;
+        margin-bottom: 1.5rem;
+        animation: slideInLeft 0.8s ease-out 0.1s backwards;
     }
-    
+
+    .hero-title span {
+        background: linear-gradient(135deg, #FCD34D 0%, #FBBF24 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+        font-size: 1.25rem;
+        opacity: 0.95;
+        margin-bottom: 2rem;
+        line-height: 1.6;
+        animation: slideInLeft 0.8s ease-out 0.2s backwards;
+    }
+
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 2rem;
+        animation: slideInLeft 0.8s ease-out 0.3s backwards;
+    }
+
+    .cta-primary {
+        background: white;
+        color: var(--primary-green);
+        padding: 1rem 2.5rem;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 1.1rem;
+        border: none;
+        box-shadow: var(--shadow-lg);
+        transition: var(--transition-normal);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .cta-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+        color: var(--primary-green-dark);
+    }
+
+    .cta-secondary {
+        background: transparent;
+        color: white;
+        padding: 1rem 2.5rem;
+        border: 2px solid white;
+        border-radius: var(--radius-md);
+        font-weight: 700;
+        font-size: 1.1rem;
+        transition: var(--transition-normal);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+    }
+
+    .cta-secondary:hover {
+        background: white;
+        color: var(--primary-green);
+    }
+
+    .hero-visual {
+        position: relative;
+        animation: slideInRight 0.8s ease-out 0.2s backwards;
+    }
+
     .dashboard-mockup {
-        transform: none;
+        background: white;
+        border-radius: var(--radius-xl);
+        padding: 2rem;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+        transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+        transition: all 0.5s cubic-bezier(0.23, 1, 0.320, 1);
+        animation: float 6s ease-in-out infinite;
     }
-    
+
+    .dashboard-mockup:hover {
+        transform: perspective(1000px) rotateY(0deg);
+    }
+
+    .trust-badges {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        flex-wrap: wrap;
+        opacity: 0.9;
+        animation: slideInLeft 0.8s ease-out 0.4s backwards;
+    }
+
+    .trust-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .trust-badge i {
+        font-size: 1.25rem;
+    }
+
+    /* === FEATURES SECTION === */
+    .feature-card-modern {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-md);
+        transition: var(--transition-normal);
+        height: 100%;
+        border: 2px solid transparent;
+        position: relative;
+        overflow: hidden;
+        animation: scaleIn 0.6s ease-out backwards;
+    }
+
+    .feature-card-modern:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card-modern:nth-child(2) { animation-delay: 0.2s; }
+    .feature-card-modern:nth-child(3) { animation-delay: 0.3s; }
+    .feature-card-modern:nth-child(4) { animation-delay: 0.4s; }
+    .feature-card-modern:nth-child(5) { animation-delay: 0.5s; }
+    .feature-card-modern:nth-child(6) { animation-delay: 0.6s; }
+
+    .feature-card-modern:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+        border-color: var(--primary-green);
+    }
+
+    .feature-icon-modern {
+        width: 80px;
+        height: 80px;
+        border-radius: var(--radius-md);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        margin-bottom: 1.5rem;
+        background: var(--gradient-hero);
+        color: white;
+        transition: var(--transition-normal);
+        box-shadow: 0 4px 12px rgba(0,213,99,0.2);
+    }
+
+    .feature-card-modern:hover .feature-icon-modern {
+        transform: scale(1.15) rotate(10deg);
+        box-shadow: var(--shadow-glow);
+    }
+
+    .feature-card-modern h5 {
+        font-weight: 700;
+        color: var(--neutral-900);
+        margin-bottom: 1rem;
+        font-size: 1.3rem;
+    }
+
+    .feature-card-modern p {
+        color: var(--neutral-600);
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .feature-card-modern.premium {
+        background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+        border-color: transparent;
+    }
+
+    .feature-card-modern.premium .feature-icon-modern {
+        background: linear-gradient(135deg, #F59E0B 0%, #EF4444 100%);
+    }
+
+    .feature-card-modern.premium h5 {
+        color: #92400E;
+    }
+
+    /* === SECTION HEADERS === */
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+        font-size: 2.75rem;
+        font-weight: 800;
+        color: var(--neutral-900);
+        margin-bottom: 1rem;
+    }
+
+    .section-header p {
+        font-size: 1.15rem;
+        color: var(--neutral-600);
+        max-width: 600px;
+        margin: 0 auto;
+    }
+
+    /* === HOW IT WORKS === */
+    .step-card {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        text-align: center;
+        transition: var(--transition-normal);
+        animation: scaleIn 0.6s ease-out backwards;
+    }
+
+    .step-card:nth-child(1) { animation-delay: 0.1s; }
+    .step-card:nth-child(2) { animation-delay: 0.2s; }
+    .step-card:nth-child(3) { animation-delay: 0.3s; }
+    .step-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .step-card:hover {
+        transform: translateY(-8px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .step-number {
+        width: 70px;
+        height: 70px;
+        border-radius: 50%;
+        background: var(--gradient-hero);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 700;
+        margin: 0 auto 1.5rem;
+        box-shadow: var(--shadow-glow);
+    }
+
     .step-card::after {
+        content: '→';
+        position: absolute;
+        top: 50%;
+        right: -30px;
+        transform: translateY(-50%);
+        font-size: 2rem;
+        color: var(--neutral-300);
+    }
+
+    .step-card:last-child::after {
         display: none;
     }
 
-    .sponsor-card-landing {
-        min-width: 280px;
+    .step-card h5 {
+        font-weight: 700;
+        color: var(--neutral-900);
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
     }
 
-    .sponsors-landing-header h2 {
-        font-size: 1.75rem;
+    .step-card p {
+        color: var(--neutral-600);
+        font-size: 0.95rem;
     }
 
-    .carousel-nav-landing {
-        width: 44px;
-        height: 44px;
+    /* === SPONSORS SECTION === */
+    .sponsors-section {
+        background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+        padding: 5rem 0;
+        border-top: 1px solid #FCD34D;
+        border-bottom: 1px solid #FCD34D;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sponsors-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: -200px;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(245,158,11,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .sponsors-section::after {
+        content: '';
+        position: absolute;
+        bottom: -100px;
+        left: -200px;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%);
+        border-radius: 50%;
+        pointer-events: none;
+    }
+
+    .sponsors-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        position: relative;
+        z-index: 1;
+    }
+
+    .sponsors-header h2 {
+        font-size: 2.5rem;
+        font-weight: 800;
+        color: #92400E;
+        margin-bottom: 1rem;
+    }
+
+    .sponsors-header p {
         font-size: 1.1rem;
+        color: #B45309;
+        max-width: 600px;
+        margin: 0 auto;
     }
 
-    .sponsors-cta-landing {
-        padding: 1.5rem;
+    .sponsor-card-featured {
+        background: white;
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        text-align: center;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: var(--transition-normal);
+        position: relative;
+        overflow: hidden;
+        height: 100%;
+        animation: scaleIn 0.6s ease-out backwards;
     }
-}
+
+    .sponsor-card-featured:nth-child(1) { animation-delay: 0.1s; }
+    .sponsor-card-featured:nth-child(2) { animation-delay: 0.2s; }
+    .sponsor-card-featured:nth-child(3) { animation-delay: 0.3s; }
+
+    .sponsor-card-featured::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--gradient-hero);
+    }
+
+    .sponsor-card-featured:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+    }
+
+    .sponsor-logo-featured {
+        width: 90px;
+        height: 90px;
+        background: var(--gradient-hero);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        font-size: 2.5rem;
+        color: white;
+        box-shadow: var(--shadow-glow);
+    }
+
+    .sponsor-card-featured h5 {
+        font-weight: 700;
+        color: var(--neutral-900);
+        font-size: 1.25rem;
+        margin-bottom: 1rem;
+    }
+
+    .sponsor-card-featured p {
+        color: var(--neutral-600);
+        margin-bottom: 1.5rem;
+        font-size: 0.95rem;
+    }
+
+    .sponsor-benefits {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+
+    .sponsor-benefits .badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.85rem;
+        border-radius: var(--radius-full);
+        font-weight: 600;
+    }
+
+    /* === FAQ === */
+    .faq-item {
+        background: white;
+        border-radius: var(--radius-md);
+        padding: 2rem;
+        margin-bottom: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        cursor: pointer;
+        transition: var(--transition-normal);
+        animation: slideInLeft 0.6s ease-out backwards;
+    }
+
+    .faq-item:nth-child(1) { animation-delay: 0.1s; }
+    .faq-item:nth-child(2) { animation-delay: 0.2s; }
+    .faq-item:nth-child(3) { animation-delay: 0.3s; }
+
+    .faq-item:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    .faq-question {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 600;
+        color: var(--neutral-900);
+        font-size: 1.05rem;
+    }
+
+    .faq-question i {
+        transition: var(--transition-fast);
+    }
+
+    .faq-item.active .faq-question i {
+        transform: rotate(180deg);
+    }
+
+    .faq-answer {
+        margin-top: 1.5rem;
+        color: var(--neutral-600);
+        display: none;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+
+    .faq-item.active .faq-answer {
+        display: block;
+        animation: slideInLeft 0.3s ease-out;
+    }
+
+    /* === CTA FINAL === */
+    .cta-final {
+        background: linear-gradient(135deg, #EF4444 0%, #F59E0B 100%);
+        color: white;
+        padding: 5rem 0;
+        position: relative;
+        overflow: hidden;
+        background-size: 200% 200%;
+        animation: gradientShift 8s ease infinite;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    .cta-final::before {
+        content: '🚀';
+        position: absolute;
+        bottom: -50px;
+        right: -50px;
+        font-size: 15rem;
+        opacity: 0.1;
+        animation: float 8s ease-in-out infinite;
+    }
+
+    .cta-final h2 {
+        animation: slideInLeft 0.8s ease-out;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-final .cta-primary {
+        animation: slideInRight 0.8s ease-out 0.2s backwards;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.5rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+        }
+
+        .cta-primary, .cta-secondary {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .dashboard-mockup {
+            transform: none;
+        }
+
+        .step-card::after {
+            display: none;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+        }
+
+        .sponsors-header h2 {
+            font-size: 1.75rem;
+        }
+
+        .trust-badges {
+            gap: 1rem;
+        }
+
+        .cta-final h2 {
+            font-size: 1.75rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-title {
+            font-size: 2rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1rem;
+        }
+
+        .feature-card-modern, .step-card {
+            padding: 1.5rem;
+        }
+
+        .section-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .faq-item {
+            padding: 1.5rem;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -740,35 +655,41 @@
     <div class="container">
         <div class="row align-items-center">
             <div class="col-lg-6 mb-5 mb-lg-0">
-                
+                <div class="hero-badge">
+                    <i class="bi bi-lightning-fill"></i>
+                    Sostenibilità Intelligente
+                </div>
                 
                 <h1 class="hero-title">
                     Riduci gli Sprechi<br>
-                    Alimentari del <span style="color: #FCD34D;">70%</span>
+                    Alimentari del <span>70%</span>
                 </h1>
                 
                 <p class="hero-subtitle">
-                    Gestisci la tua dispensa con l'intelligenza artificiale. 
-                    Ricevi ricette personalizzate, riduci gli sprechi e risparmia tempo e denaro.
+                    Gestisci la tua dispensa con l'intelligenza artificiale. Ricevi ricette personalizzate, riduci gli sprechi e risparmia tempo e denaro.
                 </p>
                 
-                <div class="d-flex gap-3 flex-wrap mb-4">
+                <div class="hero-buttons">
                     <a href="{{ url_for('register') }}" class="cta-primary">
-                        Inizia Gratis →
+                        <i class="bi bi-play-fill"></i>Inizia Gratis
                     </a>
                     <a href="#features" class="cta-secondary">
-                        Guarda Come Funziona
+                        <i class="bi bi-play-circle"></i>Come Funziona
                     </a>
                 </div>
                 
                 <div class="trust-badges">
                     <div class="trust-badge">
                         <i class="bi bi-shield-check"></i>
-                        <span>100% Gratis</span>
+                        100% Gratis
                     </div>
                     <div class="trust-badge">
                         <i class="bi bi-clock"></i>
-                        <span>Setup in 2 minuti</span>
+                        Setup in 2 min
+                    </div>
+                    <div class="trust-badge">
+                        <i class="bi bi-check-circle"></i>
+                        Nessuna Carta
                     </div>
                 </div>
             </div>
@@ -778,24 +699,24 @@
                     <div class="dashboard-mockup">
                         <div class="row g-3">
                             <div class="col-6">
-                                <div class="text-center p-3" style="background: #F0FDF4; border-radius: 12px;">
+                                <div class="text-center p-3" style="background: #F0FDF4; border-radius: var(--radius-md);">
                                     <i class="bi bi-box-seam" style="font-size: 2rem; color: #10B981;"></i>
-                                    <h6 class="mt-2 mb-0" style="color: #1E293B;">45 Prodotti</h6>
-                                    <small style="color: #64748B;">Monitorati</small>
+                                    <h6 class="mt-2 mb-0" style="color: var(--neutral-900); font-weight: 700;">45 Prodotti</h6>
+                                    <small style="color: var(--neutral-600);">Monitorati</small>
                                 </div>
                             </div>
                             <div class="col-6">
-                                <div class="text-center p-3" style="background: #FEF3C7; border-radius: 12px;">
+                                <div class="text-center p-3" style="background: #FEF3C7; border-radius: var(--radius-md);">
                                     <i class="bi bi-exclamation-triangle" style="font-size: 2rem; color: #F59E0B;"></i>
-                                    <h6 class="mt-2 mb-0" style="color: #1E293B;">3 In Scadenza</h6>
-                                    <small style="color: #64748B;">Questa settimana</small>
+                                    <h6 class="mt-2 mb-0" style="color: var(--neutral-900); font-weight: 700;">3 In Scadenza</h6>
+                                    <small style="color: var(--neutral-600);">Questa settimana</small>
                                 </div>
                             </div>
                             <div class="col-12">
-                                <div class="text-center p-3" style="background: #DBEAFE; border-radius: 12px;">
+                                <div class="text-center p-3" style="background: #DBEAFE; border-radius: var(--radius-md);">
                                     <i class="bi bi-magic" style="font-size: 2rem; color: #3B82F6;"></i>
-                                    <h6 class="mt-2 mb-0" style="color: #1E293B;">5 Ricette AI</h6>
-                                    <small style="color: #64748B;">Suggerite per te</small>
+                                    <h6 class="mt-2 mb-0" style="color: var(--neutral-900); font-weight: 700;">5 Ricette AI</h6>
+                                    <small style="color: var(--neutral-600);">Suggerite per te</small>
                                 </div>
                             </div>
                         </div>
@@ -806,13 +727,12 @@
     </div>
 </section>
 
-
 <!-- Features Section -->
 <section id="features" class="py-5">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold mb-3">Tutto Quello Che Ti Serve, In Un'Unica App</h2>
-            <p class="lead text-muted">Gestione intelligente end-to-end del cibo</p>
+        <div class="section-header">
+            <h2>Tutto Quello Che Ti Serve</h2>
+            <p>Gestione intelligente end-to-end del cibo</p>
         </div>
         
         <div class="row g-4">
@@ -821,10 +741,8 @@
                     <div class="feature-icon-modern">
                         <i class="bi bi-robot"></i>
                     </div>
-                    <h5 class="fw-bold mb-3">AI Avanzata</h5>
-                    <p class="text-muted mb-0">
-                        Ricette personalizzate, liste spesa automatiche e suggerimenti nutrizionali basati sui tuoi gusti e obiettivi.
-                    </p>
+                    <h5>AI Avanzata</h5>
+                    <p>Ricette personalizzate e suggerimenti nutrizionali basati su ingredienti e obiettivi.</p>
                 </div>
             </div>
             
@@ -833,10 +751,8 @@
                     <div class="feature-icon-modern">
                         <i class="bi bi-bell"></i>
                     </div>
-                    <h5 class="fw-bold mb-3">Notifiche Smart</h5>
-                    <p class="text-muted mb-0">
-                        Avvisi proattivi per scadenze, scorte basse e suggerimenti per utilizzare ingredienti prima che scadano.
-                    </p>
+                    <h5>Notifiche Smart</h5>
+                    <p>Avvisi per scadenze, scorte basse e suggerimenti per ridurre sprechi.</p>
                 </div>
             </div>
             
@@ -845,10 +761,8 @@
                     <div class="feature-icon-modern">
                         <i class="bi bi-graph-up"></i>
                     </div>
-                    <h5 class="fw-bold mb-3">Analytics Dettagliate</h5>
-                    <p class="text-muted mb-0">
-                        Traccia sprechi, nutrizione e spesa. Vedi trend e ottimizza continuamente la tua gestione alimentare.
-                    </p>
+                    <h5>Analytics Dettagliate</h5>
+                    <p>Traccia sprechi, nutrizione e spesa con grafici e insights approfonditi.</p>
                 </div>
             </div>
             
@@ -857,10 +771,8 @@
                     <div class="feature-icon-modern">
                         <i class="bi bi-heart-pulse"></i>
                     </div>
-                    <h5 class="fw-bold mb-3">Piano Nutrizionale</h5>
-                    <p class="text-muted mb-0">
-                        Calcolo automatico BMR/TDEE e macros. Piano pasti personalizzato per perdita peso, massa muscolare o mantenimento.
-                    </p>
+                    <h5>Piano Nutrizionale</h5>
+                    <p>Calcolo automatico calorie e macros. Piano pasti personalizzato per i tuoi obiettivi.</p>
                 </div>
             </div>
             
@@ -869,10 +781,8 @@
                     <div class="feature-icon-modern">
                         <i class="bi bi-arrow-repeat"></i>
                     </div>
-                    <h5 class="fw-bold mb-3">Tutto Connesso</h5>
-                    <p class="text-muted mb-0">
-                        Piano pasti → Lista spesa → Dispensa → Ricette. Zero copia-incolla, tutto si aggiorna automaticamente.
-                    </p>
+                    <h5>Tutto Connesso</h5>
+                    <p>Piano pasti → Lista spesa → Dispensa. Tutto si aggiorna automaticamente.</p>
                 </div>
             </div>
             
@@ -881,10 +791,8 @@
                     <div class="feature-icon-modern">
                         <i class="bi bi-trophy"></i>
                     </div>
-                    <h5 class="fw-bold mb-3">Gamification</h5>
-                    <p class="text-muted mb-0">
-                        Punti, badge, streak e classifiche. Rendi la gestione del cibo divertente e mantieni la motivazione alta.
-                    </p>
+                    <h5>Gamification</h5>
+                    <p>Punti, badge e classifiche. Rendi la gestione del cibo divertente e motivante.</p>
                 </div>
             </div>
         </div>
@@ -894,207 +802,106 @@
 <!-- How It Works -->
 <section class="py-5" style="background: #F8FAFC;">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold mb-3">Come Funziona</h2>
-            <p class="lead text-muted">4 semplici passaggi per iniziare</p>
+        <div class="section-header">
+            <h2>Come Funziona</h2>
+            <p>4 semplici passaggi per iniziare</p>
         </div>
         
         <div class="row g-4">
             <div class="col-lg-3 col-md-6">
                 <div class="step-card">
                     <div class="step-number">1</div>
-                    <h5 class="fw-bold mb-3">Aggiungi Prodotti</h5>
-                    <p class="text-muted mb-0">
-                        Inserisci gli ingredienti della tua dispensa con scadenze e quantità
-                    </p>
+                    <h5>Aggiungi Prodotti</h5>
+                    <p>Inserisci gli ingredienti della tua dispensa con scadenze e quantità.</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6">
                 <div class="step-card">
                     <div class="step-number">2</div>
-                    <h5 class="fw-bold mb-3">Ricevi Ricette</h5>
-                    <p class="text-muted mb-0">
-                        L'AI suggerisce ricette basate su cosa hai disponibile
-                    </p>
+                    <h5>Ricevi Ricette</h5>
+                    <p>L'AI suggerisce ricette basate su cosa hai disponibile.</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6">
                 <div class="step-card">
                     <div class="step-number">3</div>
-                    <h5 class="fw-bold mb-3">Lista Spesa Auto</h5>
-                    <p class="text-muted mb-0">
-                        La lista si aggiorna con ingredienti mancanti per le ricette
-                    </p>
+                    <h5>Lista Spesa Auto</h5>
+                    <p>La lista si aggiorna con ingredienti mancanti automaticamente.</p>
                 </div>
             </div>
             
             <div class="col-lg-3 col-md-6">
                 <div class="step-card">
                     <div class="step-number">4</div>
-                    <h5 class="fw-bold mb-3">Cucina e Risparmia</h5>
-                    <p class="text-muted mb-0">
-                        Riduci sprechi e risparmia tempo e denaro ogni settimana
-                    </p>
+                    <h5>Cucina e Risparmia</h5>
+                    <p>Riduci sprechi e risparmia tempo e denaro ogni settimana.</p>
                 </div>
             </div>
         </div>
     </div>
 </section>
 
-<!-- === SPONSORS SECTION === -->
-<section class="sponsors-landing-section">
+<!-- Sponsors Section -->
+<section class="sponsors-section">
     <div class="container">
-        <div class="sponsors-landing-header">
+        <div class="sponsors-header">
             <h2>I Nostri Partner</h2>
-            <p>Brand affidabili che condividono la nostra missione di sostenibilità e riduzione degli sprechi</p>
+            <p>Brand affidabili che condividono la nostra missione</p>
         </div>
 
-        <!-- Sponsors Carousel -->
-        <div class="sponsors-landing-carousel-wrapper">
-            <button class="carousel-nav-landing" onclick="scrollSponsorsLeft()">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-
-            <div class="sponsors-landing-carousel" id="sponsorsLandingCarousel">
-                <!-- SPONSOR 1 -->
-                <div class="sponsor-card-landing">
-                    <div class="sponsor-badge-landing">Sponsor</div>
-                    
-                    <div class="sponsor-logo-landing">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%2300D563' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='20' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3EEcoBrand%3C/text%3E%3C/svg%3E" alt="EcoBrand">
+        <div class="row g-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="sponsor-card-featured">
+                    <div class="sponsor-logo-featured">
+                        <i class="bi bi-shop"></i>
                     </div>
-
-                    <div class="sponsor-content-landing">
-                        <h5 class="sponsor-name-landing">EcoBrand</h5>
-                        <p class="sponsor-description-landing">Alimenti biologici certificati e sostenibili</p>
-                        
-                        <div class="sponsor-tags-landing">
-                            <span class="sponsor-tag-landing">Biologico</span>
-                            <span class="sponsor-tag-landing">Sostenibile</span>
-                        </div>
+                    <h5>EcoMarket</h5>
+                    <p>Supermercato sostenibile con prodotti a km zero</p>
+                    <div class="sponsor-benefits">
+                        <span class="badge bg-success">-15% sconto</span>
+                        <span class="badge bg-info">Consegna eco</span>
                     </div>
-
-                    <a href="#" class="sponsor-link-landing" target="_blank">
-                        <span>Scopri di più</span>
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
                 </div>
-
-                <!-- SPONSOR 2 -->
-                <div class="sponsor-card-landing">
-                    <div class="sponsor-badge-landing gold">Gold Partner</div>
-                    
-                    <div class="sponsor-logo-landing">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%2300BCD4' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='20' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3EGreenShop%3C/text%3E%3C/svg%3E" alt="GreenShop">
-                    </div>
-
-                    <div class="sponsor-content-landing">
-                        <h5 class="sponsor-name-landing">GreenShop</h5>
-                        <p class="sponsor-description-landing">Negozio online di prodotti eco-friendly</p>
-                        
-                        <div class="sponsor-tags-landing">
-                            <span class="sponsor-tag-landing">E-commerce</span>
-                            <span class="sponsor-tag-landing">Consegna Rapida</span>
-                        </div>
-                    </div>
-
-                    <a href="#" class="sponsor-link-landing" target="_blank">
-                        <span>Scopri di più</span>
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
-                </div>
-
-                <!-- SPONSOR 3 -->
-                <div class="sponsor-card-landing">
-                    <div class="sponsor-badge-landing">Sponsor</div>
-                    
-                    <div class="sponsor-logo-landing">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%239C27B0' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='20' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3ECompostly%3C/text%3E%3C/svg%3E" alt="Compostly">
-                    </div>
-
-                    <div class="sponsor-content-landing">
-                        <h5 class="sponsor-name-landing">Compostly</h5>
-                        <p class="sponsor-description-landing">Servizio di compostaggio domestico intelligente</p>
-                        
-                        <div class="sponsor-tags-landing">
-                            <span class="sponsor-tag-landing">Compostaggio</span>
-                            <span class="sponsor-tag-landing">Sostenibilità</span>
-                        </div>
-                    </div>
-
-                    <a href="#" class="sponsor-link-landing" target="_blank">
-                        <span>Scopri di più</span>
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
-                </div>
-
-                <!-- SPONSOR 4 -->
-                <div class="sponsor-card-landing">
-                    <div class="sponsor-badge-landing">Sponsor</div>
-                    
-                    <div class="sponsor-logo-landing">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%23FF6B35' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='18' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3ENutriFlow%3C/text%3E%3C/svg%3E" alt="NutriFlow">
-                    </div>
-
-                    <div class="sponsor-content-landing">
-                        <h5 class="sponsor-name-landing">NutriFlow</h5>
-                        <p class="sponsor-description-landing">App di tracking nutrizionale avanzata</p>
-                        
-                        <div class="sponsor-tags-landing">
-                            <span class="sponsor-tag-landing">Nutrizione</span>
-                            <span class="sponsor-tag-landing">Tracking</span>
-                        </div>
-                    </div>
-
-                    <a href="#" class="sponsor-link-landing" target="_blank">
-                        <span>Scopri di più</span>
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
-                </div>
-
-                <!-- SPONSOR 5 -->
-                <div class="sponsor-card-landing">
-                    <div class="sponsor-badge-landing">Sponsor</div>
-                    
-                    <div class="sponsor-logo-landing">
-                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100'%3E%3Crect fill='%2310B981' width='200' height='100'/%3E%3Ctext x='50%' y='50%' font-size='18' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'%3ELocalFresh%3C/text%3E%3C/svg%3E" alt="LocalFresh">
-                    </div>
-
-                    <div class="sponsor-content-landing">
-                        <h5 class="sponsor-name-landing">LocalFresh</h5>
-                        <p class="sponsor-description-landing">Piattaforma di ordini da aziende agricole locali</p>
-                        
-                        <div class="sponsor-tags-landing">
-                            <span class="sponsor-tag-landing">Agricoltura</span>
-                            <span class="sponsor-tag-landing">Locale</span>
-                        </div>
-                    </div>
-
-                    <a href="#" class="sponsor-link-landing" target="_blank">
-                        <span>Scopri di più</span>
-                        <i class="bi bi-arrow-right-short"></i>
-                    </a>
-                </div>
-
             </div>
-
-            <button class="carousel-nav-landing" onclick="scrollSponsorsRight()">
-                <i class="bi bi-chevron-right"></i>
-            </button>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="sponsor-card-featured">
+                    <div class="sponsor-logo-featured">
+                        <i class="bi bi-recycle"></i>
+                    </div>
+                    <h5>GreenLife</h5>
+                    <p>Servizi di riciclo e compostaggio intelligente</p>
+                    <div class="sponsor-benefits">
+                        <span class="badge bg-success">Ritiro gratuito</span>
+                        <span class="badge bg-warning">Punti ricompensa</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4 col-md-6">
+                <div class="sponsor-card-featured">
+                    <div class="sponsor-logo-featured">
+                        <i class="bi bi-heart-pulse"></i>
+                    </div>
+                    <h5>NutriPro</h5>
+                    <p>Consulenza nutrizionale personalizzata</p>
+                    <div class="sponsor-benefits">
+                        <span class="badge bg-primary">Consulto gratuito</span>
+                        <span class="badge bg-secondary">Piano personalizzato</span>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <!-- Sponsors CTA -->
-        <div class="sponsors-cta-landing">
-            <h5>
-                <i class="bi bi-handshake me-2"></i>
-                Diventa Nostro Partner
-            </h5>
-            <p>Raggiungi una community consapevole e sostenibile</p>
-            <a href="/sponsor">
-                <i class="bi bi-info-circle me-1"></i>Scopri le Partnership
+        
+        <div class="text-center mt-5" style="position: relative; z-index: 2;">
+            <a href="{{ url_for('sponsors') }}" class="btn btn-lg" style="background: var(--gradient-hero); color: white; border: none; font-weight: 700; padding: 1rem 2.5rem; border-radius: var(--radius-md); box-shadow: var(--shadow-lg);">
+                <i class="bi bi-handshake me-2"></i>Diventa Partner
             </a>
+            <p class="mt-3 text-muted">
+                <small>Scopri le opportunità di partnership con FoodFlow</small>
+            </p>
         </div>
     </div>
 </section>
@@ -1102,8 +909,9 @@
 <!-- FAQ -->
 <section class="py-5">
     <div class="container">
-        <div class="text-center mb-5">
-            <h2 class="display-6 fw-bold mb-3">Domande Frequenti</h2>
+        <div class="section-header">
+            <h2>Domande Frequenti</h2>
+            <p>Tutto quello che devi sapere su FoodFlow</p>
         </div>
         
         <div class="row justify-content-center">
@@ -1114,7 +922,7 @@
                         <i class="bi bi-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        L'intelligenza artificiale analizza gli ingredienti nella tua dispensa, le tue preferenze alimentari e le scadenze per suggerirti ricette personalizzate che massimizzano l'uso di ciò che hai.
+                        L'intelligenza artificiale analizza gli ingredienti nella tua dispensa, le tue preferenze alimentari e le scadenze per suggerirti ricette personalizzate che massimizzano l'uso di ciò che hai disponibile.
                     </div>
                 </div>
                 
@@ -1134,7 +942,17 @@
                         <i class="bi bi-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        Assolutamente! Puoi impostare restrizioni alimentari, allergie e preferenze nel tuo profilo nutrizionale e l'AI terrà conto di tutte le tue esigenze.
+                        Assolutamente! Puoi impostare restrizioni alimentari, allergie e preferenze nel tuo profilo nutrizionale e l'AI terrà conto di tutte le tue esigenze specifiche.
+                    </div>
+                </div>
+
+                <div class="faq-item" onclick="this.classList.toggle('active')">
+                    <div class="faq-question">
+                        <span>I miei dati sono al sicuro?</span>
+                        <i class="bi bi-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        Sì, utilizziamo crittografia end-to-end e i tuoi dati non vengono mai condivisi con terze parti. La tua privacy è la nostra priorità.
                     </div>
                 </div>
             </div>
@@ -1147,15 +965,13 @@
     <div class="container text-center">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <h2 class="display-5 fw-bold mb-4">
-                    Inizia Oggi a Ridurre gli Sprechi
-                </h2>
-                <p class="lead mb-4">Setup in 2 minuti.</p>
+                <h2>Inizia Oggi a Ridurre gli Sprechi</h2>
+                <p class="lead mb-4" style="font-size: 1.2rem; opacity: 0.95;">Setup in 2 minuti. Gratis. Nessuna carta richiesta.</p>
                 <a href="{{ url_for('register') }}" class="cta-primary mb-3">
-                    Crea Account Gratis →
+                    <i class="bi bi-play-fill"></i>Crea Account Gratis
                 </a>
-                <p class="mt-3 opacity-75">
-                    <small>✓ Gratis Forever  ✓ Cancellazione Sempre Possibile</small>
+                <p class="mt-3" style="opacity: 0.85;">
+                    <small><i class="bi bi-check-circle-fill me-1"></i>Gratis Forever  <i class="bi bi-check-circle-fill ms-3 me-1"></i>Cancellazione Sempre Possibile</small>
                 </p>
             </div>
         </div>
@@ -1166,21 +982,18 @@
 
 {% block extra_js %}
 <script>
-// === CAROUSEL SPONSORS LANDING ===
-function scrollSponsorsLeft() {
-    const carousel = document.getElementById('sponsorsLandingCarousel');
-    carousel.scrollBy({
-        left: -340,
-        behavior: 'smooth'
+    // FAQ toggle functionality
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.addEventListener('click', function(e) {
+            // Chiudi gli altri
+            document.querySelectorAll('.faq-item').forEach(other => {
+                if (other !== this) {
+                    other.classList.remove('active');
+                }
+            });
+            // Toggle il corrente
+            this.classList.toggle('active');
+        });
     });
-}
-
-function scrollSponsorsRight() {
-    const carousel = document.getElementById('sponsorsLandingCarousel');
-    carousel.scrollBy({
-        left: 340,
-        behavior: 'smooth'
-    });
-}
 </script>
 {% endblock %}

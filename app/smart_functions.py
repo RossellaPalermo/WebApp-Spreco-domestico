@@ -12,7 +12,8 @@ except ImportError:
 from . import db
 from .models import (
     User, UserStats, Product, ShoppingList, ShoppingItem,
-    NutritionalProfile, NutritionalGoal, MealPlan, RewardHistory
+    NutritionalProfile, NutritionalGoal, MealPlan, RewardHistory,
+    Family, FamilyMember
 )
 import json
 
@@ -861,3 +862,202 @@ def upsert_missing_ingredients_to_shopping_list(user_id, missing_ingredients, sh
 
     db.session.commit()
     return shopping_list, updated_items
+
+
+# ========================================
+# SISTEMA FAMIGLIA
+# ========================================
+
+def generate_family_code():
+    """Genera un codice famiglia univoco di 12 caratteri"""
+    import string
+    import random
+    
+    # Genera codice con lettere maiuscole e numeri
+    characters = string.ascii_uppercase + string.digits
+    while True:
+        code = ''.join(random.choices(characters, k=12))
+        # Verifica che non esista già
+        if not Family.query.filter_by(family_code=code).first():
+            return code
+
+
+def create_family(user_id, family_name):
+    """Crea una nuova famiglia per l'utente"""
+    try:
+        # Verifica che l'utente non sia già in una famiglia
+        existing_membership = FamilyMember.query.filter_by(user_id=user_id).first()
+        if existing_membership:
+            return {'success': False, 'message': 'Sei già membro di una famiglia'}
+        
+        # Crea famiglia
+        family = Family(
+            name=family_name,
+            family_code=generate_family_code(),
+            created_by=user_id
+        )
+        db.session.add(family)
+        db.session.flush()  # Per ottenere l'ID
+        
+        # Aggiungi l'utente come amministratore
+        admin_member = FamilyMember(
+            family_id=family.id,
+            user_id=user_id,
+            is_admin=True
+        )
+        db.session.add(admin_member)
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'family': family,
+            'family_code': family.family_code,
+            'message': f'Famiglia "{family_name}" creata con successo!'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Errore nella creazione della famiglia: {str(e)}'}
+
+
+def join_family(user_id, family_code):
+    """Unisce un utente a una famiglia tramite codice"""
+    try:
+        # Verifica che l'utente non sia già in una famiglia
+        existing_membership = FamilyMember.query.filter_by(user_id=user_id).first()
+        if existing_membership:
+            return {'success': False, 'message': 'Sei già membro di una famiglia'}
+        
+        # Trova famiglia per codice
+        family = Family.query.filter_by(family_code=family_code, is_active=True).first()
+        if not family:
+            return {'success': False, 'message': 'Codice famiglia non valido'}
+        
+        # Aggiungi membro
+        member = FamilyMember(
+            family_id=family.id,
+            user_id=user_id,
+            is_admin=False
+        )
+        db.session.add(member)
+        db.session.commit()
+        
+        return {
+            'success': True,
+            'family': family,
+            'message': f'Benvenuto nella famiglia "{family.name}"!'
+        }
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Errore nell\'unione alla famiglia: {str(e)}'}
+
+
+def get_user_family(user_id):
+    """Ottiene la famiglia dell'utente"""
+    membership = FamilyMember.query.filter_by(user_id=user_id).first()
+    if membership:
+        return membership.family
+    return None
+
+
+def get_family_members(user_id):
+    """Ottiene tutti i membri della famiglia dell'utente"""
+    family = get_user_family(user_id)
+    if not family:
+        return []
+    
+    return family.members.join(User).all()
+
+
+def get_family_products(user_id):
+    """Ottiene tutti i prodotti condivisi della famiglia dell'utente"""
+    family = get_user_family(user_id)
+    if not family:
+        return []
+    
+    # Ottieni tutti gli user_id dei membri della famiglia
+    member_ids = [member.user_id for member in family.members.all()]
+    
+    # Query prodotti condivisi di tutti i membri
+    return Product.query.filter(
+        Product.user_id.in_(member_ids),
+        Product.is_shared == True,
+        Product.wasted == False
+    ).order_by(Product.expiry_date.asc()).all()
+
+
+def get_family_meal_plans(user_id):
+    """Ottiene tutti i pasti condivisi della famiglia dell'utente"""
+    family = get_user_family(user_id)
+    if not family:
+        return []
+    
+    # Ottieni tutti gli user_id dei membri della famiglia
+    member_ids = [member.user_id for member in family.members.all()]
+    
+    # Query pasti condivisi di tutti i membri
+    return MealPlan.query.filter(
+        MealPlan.user_id.in_(member_ids),
+        MealPlan.is_shared == True
+    ).order_by(MealPlan.date.desc()).all()
+
+
+def leave_family(user_id):
+    """L'utente esce dalla famiglia"""
+    try:
+        membership = FamilyMember.query.filter_by(user_id=user_id).first()
+        if not membership:
+            return {'success': False, 'message': 'Non sei membro di nessuna famiglia'}
+        
+        # Se è l'admin, disattiva la famiglia
+        if membership.is_admin:
+            family = membership.family
+            family.is_active = False
+            # Rimuovi tutti i membri
+            FamilyMember.query.filter_by(family_id=family.id).delete()
+        else:
+            # Rimuovi solo questo membro
+            db.session.delete(membership)
+        
+        db.session.commit()
+        return {'success': True, 'message': 'Hai lasciato la famiglia'}
+        
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': f'Errore: {str(e)}'}
+
+
+def get_combined_products(user_id):
+    """Ottiene prodotti personali + condivisi della famiglia"""
+    # Prodotti personali
+    personal_products = Product.query.filter_by(
+        user_id=user_id,
+        wasted=False
+    ).order_by(Product.expiry_date.asc()).all()
+    
+    # Prodotti condivisi della famiglia
+    family_products = get_family_products(user_id)
+    
+    # Combina e rimuovi duplicati (se l'utente ha lo stesso prodotto sia personale che condiviso)
+    all_products = personal_products.copy()
+    personal_names = {p.name.lower() for p in personal_products}
+    
+    for product in family_products:
+        if product.name.lower() not in personal_names:
+            all_products.append(product)
+    
+    return all_products
+
+
+def get_combined_meal_plans(user_id):
+    """Ottiene pasti personali + condivisi della famiglia"""
+    # Pasti personali
+    personal_meals = MealPlan.query.filter_by(user_id=user_id).order_by(MealPlan.date.desc()).all()
+    
+    # Pasti condivisi della famiglia
+    family_meals = get_family_meal_plans(user_id)
+    
+    # Combina
+    all_meals = personal_meals + family_meals
+    return sorted(all_meals, key=lambda x: x.date, reverse=True)

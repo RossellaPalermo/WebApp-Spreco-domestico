@@ -45,6 +45,20 @@ un'applicazione web moderna e intelligente per la gestione della dispensa domest
 - Leaderboard globale
 - Reward history completa
 
+### 👨‍👩‍👧‍👦 **Sistema Famiglia**
+- Creazione e gestione gruppi familiari
+- Codice famiglia univoco per unirsi
+- Condivisione prodotti e pasti tra membri
+- Vista combinata contenuti personali + condivisi
+- Gestione membri e ruoli (admin/membro)
+
+### 🤝 **Sistema Sponsor & Partnership**
+- Sezione sponsor nel footer e homepage
+- Pagina dedicata per partnership commerciali
+- Pacchetti sponsor (Starter, Professional, Enterprise)
+- Form di contatto per potenziali partner
+- Banner sponsor discreto per utenti non autenticati
+
 ---
 ## 🚀 **Installazione**
 
@@ -99,6 +113,10 @@ Nella dashboard, genera ricette intelligenti basate sui tuoi ingredienti
 Crea un piano settimanale in `/meal-planning`
 ### **6. Monitora Analytics**
 Visualizza statistiche e report in `/analytics`
+### **7. Gestisci Famiglia**
+Crea o unisciti a una famiglia in `/family` per condividere prodotti e pasti
+### **8. Diventa Partner**
+Scopri opportunità di partnership in `/sponsors`
 ---
 
 ## 🛠️ **Tecnologie Utilizzate**
@@ -121,6 +139,35 @@ Visualizza statistiche e report in `/analytics`
 
 ## 📄 **Licenza**
 Questo progetto è sotto licenza MIT. Vedi `LICENSE` per dettagli.
+---
+
+## 👨‍👩‍👧‍👦 **Sistema Famiglia - Dettagli**
+
+### **Funzionalità Principali**
+- **Creazione famiglia**: Un utente può creare una nuova famiglia con un nome personalizzato
+- **Codice famiglia**: Ogni famiglia riceve un codice univoco di 12 caratteri (lettere maiuscole e numeri)
+- **Unione a famiglia**: Gli utenti possono unirsi a una famiglia esistente inserendo il codice
+- **Condivisione contenuti**: Prodotti e pasti possono essere marcati come "condivisi" e saranno visibili a tutti i membri
+- **Vista combinata**: Ogni utente vede i propri contenuti + quelli condivisi dalla famiglia
+
+### **Utilizzo Sistema Famiglia**
+1. **Creare una Famiglia**: Vai su `/family` → "Crea Famiglia" → Inserisci nome → Copia il codice generato
+2. **Unirsi a una Famiglia**: Vai su `/family` → "Unisciti a Famiglia" → Inserisci codice (12 caratteri)
+3. **Condividere Prodotti/Pasti**: Attiva la checkbox "Condividi con la famiglia" nei form
+
+### **API Endpoints Famiglia**
+- `GET /family` - Pagina gestione famiglia
+- `POST /family/create` - Crea nuova famiglia
+- `POST /family/join` - Unisciti a famiglia
+- `POST /family/leave` - Lascia famiglia
+- `GET /family/members` - Lista membri famiglia
+
+### **Modifiche Database**
+Il sistema famiglia aggiunge le seguenti tabelle:
+- `family` - Informazioni famiglia e codice univoco
+- `family_member` - Relazione utenti-famiglia con ruoli
+- Colonne `is_shared` aggiunte a `product` e `meal_plan`
+
 ---
 
 ## 👨‍💻 **Autore**

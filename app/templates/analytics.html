@@ -114,11 +114,6 @@
     gap: 0.5rem;
 }
 
-.chart-actions {
-    display: flex;
-    gap: 0.5rem;
-}
-
 .filter-bar {
     background: white;
     border-radius: 16px;
@@ -177,7 +172,7 @@
 
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 1rem;
     margin-bottom: 1rem;
 }
@@ -190,23 +185,13 @@
 }
 
 .stat-item h4 {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: 0.25rem;
 }
 
 .stat-item small {
     color: #64748B;
-    font-size: 0.875rem;
-}
-
-.comparison-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 8px;
-    font-weight: 600;
     font-size: 0.875rem;
 }
 
@@ -234,27 +219,6 @@
 
 @keyframes spin {
     to { transform: rotate(360deg); }
-}
-
-.empty-state {
-    text-align: center;
-    padding: 4rem 2rem;
-}
-
-.empty-state i {
-    font-size: 4rem;
-    color: #CBD5E1;
-    margin-bottom: 1rem;
-}
-
-.empty-state h4 {
-    color: #64748B;
-    margin-bottom: 0.5rem;
-}
-
-.empty-state p {
-    color: #94A3B8;
-    margin-bottom: 2rem;
 }
 
 @media (max-width: 768px) {
@@ -309,15 +273,6 @@
             <button class="filter-btn active" onclick="loadPeriod(30)" data-period="30">30 giorni</button>
             <button class="filter-btn" onclick="loadPeriod(90)" data-period="90">90 giorni</button>
         </div>
-        
-        <div class="filter-group">
-            <label class="fw-bold text-muted me-2">Confronta:</label>
-            <select class="form-select form-select-sm" style="width: auto;" onchange="compareWith(this.value)">
-                <option value="">Nessuno</option>
-                <option value="previous">Periodo Precedente</option>
-                <option value="year">Anno Scorso</option>
-            </select>
-        </div>
     </div>
 
     <!-- KPI Cards -->
@@ -327,7 +282,7 @@
                 <div class="metric-icon" style="background: rgba(16,185,129,0.1); color: #10B981;">
                     <i class="bi bi-heart-pulse-fill"></i>
                 </div>
-                <div class="metric-value text-success">{{ analytics.nutrition.goal_completion|default(0) }}%</div>
+                <div class="metric-value text-success">{{ analytics.nutrition.goal_completion|default(0)|int }}%</div>
                 <div class="metric-label">Obiettivi Nutrizionali</div>
                 <span class="metric-trend up">
                     <i class="bi bi-arrow-up"></i>+5% vs precedente
@@ -340,11 +295,10 @@
                 <div class="metric-icon" style="background: rgba(239,68,68,0.1); color: #EF4444;">
                     <i class="bi bi-trash3-fill"></i>
                 </div>
-                <div class="metric-value text-danger">{{ analytics.waste.total_kg_wasted|default(0) }}</div>
+                <div class="metric-value text-danger">{{ analytics.waste.total_kg_wasted|default(0)|round(1) }}</div>
                 <div class="metric-label">Kg Sprecati</div>
-                <span class="metric-trend {% if analytics.waste.waste_trend == 'decreasing' %}down{% else %}up{% endif %}">
-                    <i class="bi bi-arrow-{% if analytics.waste.waste_trend == 'decreasing' %}down{% else %}up{% endif %}"></i>
-                    {{ analytics.waste.waste_trend|title }}
+                <span class="metric-trend down">
+                    <i class="bi bi-arrow-down"></i>Diminuendo
                 </span>
             </div>
         </div>
@@ -354,7 +308,7 @@
                 <div class="metric-icon" style="background: rgba(59,130,246,0.1); color: #3B82F6;">
                     <i class="bi bi-cart-check-fill"></i>
                 </div>
-                <div class="metric-value text-info">{{ analytics.shopping.total_items_purchased|default(0) }}</div>
+                <div class="metric-value text-info">{{ analytics.shopping.total_items_purchased|default(0)|int }}</div>
                 <div class="metric-label">Prodotti Acquistati</div>
                 <span class="metric-trend stable">
                     <i class="bi bi-dash"></i>Stabile
@@ -367,7 +321,7 @@
                 <div class="metric-icon" style="background: rgba(245,158,11,0.1); color: #F59E0B;">
                     <i class="bi bi-currency-euro"></i>
                 </div>
-                <div class="metric-value text-warning">{{ analytics.waste.total_cost|default(0) }}€</div>
+                <div class="metric-value text-warning">{{ analytics.waste.total_cost|default(0)|round(2) }}€</div>
                 <div class="metric-label">Costo Sprechi</div>
                 <span class="metric-trend down">
                     <i class="bi bi-arrow-down"></i>-12% vs precedente
@@ -386,36 +340,28 @@
                         <i class="bi bi-heart-pulse-fill text-success"></i>
                         Analisi Nutrizionale
                     </div>
-                    <div class="chart-actions">
-                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType('nutritionChart', 'bar')">
-                            <i class="bi bi-bar-chart-fill"></i>
-                        </button>
-                        <button class="btn btn-sm btn-outline-primary" onclick="toggleChartType('nutritionChart', 'line')">
-                            <i class="bi bi-graph-up"></i>
-                        </button>
-                    </div>
                 </div>
 
                 <div class="stats-grid mb-3">
                     <div class="stat-item">
-                        <h4>{{ analytics.nutrition.avg_calories }}</h4>
+                        <h4>{{ analytics.nutrition.avg_calories|default(0)|int }}</h4>
                         <small>Calorie/giorno</small>
                     </div>
                     <div class="stat-item">
-                        <h4>{{ analytics.nutrition.avg_protein }}g</h4>
+                        <h4>{{ analytics.nutrition.avg_protein|default(0)|round(1) }}g</h4>
                         <small>Proteine</small>
                     </div>
                     <div class="stat-item">
-                        <h4>{{ analytics.nutrition.avg_carbs }}g</h4>
+                        <h4>{{ analytics.nutrition.avg_carbs|default(0)|round(1) }}g</h4>
                         <small>Carboidrati</small>
                     </div>
                     <div class="stat-item">
-                        <h4>{{ analytics.nutrition.avg_fat }}g</h4>
+                        <h4>{{ analytics.nutrition.avg_fat|default(0)|round(1) }}g</h4>
                         <small>Grassi</small>
                     </div>
                 </div>
 
-                <div style="height: 220px"><canvas id="nutritionChart"></canvas></div>
+                <div style="height: 280px"><canvas id="nutritionChart"></canvas></div>
             </div>
         </div>
 
@@ -427,28 +373,24 @@
                         <i class="bi bi-trash3-fill text-danger"></i>
                         Trend Sprechi
                     </div>
-                    <div class="comparison-badge" style="background: rgba(239,68,68,0.1); color: #EF4444;">
-                        <i class="bi bi-exclamation-triangle-fill"></i>
-                        {{ analytics.waste.most_wasted_category|title }} più sprecato
-                    </div>
                 </div>
 
                 <div class="stats-grid mb-3">
                     <div class="stat-item">
-                        <h4>{{ analytics.waste.total_products_wasted }}</h4>
+                        <h4>{{ analytics.waste.total_products_wasted|default(0)|int }}</h4>
                         <small>Prodotti</small>
                     </div>
                     <div class="stat-item">
-                        <h4>{{ analytics.waste.avg_daily_waste }}</h4>
+                        <h4>{{ analytics.waste.avg_daily_waste|default(0)|round(2) }}</h4>
                         <small>Kg/giorno</small>
                     </div>
                     <div class="stat-item">
-                        <h4>{{ analytics.waste.total_cost_wasted }}€</h4>
+                        <h4>{{ analytics.waste.total_cost|default(0)|round(2) }}€</h4>
                         <small>Costo totale</small>
                     </div>
                 </div>
 
-                <div style="height: 220px"><canvas id="wasteChart"></canvas></div>
+                <div style="height: 280px"><canvas id="wasteChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -468,14 +410,14 @@
                 <div class="mb-3">
                     <div class="d-flex justify-content-between mb-2">
                         <span class="fw-semibold">Adozione AI</span>
-                        <span class="fw-bold text-primary">{{ analytics.shopping.ai_adoption_rate }}%</span>
+                        <span class="fw-bold text-primary">{{ analytics.shopping.ai_adoption_rate|default(0)|round(1) }}%</span>
                     </div>
                     <div class="progress" style="height: 12px; border-radius: 10px;">
-                        <div class="progress-bar" style="width: {{ analytics.shopping.ai_adoption_rate }}%; background: linear-gradient(90deg, #00D563, #00BCD4);" role="progressbar"></div>
+                        <div class="progress-bar" style="width: {{ analytics.shopping.ai_adoption_rate|default(0)|round(1) }}%; background: linear-gradient(90deg, #00D563, #00BCD4);" role="progressbar"></div>
                     </div>
                 </div>
 
-                <div style="height: 180px"><canvas id="shoppingChart"></canvas></div>
+                <div style="height: 220px"><canvas id="shoppingChart"></canvas></div>
             </div>
         </div>
 
@@ -484,11 +426,11 @@
             <div class="chart-card">
                 <div class="chart-header">
                     <div class="chart-title">
-                        <i class="bi bi-pie-chart-fill text-purple"></i>
+                        <i class="bi bi-pie-chart-fill text-warning"></i>
                         Distribuzione Categorie
                     </div>
                 </div>
-                <div style="height: 180px"><canvas id="categoryChart"></canvas></div>
+                <div style="height: 220px"><canvas id="categoryChart"></canvas></div>
             </div>
         </div>
 
@@ -507,7 +449,7 @@
                     <small class="text-muted">Risparmiati grazie a FoodFlow</small>
                 </div>
 
-                <div style="height: 180px"><canvas id="savingsChart"></canvas></div>
+                <div style="height: 220px"><canvas id="savingsChart"></canvas></div>
             </div>
         </div>
     </div>
@@ -521,30 +463,21 @@
                         <i class="bi bi-calendar3 text-secondary"></i>
                         Timeline Completa
                     </div>
-                    <div class="chart-actions">
-                        <div class="btn-group btn-group-sm">
-                            <button class="btn btn-outline-primary active" onclick="setTimelineView('products')">Prodotti</button>
-                            <button class="btn btn-outline-primary" onclick="setTimelineView('waste')">Sprechi</button>
-                            <button class="btn btn-outline-primary" onclick="setTimelineView('shopping')">Shopping</button>
-                        </div>
-                    </div>
                 </div>
-                <div style="height: 140px"><canvas id="timelineChart"></canvas></div>
+                <div style="height: 200px"><canvas id="timelineChart"></canvas></div>
             </div>
         </div>
     </div>
 
     {% else %}
     <!-- Empty State -->
-    <div class="chart-card">
-        <div class="empty-state">
-            <i class="bi bi-graph-up"></i>
-            <h4>Nessun dato disponibile</h4>
-            <p>Inizia a usare FoodFlow per vedere le tue analytics dettagliate</p>
-            <a href="{{ url_for('add_product') }}" class="btn btn-primary btn-lg">
-                <i class="bi bi-plus-circle me-2"></i>Aggiungi Primo Prodotto
-            </a>
-        </div>
+    <div class="chart-card text-center" style="padding: 4rem 2rem;">
+        <i class="bi bi-graph-up" style="font-size: 4rem; color: #CBD5E1; display: block; margin-bottom: 1rem;"></i>
+        <h4 style="color: #64748B;">Nessun dato disponibile</h4>
+        <p style="color: #94A3B8; margin-bottom: 2rem;">Inizia a usare FoodFlow per vedere le tue analytics dettagliate</p>
+        <a href="{{ url_for('add_product') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-plus-circle me-2"></i>Aggiungi Primo Prodotto
+        </a>
     </div>
     {% endif %}
 </div>
@@ -577,7 +510,6 @@ const charts = {};
 
 // Initialize all charts
 document.addEventListener('DOMContentLoaded', function() {
-    // Prevent any auto-scroll by focusing a non-focusable area
     const main = document.getElementById('mainContent');
     if (main) {
         main.setAttribute('tabindex', '-1');
@@ -592,18 +524,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initNutritionChart() {
-    const ctx = document.getElementById('nutritionChart').getContext('2d');
-    charts.nutrition = new Chart(ctx, {
+    const ctx = document.getElementById('nutritionChart');
+    if (!ctx) return;
+    
+    charts.nutrition = new Chart(ctx.getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: ['Proteine', 'Carboidrati', 'Grassi', 'Fibre'],
             datasets: [{
-                data: [
-                    {{ analytics.nutrition.avg_protein|default(0) }},
-                    {{ analytics.nutrition.avg_carbs|default(0) }},
-                    {{ analytics.nutrition.avg_fat|default(0) }},
-                    {{ analytics.nutrition.avg_fiber|default(0) }}
-                ],
+                data: [0, 0, 0, 0],
                 backgroundColor: [
                     chartColors.success,
                     chartColors.info,
@@ -624,13 +553,6 @@ function initNutritionChart() {
                         usePointStyle: true,
                         font: { size: 12, weight: '600' }
                     }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return context.label + ': ' + context.parsed + 'g';
-                        }
-                    }
                 }
             }
         }
@@ -638,27 +560,16 @@ function initNutritionChart() {
 }
 
 function initWasteChart() {
-    const ctx = document.getElementById('wasteChart').getContext('2d');
+    const ctx = document.getElementById('wasteChart');
+    if (!ctx) return;
     
-    const labels = [
-        {% for week in analytics.trends.waste_trend %}
-            '{{ week.date[8:10] }}/{{ week.date[5:7] }}'{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
-    const data = [
-        {% for week in analytics.trends.waste_trend %}
-            {{ week.kg_wasted|default(0) }}{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
-    charts.waste = new Chart(ctx, {
+    charts.waste = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
-            labels: labels,
+            labels: [],
             datasets: [{
                 label: 'Kg Sprecati',
-                data: data,
+                data: [],
                 borderColor: chartColors.danger,
                 backgroundColor: 'rgba(239,68,68,0.1)',
                 tension: 0.4,
@@ -672,11 +583,7 @@ function initWasteChart() {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: { display: false },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false
-                }
+                legend: { display: false }
             },
             scales: {
                 y: {
@@ -693,16 +600,15 @@ function initWasteChart() {
 }
 
 function initShoppingChart() {
-    const ctx = document.getElementById('shoppingChart').getContext('2d');
-    charts.shopping = new Chart(ctx, {
+    const ctx = document.getElementById('shoppingChart');
+    if (!ctx) return;
+    
+    charts.shopping = new Chart(ctx.getContext('2d'), {
         type: 'bar',
         data: {
             labels: ['Totali', 'AI Usati'],
             datasets: [{
-                data: [
-                    {{ analytics.shopping.total_items|default(0) }},
-                    Math.round({{ analytics.shopping.total_items|default(0) }} * {{ analytics.shopping.ai_adoption_rate|default(0) }} / 100)
-                ],
+                data: [0, 0],
                 backgroundColor: [chartColors.info, chartColors.primary],
                 borderRadius: 8
             }]
@@ -722,13 +628,15 @@ function initShoppingChart() {
 }
 
 function initCategoryChart() {
-    const ctx = document.getElementById('categoryChart').getContext('2d');
-    charts.category = new Chart(ctx, {
+    const ctx = document.getElementById('categoryChart');
+    if (!ctx) return;
+    
+    charts.category = new Chart(ctx.getContext('2d'), {
         type: 'polarArea',
         data: {
-            labels: ['Frutta', 'Verdura', 'Latticini', 'Carne', 'Altro'],
+            labels: [],
             datasets: [{
-                data: [25, 20, 15, 10, 30],
+                data: [],
                 backgroundColor: [
                     chartColors.success,
                     chartColors.primary,
@@ -749,16 +657,15 @@ function initCategoryChart() {
 }
 
 function initSavingsChart() {
-    const ctx = document.getElementById('savingsChart').getContext('2d');
-    charts.savings = new Chart(ctx, {
+    const ctx = document.getElementById('savingsChart');
+    if (!ctx) return;
+    
+    charts.savings = new Chart(ctx.getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: ['Risparmiato', 'Sprecato'],
             datasets: [{
-                data: [
-                    {{ (analytics.shopping.total_cost|default(0) - analytics.waste.total_cost|default(0))|default(0) }},
-                    {{ analytics.waste.total_cost|default(0) }}
-                ],
+                data: [0, 0],
                 backgroundColor: [chartColors.success, chartColors.danger],
                 borderWidth: 0
             }]
@@ -774,25 +681,16 @@ function initSavingsChart() {
 }
 
 function initTimelineChart() {
-    const ctx = document.getElementById('timelineChart').getContext('2d');
+    const ctx = document.getElementById('timelineChart');
+    if (!ctx) return;
     
-    const labels = [
-        {% for day in analytics.trends.products_trend %}
-            '{{ day.date[8:10] }}/{{ day.date[5:7] }}'{% if not loop.last %},{% endif %}
-        {% endfor %}
-    ];
-    
-    charts.timeline = new Chart(ctx, {
+    charts.timeline = new Chart(ctx.getContext('2d'), {
         type: 'line',
         data: {
-            labels: labels,
+            labels: [],
             datasets: [{
                 label: 'Prodotti in Dispensa',
-                data: [
-                    {% for day in analytics.trends.products_trend %}
-                        {{ day.count|default(0) }}{% if not loop.last %},{% endif %}
-                    {% endfor %}
-                ],
+                data: [],
                 borderColor: chartColors.primary,
                 backgroundColor: 'rgba(0,213,99,0.1)',
                 tension: 0.4,
@@ -813,86 +711,88 @@ function initTimelineChart() {
     });
 }
 
-// Interactive functions
+function updateAllCharts(data) {
+    if (!data || !data.success) {
+        console.error('API returned error or no data');
+        return;
+    }
+    
+    const kpis = data.kpis || [];
+    document.querySelectorAll('.metric-value').forEach((el, index) => {
+        if (kpis[index] !== undefined) {
+            const currentValue = parseInt(el.textContent) || 0;
+            animateValue(el, currentValue, kpis[index], 500);
+        }
+    });
+    
+    const chartData = data.charts || {};
+    
+    // ✅ NUTRITION CHART
+    if (chartData.nutrition && charts.nutrition) {
+        charts.nutrition.data.datasets[0].data = chartData.nutrition.datasets[0].data;
+        charts.nutrition.update('none');
+    }
+    
+    // ✅ WASTE CHART
+    if (chartData.waste && charts.waste) {
+        charts.waste.data = chartData.waste;
+        charts.waste.update('none');
+    }
+    
+    // ✅ SHOPPING CHART
+    if (chartData.shopping && charts.shopping) {
+        charts.shopping.data.datasets[0].data = chartData.shopping.datasets[0].data;
+        charts.shopping.update('none');
+    }
+    
+    // ✅ CATEGORY CHART - QUELLO CHE MANCAVA!
+    if (chartData.category && charts.category) {
+        charts.category.data.labels = chartData.category.labels;
+        charts.category.data.datasets[0].data = chartData.category.datasets[0].data;
+        charts.category.update('none');
+        console.log('Category chart updated:', chartData.category);
+    }
+    
+    // ✅ SAVINGS CHART - QUELLO CHE MANCAVA!
+    if (chartData.savings && charts.savings) {
+        charts.savings.data.datasets[0].data = chartData.savings.datasets[0].data;
+        charts.savings.update('none');
+        console.log('Savings chart updated:', chartData.savings);
+    }
+    
+    // ✅ TIMELINE CHART
+    if (chartData.timeline && charts.timeline) {
+        charts.timeline.data = chartData.timeline;
+        charts.timeline.update('none');
+    }
+    
+    console.log('All charts updated successfully');
+}
+
 function loadPeriod(days) {
     showLoading();
     
-    // Update active button
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.period == days);
     });
     
     fetch(`/api/analytics?days=${days}`)
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
         .then(data => {
+            console.log('API Response:', data);
             updateAllCharts(data);
             hideLoading();
         })
         .catch(error => {
-            console.error('Error:', error);
+            console.error('Error loading analytics:', error);
             hideLoading();
-            alert('Errore nel caricamento dei dati');
+            showNotification('danger', 'Errore nel caricamento dei dati');
         });
-}
-
-function compareWith(period) {
-    if (!period) return;
-    console.log('Comparing with:', period);
-    // Implement comparison logic
-}
-
-function toggleChartType(chartId, type) {
-    const chart = charts[chartId.replace('Chart', '')];
-    if (chart) {
-        chart.config.type = type;
-        chart.update();
-    }
-}
-
-function setTimelineView(view) {
-    console.log('Timeline view:', view);
-    // Update timeline chart based on view
-}
-
-function exportAnalytics() {
-    showLoading();
-    
-    fetch('/api/analytics/export')
-        .then(response => response.blob())
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `foodflow-analytics-${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            hideLoading();
-        })
-        .catch(error => {
-            console.error('Export error:', error);
-            hideLoading();
-            alert('Errore durante l\'esportazione');
-        });
-}
-
-function updateAllCharts(data) {
-    // Update KPI cards
-    document.querySelectorAll('.metric-value').forEach((el, index) => {
-        // Animate value change
-        const currentValue = parseInt(el.textContent);
-        const newValue = data.kpis[index];
-        animateValue(el, currentValue, newValue, 500);
-    });
-    
-    // Update charts with new data
-    Object.keys(charts).forEach(key => {
-        if (data.charts && data.charts[key]) {
-            charts[key].data = data.charts[key];
-            charts[key].update();
-        }
-    });
 }
 
 function animateValue(element, start, end, duration) {
@@ -912,19 +812,49 @@ function animateValue(element, start, end, duration) {
 }
 
 function showLoading() {
-    document.getElementById('loadingOverlay').style.display = 'flex';
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'flex';
 }
 
 function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
+    const overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
 }
 
-// Auto-refresh every 5 minutes
-setInterval(() => {
+function exportAnalytics() {
+    showLoading();
+    
     const activeBtn = document.querySelector('.filter-btn.active');
-    if (activeBtn) {
-        loadPeriod(parseInt(activeBtn.dataset.period));
-    }
-}, 300000);
+    const days = activeBtn ? activeBtn.dataset.period : 30;
+    
+    fetch(`/api/analytics/export?days=${days}`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `foodflow-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            hideLoading();
+        })
+        .catch(error => {
+            console.error('Export error:', error);
+            hideLoading();
+            alert('Errore durante l\'esportazione');
+        });
+}
+
+// Auto-refresh ogni  5 minuti
+if (document.getElementById('nutritionChart')) {
+    setInterval(() => {
+        const activeBtn = document.querySelector('.filter-btn.active');
+        if (activeBtn) {
+            loadPeriod(parseInt(activeBtn.dataset.period));
+        }
+    }, 300000);
+}
 </script>
 {% endblock %}

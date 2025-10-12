@@ -1,6 +1,6 @@
 -- ============================================
--- FOODFLOW DATABASE SETUP SCRIPT
--- MariaDB/MySQL Database Creation Script
+-- FOODFLOW DATABASE SETUP SCRIPT (Aggiornato)
+-- Compatibile con i modelli Flask/SQLAlchemy
 -- ============================================
 
 -- Crea il database
@@ -8,7 +8,6 @@ CREATE DATABASE IF NOT EXISTS food_waste_app
 CHARACTER SET utf8mb4 
 COLLATE utf8mb4_unicode_ci;
 
--- Usa il database
 USE food_waste_app;
 
 -- ============================================
@@ -37,6 +36,7 @@ CREATE TABLE IF NOT EXISTS `product` (
     `category` VARCHAR(50) NOT NULL,
     `min_quantity` FLOAT DEFAULT 1.0,
     `wasted` BOOLEAN DEFAULT FALSE,
+    `is_shared` BOOLEAN DEFAULT FALSE,
     `allergens` VARCHAR(200) NULL,
     `notes` TEXT NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -46,10 +46,43 @@ CREATE TABLE IF NOT EXISTS `product` (
     INDEX `idx_name` (`name`),
     INDEX `idx_expiry_date` (`expiry_date`),
     INDEX `idx_category` (`category`),
-    INDEX `idx_wasted` (`wasted`)
+    INDEX `idx_wasted` (`wasted`),
+    INDEX `idx_is_shared` (`is_shared`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella liste spesa
+-- ============================================
+-- SISTEMA FAMIGLIA
+-- ============================================
+
+CREATE TABLE IF NOT EXISTS `family` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `name` VARCHAR(100) NOT NULL,
+    `family_code` VARCHAR(12) NOT NULL UNIQUE,
+    `created_by` INT NOT NULL,
+    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `is_active` BOOLEAN DEFAULT TRUE,
+    FOREIGN KEY (`created_by`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    INDEX `idx_family_code` (`family_code`),
+    INDEX `idx_created_by` (`created_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS `family_member` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `family_id` INT NOT NULL,
+    `user_id` INT NOT NULL,
+    `joined_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    `is_admin` BOOLEAN DEFAULT FALSE,
+    FOREIGN KEY (`family_id`) REFERENCES `family`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
+    UNIQUE KEY `unique_family_member` (`family_id`, `user_id`),
+    INDEX `idx_family_id` (`family_id`),
+    INDEX `idx_user_id` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ============================================
+-- SHOPPING LIST
+-- ============================================
+
 CREATE TABLE IF NOT EXISTS `shopping_list` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -69,7 +102,6 @@ CREATE TABLE IF NOT EXISTS `shopping_list` (
     INDEX `idx_completed` (`completed`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella items lista spesa
 CREATE TABLE IF NOT EXISTS `shopping_item` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `shopping_list_id` INT NOT NULL,
@@ -93,7 +125,6 @@ CREATE TABLE IF NOT EXISTS `shopping_item` (
 -- GAMIFICATION
 -- ============================================
 
--- Tabella statistiche utente
 CREATE TABLE IF NOT EXISTS `user_stats` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL UNIQUE,
@@ -110,7 +141,6 @@ CREATE TABLE IF NOT EXISTS `user_stats` (
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella badge
 CREATE TABLE IF NOT EXISTS `badge` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(50) NOT NULL UNIQUE,
@@ -121,7 +151,6 @@ CREATE TABLE IF NOT EXISTS `badge` (
     `category` VARCHAR(50) NOT NULL DEFAULT 'general'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella badge utente
 CREATE TABLE IF NOT EXISTS `user_badge` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -134,7 +163,6 @@ CREATE TABLE IF NOT EXISTS `user_badge` (
     INDEX `idx_badge_id` (`badge_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella cronologia ricompense
 CREATE TABLE IF NOT EXISTS `reward_history` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -153,7 +181,6 @@ CREATE TABLE IF NOT EXISTS `reward_history` (
 -- PIANO NUTRIZIONALE
 -- ============================================
 
--- Tabella profilo nutrizionale
 CREATE TABLE IF NOT EXISTS `nutritional_profile` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL UNIQUE,
@@ -171,7 +198,6 @@ CREATE TABLE IF NOT EXISTS `nutritional_profile` (
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella obiettivi nutrizionali
 CREATE TABLE IF NOT EXISTS `nutritional_goal` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL UNIQUE,
@@ -186,7 +212,6 @@ CREATE TABLE IF NOT EXISTS `nutritional_goal` (
     INDEX `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella piano pasti
 CREATE TABLE IF NOT EXISTS `meal_plan` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -198,14 +223,12 @@ CREATE TABLE IF NOT EXISTS `meal_plan` (
     `carbs` FLOAT NULL,
     `fat` FLOAT NULL,
     `fiber` FLOAT NULL,
+    `is_shared` BOOLEAN DEFAULT FALSE,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
-    INDEX `idx_user_date` (`user_id`, `date`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_date` (`date`)
+    INDEX `idx_user_date` (`user_id`, `date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella nutrizione giornaliera
 CREATE TABLE IF NOT EXISTS `daily_nutrition` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -225,16 +248,13 @@ CREATE TABLE IF NOT EXISTS `daily_nutrition` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
     UNIQUE KEY `unique_daily_nutrition` (`user_id`, `date`),
-    INDEX `idx_user_date_nutrition` (`user_id`, `date`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_date` (`date`)
+    INDEX `idx_user_date_nutrition` (`user_id`, `date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- ANALYTICS
 -- ============================================
 
--- Tabella analytics sprechi
 CREATE TABLE IF NOT EXISTS `waste_analytics` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -247,12 +267,9 @@ CREATE TABLE IF NOT EXISTS `waste_analytics` (
     `most_wasted_category` VARCHAR(50) NULL,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
-    INDEX `idx_user_date_waste` (`user_id`, `date`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_date` (`date`)
+    INDEX `idx_user_date_waste` (`user_id`, `date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Tabella analytics shopping
 CREATE TABLE IF NOT EXISTS `shopping_analytics` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT NOT NULL,
@@ -265,16 +282,13 @@ CREATE TABLE IF NOT EXISTS `shopping_analytics` (
     `shopping_frequency_days` FLOAT DEFAULT 0.0,
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON DELETE CASCADE,
-    INDEX `idx_user_date_shopping` (`user_id`, `date`),
-    INDEX `idx_user_id` (`user_id`),
-    INDEX `idx_date` (`date`)
+    INDEX `idx_user_date_shopping` (`user_id`, `date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================
 -- DATI INIZIALI
 -- ============================================
 
--- Inserisci badge di default
 INSERT IGNORE INTO `badge` (`name`, `description`, `icon`, `points_required`, `condition`, `category`) VALUES
 ('Benvenuto', 'Hai completato la registrazione', 'bi-star-fill', 0, 'registration', 'general'),
 ('Primo Passo', 'Hai aggiunto il primo prodotto', 'bi-box-seam', 10, 'first_product', 'general'),
@@ -286,49 +300,3 @@ INSERT IGNORE INTO `badge` (`name`, `description`, `icon`, `points_required`, `c
 ('Spreco Zero', 'Hai raggiunto una settimana senza sprechi', 'bi-recycle', 150, 'zero_waste_week', 'environment'),
 ('Consistenza', 'Hai seguito il piano nutrizionale per 7 giorni consecutivi', 'bi-calendar-check', 100, 'nutrition_consistency_7', 'nutrition'),
 ('Esploratore', 'Hai provato 5 nuove ricette', 'bi-compass', 75, 'new_recipes_5', 'cooking');
-
--- ============================================
--- VERIFICA SETUP
--- ============================================
-
--- Mostra le tabelle create
-SHOW TABLES;
-
--- Mostra il numero di badge inseriti
-SELECT COUNT(*) as 'Badge Inseriti' FROM badge;
-
--- Mostra informazioni database
-SELECT 
-    DATABASE() as 'Database Corrente',
-    @@character_set_database as 'Charset',
-    @@collation_database as 'Collation';
-
--- ============================================
--- NOTE FINALI
--- ============================================
-
-/*
-SETUP COMPLETATO!
-
-Il database FoodFlow è stato creato con successo con:
-
-✅ 12 tabelle principali
-✅ Indici ottimizzati per performance
-✅ Relazioni foreign key corrette
-✅ 10 badge di default per gamification
-✅ Charset UTF8MB4 per supporto emoji
-✅ Engine InnoDB per transazioni ACID
-
-PROSSIMI PASSI:
-1. Configura le variabili d'ambiente (.env)
-2. Avvia l'applicazione Flask
-3. Crea il primo utente tramite registrazione
-4. Inizia ad aggiungere prodotti alla dispensa
-
-CONFIGURAZIONE RICHIESTA:
-- SECRET_KEY: Chiave segreta per Flask
-- DATABASE_URL: mysql+pymysql://user:password@localhost/food_waste_app
-- GROQ_API_KEY: Chiave API per funzionalità AI
-
-Buon lavoro con FoodFlow! 🚀
-*/

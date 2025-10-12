@@ -17,17 +17,13 @@
     <!-- AOS Animation Library -->
     <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 
-    <!-- Custom CSS -->
-    <link href="{{ url_for('static', filename='css/foodflow.css') }}" rel="stylesheet">
-
     <style>
         :root {
-            /* === PALETTE MIGLIORATA === */
+            /* === PALETTE DESIGN SYSTEM === */
             --primary-green: #00D563;
             --primary-green-light: #4AE189;
             --primary-green-dark: #00B350;
             --secondary-orange: #FF6B35;
-            --secondary-orange-light: #FF8A65;
             --accent-teal: #00BCD4;
             --accent-purple: #9C27B0;
             
@@ -36,7 +32,7 @@
             --danger: #EF4444;
             --info: #3B82F6;
 
-            /* Neutrals migliorati */
+            /* Neutrals */
             --neutral-50: #FAFAFA;
             --neutral-100: #F5F5F5;
             --neutral-200: #E5E7EB;
@@ -48,19 +44,18 @@
             --neutral-800: #1F2937;
             --neutral-900: #111827;
 
-            /* Gradienti avanzati */
+            /* Gradients */
             --gradient-hero: linear-gradient(135deg, #00D563 0%, #00BCD4 100%);
             --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.95) 100%);
             --gradient-glass: linear-gradient(145deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
             --gradient-shine: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.4) 50%, transparent 100%);
 
-            /* Shadows avanzate */
+            /* Shadows */
             --shadow-xs: 0 1px 2px rgba(0,0,0,0.05);
             --shadow-sm: 0 2px 4px rgba(0,0,0,0.06);
             --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
             --shadow-lg: 0 10px 24px rgba(0,0,0,0.1);
             --shadow-xl: 0 20px 40px rgba(0,0,0,0.12);
-            --shadow-2xl: 0 25px 50px rgba(0,0,0,0.15);
             --shadow-glow: 0 0 20px rgba(0,213,99,0.3);
 
             /* Radius */
@@ -68,30 +63,22 @@
             --radius-md: 12px;
             --radius-lg: 16px;
             --radius-xl: 24px;
-            --radius-2xl: 32px;
             --radius-full: 9999px;
 
             /* Transitions */
             --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-normal: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        /* === DARK MODE VARIABLES === */
-        [data-bs-theme="dark"] {
-            --bg-primary: #0F172A;
-            --bg-secondary: #1E293B;
-            --bg-tertiary: #334155;
-            --text-primary: #F8FAFC;
-            --text-secondary: #CBD5E1;
-            --border-color: #334155;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
         }
 
         body {
@@ -112,7 +99,7 @@
             left: -50%;
             width: 200%;
             height: 200%;
-            background: radial-gradient(circle, rgba(0,213,99,0.05) 1px, transparent 1px);
+            background: radial-gradient(circle, rgba(0,213,99,0.03) 1px, transparent 1px);
             background-size: 50px 50px;
             animation: backgroundPulse 20s ease-in-out infinite;
             pointer-events: none;
@@ -121,7 +108,7 @@
 
         @keyframes backgroundPulse {
             0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(20px, 20px); }
+            50% { transform: translate(15px, 15px); }
         }
 
         /* === NAVBAR ULTRA-MODERNA === */
@@ -129,7 +116,7 @@
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px) saturate(180%);
             -webkit-backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 2px solid rgba(0,213,99,0.08);
             box-shadow: var(--shadow-md);
             transition: var(--transition-normal);
             padding: 0.75rem 0;
@@ -143,8 +130,10 @@
             background: rgba(255, 255, 255, 0.95);
             box-shadow: var(--shadow-lg);
             padding: 0.5rem 0;
+            border-bottom-color: rgba(0,213,99,0.15);
         }
 
+        /* Brand */
         .navbar-brand-modern {
             font-family: 'Poppins', sans-serif;
             font-weight: 800;
@@ -156,6 +145,10 @@
             letter-spacing: -0.5px;
             position: relative;
             transition: var(--transition-normal);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            text-decoration: none;
         }
 
         .navbar-brand-modern:hover {
@@ -169,6 +162,7 @@
             background-clip: text;
             -webkit-text-fill-color: transparent;
             animation: heartbeat 1.5s ease-in-out infinite;
+            font-size: 1.5rem;
         }
 
         @keyframes heartbeat {
@@ -177,15 +171,20 @@
             20%, 40% { transform: scale(0.95); }
         }
 
+        /* Nav Links */
         .nav-link-modern {
             font-weight: 600;
             color: var(--neutral-700);
-            border-radius: var(--radius-full);
+            border-radius: var(--radius-sm);
             padding: 0.5rem 1.25rem !important;
             margin: 0 0.25rem;
             transition: var(--transition-normal);
             position: relative;
             overflow: hidden;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .nav-link-modern::before {
@@ -216,21 +215,16 @@
             transform: translateY(-2px);
         }
 
-        .nav-link-modern.active i {
-            animation: bounce 0.6s ease-in-out;
+        .nav-link-modern i {
+            font-size: 1.1rem;
         }
 
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        /* === DARK MODE TOGGLE === */
+        /* Theme Toggle */
         .theme-toggle {
             width: 48px;
             height: 48px;
             border-radius: var(--radius-full);
-            background: var(--gradient-card);
+            background: rgba(255,255,255,0.8);
             border: 2px solid var(--neutral-200);
             display: flex;
             align-items: center;
@@ -246,6 +240,7 @@
             transform: scale(1.1) rotate(15deg);
             box-shadow: var(--shadow-md);
             border-color: var(--primary-green);
+            background: white;
         }
 
         .theme-toggle i {
@@ -258,7 +253,7 @@
             color: var(--primary-green);
         }
 
-        /* === DROPDOWN MENU === */
+        /* Dropdown Menu */
         .dropdown-menu {
             border: none;
             box-shadow: var(--shadow-xl);
@@ -266,7 +261,8 @@
             padding: 0.5rem;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            margin-top: 0.5rem;
+            margin-top: 0.75rem;
+            border: 1px solid var(--neutral-200);
         }
 
         .dropdown-item {
@@ -274,6 +270,10 @@
             padding: 0.75rem 1rem;
             transition: var(--transition-fast);
             font-weight: 500;
+            color: var(--neutral-700);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
 
         .dropdown-item:hover {
@@ -284,13 +284,19 @@
 
         .dropdown-item i {
             transition: var(--transition-fast);
+            font-size: 1.1rem;
         }
 
         .dropdown-item:hover i {
             transform: scale(1.2);
         }
 
-        /* === ALERTS AVANZATI === */
+        .dropdown-divider {
+            opacity: 0.2;
+            margin: 0.5rem 0;
+        }
+
+        /* === ALERTS === */
         .alert-modern {
             border-radius: var(--radius-lg);
             padding: 1rem 1.25rem;
@@ -353,7 +359,7 @@
         .footer-modern {
             background: linear-gradient(135deg, var(--neutral-900) 0%, var(--neutral-800) 100%);
             color: var(--neutral-200);
-            padding: 3rem 0 1.5rem;
+            padding: 4rem 0 1.5rem;
             margin-top: 5rem;
             position: relative;
             overflow: hidden;
@@ -365,67 +371,218 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: var(--gradient-hero);
+            box-shadow: var(--shadow-glow);
         }
 
         .footer-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-section {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .footer-section h5 {
             color: white;
             font-weight: 700;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
             font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+        }
+
+        .footer-section h5 i {
+            color: var(--primary-green);
+            font-size: 1.3rem;
+        }
+
+        .footer-section > p {
+            color: var(--neutral-400);
+            line-height: 1.6;
+            font-size: 0.95rem;
         }
 
         .footer-link {
             color: var(--neutral-400);
             text-decoration: none;
-            display: block;
-            padding: 0.5rem 0;
-            transition: var(--transition-fast);
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 0;
+            transition: var(--transition-normal);
+            font-size: 0.95rem;
         }
 
         .footer-link:hover {
             color: var(--primary-green);
-            transform: translateX(5px);
+            transform: translateX(6px);
         }
 
+        .footer-link i {
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: var(--transition-normal);
+        }
+
+        .footer-link:hover i {
+            opacity: 1;
+        }
+
+        /* Social Links */
         .social-links {
             display: flex;
             gap: 1rem;
-            margin-top: 1rem;
+            margin-top: 1.5rem;
         }
 
         .social-link {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: var(--radius-full);
-            background: var(--neutral-700);
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             text-decoration: none;
             transition: var(--transition-normal);
+            font-size: 1.1rem;
         }
 
         .social-link:hover {
             background: var(--gradient-hero);
-            transform: translateY(-5px) rotate(360deg);
+            border-color: var(--primary-green);
+            transform: translateY(-4px) rotate(10deg);
             box-shadow: var(--shadow-glow);
         }
 
+        /* Newsletter Form */
+        .newsletter-form {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .newsletter-form input {
+            flex: 1;
+            padding: 0.75rem 1.25rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--radius-md) 0 0 var(--radius-md);
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 0.9rem;
+            transition: var(--transition-normal);
+        }
+
+        .newsletter-form input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .newsletter-form input:focus {
+            outline: none;
+            border-color: var(--primary-green);
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 0 0 3px rgba(0,213,99,0.2);
+        }
+
+        .newsletter-form button {
+            padding: 0.75rem 1.75rem;
+            background: var(--gradient-hero);
+            color: white;
+            border: none;
+            border-radius: 0 var(--radius-md) var(--radius-md) 0;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-normal);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .newsletter-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-glow);
+        }
+
+        /* Sponsor Logos */
+        .sponsor-logos {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .sponsor-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.85rem 1.25rem;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-md);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: var(--transition-normal);
+            cursor: pointer;
+        }
+
+        .sponsor-item:hover {
+            background: rgba(0,213,99,0.15);
+            border-color: var(--primary-green);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(0,213,99,0.2);
+        }
+
+        .sponsor-logo {
+            font-size: 1.75rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 213, 99, 0.15);
+            border-radius: var(--radius-full);
+            flex-shrink: 0;
+        }
+
+        .sponsor-name {
+            color: var(--neutral-200);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Footer Bottom */
         .footer-bottom {
-            border-top: 1px solid var(--neutral-700);
-            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 2rem;
             text-align: center;
             color: var(--neutral-500);
+        }
+
+        .footer-bottom p {
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .footer-bottom strong {
+            color: var(--primary-green);
         }
 
         /* === SCROLLBAR CUSTOM === */
@@ -459,17 +616,6 @@
             animation: fadeInUp 0.6s ease-out;
         }
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         .pulse {
             animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
@@ -479,8 +625,13 @@
             50% { opacity: .5; }
         }
 
-        /* === RESPONSIVE === */
-        @media (max-width: 768px) {
+        @media (max-width: 1200px) {
+            .footer-content {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
             .navbar-brand-modern {
                 font-size: 1.5rem;
             }
@@ -491,710 +642,90 @@
             }
 
             .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand-modern {
+                font-size: 1.35rem;
+            }
+
+            .nav-link-modern {
+                padding: 0.5rem 0.75rem !important;
+                font-size: 0.9rem;
+            }
+
+            .footer-content {
                 grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .sponsor-logos {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .newsletter-form input {
+                border-radius: var(--radius-md);
+            }
+
+            .newsletter-form button {
+                border-radius: var(--radius-md);
+                justify-content: center;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-brand-modern {
+                font-size: 1.25rem;
+            }
+
+            .nav-link-modern {
+                padding: 0.4rem 0.5rem !important;
+                font-size: 0.85rem;
+                gap: 0.25rem;
+            }
+
+            .nav-link-modern i {
+                font-size: 1rem;
+            }
+
+            .footer-section h5 {
+                font-size: 1rem;
+            }
+
+            .sponsor-logos {
+                grid-template-columns: 1fr;
+            }
+
+            .theme-toggle {
+                width: 44px;
+                height: 44px;
+            }
+
+            .theme-toggle i {
+                font-size: 1.1rem;
             }
         }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
-<!-- CHATBOT WIDGET PREMIUM - Inserire in base_modern.html prima di </body> -->
 
-<style>
-    /* === WIDGET CONTAINER === */
-    .chatbot-widget-container {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 999;
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
-    /* === TOGGLE BUTTON === */
-    .chatbot-toggle-btn {
-        width: 64px;
-        height: 64px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.5rem;
-        cursor: pointer;
-        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.35);
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        position: relative;
-        border: 2px solid white;
-    }
-
-    .chatbot-toggle-btn:hover {
-        transform: scale(1.12) translateY(-4px);
-        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.45);
-    }
-
-    .chatbot-toggle-btn:active {
-        transform: scale(0.98);
-    }
-
-    .chatbot-toggle-btn i {
-        transition: all 0.3s ease;
-    }
-
-    .chatbot-toggle-btn.open i {
-        transform: rotate(180deg);
-    }
-
-    .chatbot-notification-badge {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        background: #EF4444;
-        color: white;
-        border-radius: 50%;
-        width: 28px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        font-size: 0.8rem;
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-        animation: pulse-badge 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-badge {
-        0%, 100% { transform: scale(1); }
-        50% { transform: scale(1.15); }
-    }
-
-    /* === WIDGET PANEL === */
-    .chatbot-widget-panel {
-        position: absolute;
-        bottom: 80px;
-        right: 0;
-        width: 420px;
-        height: 680px;
-        background: white;
-        border-radius: 20px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        opacity: 0;
-        visibility: hidden;
-        transform: scale(0.85) translateY(20px);
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        pointer-events: none;
-        border: 1px solid #F1F5F9;
-    }
-
-    .chatbot-widget-panel.open {
-        opacity: 1;
-        visibility: visible;
-        transform: scale(1) translateY(0);
-        pointer-events: auto;
-    }
-
-    /* === HEADER === */
-    .chatbot-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        padding: 1.5rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-shrink: 0;
-    }
-
-    .chatbot-header-content {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-    }
-
-    .chatbot-header-title {
-        margin: 0;
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-
-    .chatbot-header-subtitle {
-        margin: 0;
-        font-size: 0.75rem;
-        opacity: 0.85;
-        font-weight: 500;
-    }
-
-    .chatbot-online-indicator {
-        width: 10px;
-        height: 10px;
-        background: #10B981;
-        border-radius: 50%;
-        animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-        0%, 100% { opacity: 1; }
-        50% { opacity: 0.5; }
-    }
-
-    .chatbot-close-btn {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 1.25rem;
-        cursor: pointer;
-        padding: 0;
-        width: 36px;
-        height: 36px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
-
-    .chatbot-close-btn:hover {
-        transform: rotate(90deg);
-    }
-
-    /* === MESSAGES AREA === */
-    .chatbot-messages {
-        flex: 1;
-        padding: 1.5rem;
-        overflow-y: auto;
-        background: linear-gradient(180deg, #F8FAFC 0%, #F3F4F6 100%);
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-        scroll-behavior: smooth;
-    }
-
-    .chatbot-messages::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    .chatbot-messages::-webkit-scrollbar-track {
-        background: transparent;
-    }
-
-    .chatbot-messages::-webkit-scrollbar-thumb {
-        background: #CBD5E1;
-        border-radius: 3px;
-    }
-
-    .chatbot-messages::-webkit-scrollbar-thumb:hover {
-        background: #94A3B8;
-    }
-
-    .message-wrapper {
-        display: flex;
-        animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    .message-wrapper.user {
-        justify-content: flex-end;
-    }
-
-    .message-wrapper.bot {
-        justify-content: flex-start;
-    }
-
-    .message-content {
-        max-width: 75%;
-        padding: 0.85rem 1.15rem;
-        border-radius: 16px;
-        font-size: 0.9rem;
-        line-height: 1.5;
-        word-wrap: break-word;
-    }
-
-    .message-wrapper.user .message-content {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-bottom-right-radius: 4px;
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
-    }
-
-    .message-wrapper.bot .message-content {
-        background: white;
-        color: #374151;
-        border: 1px solid #E5E7EB;
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .message-time {
-        font-size: 0.7rem;
-        opacity: 0.6;
-        margin-top: 0.35rem;
-    }
-
-    /* === SUGGESTIONS & ACTIONS === */
-    .message-suggestions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-    }
-
-    .suggestion-chip {
-        background: rgba(102, 126, 234, 0.1);
-        color: #667eea;
-        border: 1px solid rgba(102, 126, 234, 0.2);
-        padding: 0.45rem 0.9rem;
-        border-radius: 18px;
-        font-size: 0.8rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        font-weight: 500;
-    }
-
-    .suggestion-chip:hover {
-        background: #667eea;
-        color: white;
-        border-color: #667eea;
-        transform: translateY(-2px);
-        box-shadow: 0 3px 8px rgba(102, 126, 234, 0.2);
-    }
-
-    .message-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.75rem;
-    }
-
-    .action-button {
-        background: white;
-        border: 2px solid #667eea;
-        color: #667eea;
-        padding: 0.5rem 1rem;
-        border-radius: 16px;
-        font-size: 0.8rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.4rem;
-        text-decoration: none;
-    }
-
-    .action-button:hover {
-        background: #667eea;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
-    }
-
-    /* === TYPING INDICATOR === */
-    .typing-indicator {
-        display: flex;
-        align-items: center;
-        gap: 0.4rem;
-        padding: 0.85rem 1.15rem;
-        background: white;
-        border-radius: 16px;
-        border: 1px solid #E5E7EB;
-    }
-
-    .typing-dot {
-        width: 6px;
-        height: 6px;
-        background: #667eea;
-        border-radius: 50%;
-        animation: typing 1.4s infinite ease-in-out;
-    }
-
-    .typing-dot:nth-child(1) { animation-delay: -0.32s; }
-    .typing-dot:nth-child(2) { animation-delay: -0.16s; }
-    .typing-dot:nth-child(3) { animation-delay: 0s; }
-
-    @keyframes typing {
-        0%, 80%, 100% {
-            transform: scale(0.8);
-            opacity: 0.5;
-        }
-        40% {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    /* === INPUT AREA === */
-    .chatbot-input-area {
-        padding: 1.25rem;
-        background: white;
-        border-top: 1px solid #F1F5F9;
-        display: flex;
-        gap: 0.75rem;
-        flex-shrink: 0;
-    }
-
-    .chatbot-input-field {
-        flex: 1;
-        border: 2px solid #E5E7EB;
-        border-radius: 22px;
-        padding: 0.75rem 1.25rem;
-        font-size: 0.9rem;
-        font-family: inherit;
-        resize: none;
-        min-height: 44px;
-        max-height: 100px;
-        transition: all 0.2s ease;
-    }
-
-    .chatbot-input-field::placeholder {
-        color: #9CA3AF;
-    }
-
-    .chatbot-input-field:focus {
-        outline: none;
-        border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        background: #F8FAFC;
-    }
-
-    .chatbot-send-btn {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border: none;
-        border-radius: 50%;
-        width: 44px;
-        height: 44px;
-        min-width: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        box-shadow: 0 3px 10px rgba(102, 126, 234, 0.2);
-    }
-
-    .chatbot-send-btn:hover:not(:disabled) {
-        transform: scale(1.08) translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .chatbot-send-btn:active:not(:disabled) {
-        transform: scale(0.96);
-    }
-
-    .chatbot-send-btn:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-    }
-
-    /* === RESPONSIVE === */
-    @media (max-width: 640px) {
-        .chatbot-widget-panel {
-            width: 100vw;
-            height: 100vh;
-            bottom: 0;
-            right: 0;
-            border-radius: 0;
-            max-width: 100%;
-            max-height: 100%;
-        }
-
-        .chatbot-widget-panel.open {
-            transform: scale(1) translateY(0);
-        }
-
-        .chatbot-container {
-            bottom: 0;
-            right: 0;
-        }
-
-        .chatbot-toggle-btn {
-            width: 56px;
-            height: 56px;
-            font-size: 1.3rem;
-        }
-    }
-</style>
-
-<!-- WIDGET HTML -->
-<div class="chatbot-widget-container">
-    <button class="chatbot-toggle-btn" id="chatbotToggleBtn" title="Apri chat">
-        <i class="bi bi-chat-dots"></i>
-        <div class="chatbot-notification-badge" id="chatbotBadge" style="display: none;">1</div>
-    </button>
-
-    <div class="chatbot-widget-panel" id="chatbotPanel">
-        <div class="chatbot-header">
-            <div class="chatbot-header-content">
-                <div class="chatbot-online-indicator"></div>
-                <div>
-                    <h6 class="chatbot-header-title">
-                        <i class="bi bi-robot me-2"></i>FoodFlowBot
-                    </h6>
-                    <p class="chatbot-header-subtitle">Assistente Intelligente</p>
-                </div>
-            </div>
-            <button class="chatbot-close-btn" id="chatbotCloseBtn" title="Chiudi">
-                <i class="bi bi-x-lg"></i>
-            </button>
-        </div>
-
-        <div class="chatbot-messages" id="chatbotMessages">
-            <div class="message-wrapper bot">
-                <div class="message-content">
-                    <div>Ciao! 👋 Sono FoodFlowBot</div>
-                    <div style="margin-top: 0.75rem; font-size: 0.85rem; opacity: 0.9;">
-                        Come posso aiutarti con la tua gestione alimentare?
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="chatbot-input-area">
-            <textarea 
-                class="chatbot-input-field" 
-                id="chatbotInput" 
-                placeholder="Scrivi un messaggio..."
-                rows="1"
-            ></textarea>
-            <button class="chatbot-send-btn" id="chatbotSendBtn" title="Invia">
-                <i class="bi bi-send"></i>
-            </button>
-        </div>
-    </div>
-</div>
-
-<!-- WIDGET JAVASCRIPT -->
-<script>
-class FoodFlowChatbotWidget {
-    constructor() {
-        this.isOpen = false;
-        this.conversationContext = '';
-        this.messageCount = 0;
-        this.isLoading = false;
-        
-        this.initElements();
-        this.attachEventListeners();
-    }
-
-    initElements() {
-        this.toggleBtn = document.getElementById('chatbotToggleBtn');
-        this.closeBtn = document.getElementById('chatbotCloseBtn');
-        this.panel = document.getElementById('chatbotPanel');
-        this.messagesContainer = document.getElementById('chatbotMessages');
-        this.inputField = document.getElementById('chatbotInput');
-        this.sendBtn = document.getElementById('chatbotSendBtn');
-        this.badge = document.getElementById('chatbotBadge');
-    }
-
-    attachEventListeners() {
-        this.toggleBtn.addEventListener('click', () => this.togglePanel());
-        this.closeBtn.addEventListener('click', () => this.closePanel());
-        this.sendBtn.addEventListener('click', () => this.sendMessage());
-        
-        this.inputField.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                this.sendMessage();
-            }
-        });
-
-        this.inputField.addEventListener('input', () => this.autoResizeInput());
-    }
-
-    togglePanel() {
-        this.isOpen ? this.closePanel() : this.openPanel();
-    }
-
-    openPanel() {
-        this.isOpen = true;
-        this.panel.classList.add('open');
-        this.toggleBtn.classList.add('open');
-        this.inputField.focus();
-        this.badge.style.display = 'none';
-    }
-
-    closePanel() {
-        this.isOpen = false;
-        this.panel.classList.remove('open');
-        this.toggleBtn.classList.remove('open');
-    }
-
-    autoResizeInput() {
-        this.inputField.style.height = 'auto';
-        this.inputField.style.height = Math.min(this.inputField.scrollHeight, 100) + 'px';
-    }
-
-    showTypingIndicator() {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'message-wrapper bot';
-        wrapper.id = 'typingIndicator';
-        wrapper.innerHTML = `
-            <div class="typing-indicator">
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-            </div>
-        `;
-        this.messagesContainer.appendChild(wrapper);
-        this.scrollToBottom();
-    }
-
-    hideTypingIndicator() {
-        const typing = document.getElementById('typingIndicator');
-        if (typing) typing.remove();
-    }
-
-    addMessage(content, sender) {
-        const wrapper = document.createElement('div');
-        wrapper.className = `message-wrapper ${sender}`;
-        
-        const time = new Date().toLocaleTimeString('it-IT', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message-content';
-        messageDiv.innerHTML = `
-            <div>${this.escapeHtml(content)}</div>
-            <div class="message-time">${time}</div>
-        `;
-
-        wrapper.appendChild(messageDiv);
-        this.messagesContainer.appendChild(wrapper);
-        this.scrollToBottom();
-    }
-
-    addBotMessage(data) {
-        const wrapper = document.createElement('div');
-        wrapper.className = 'message-wrapper bot';
-        
-        const time = new Date().toLocaleTimeString('it-IT', {
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-
-        const messageDiv = document.createElement('div');
-        messageDiv.className = 'message-content';
-        
-        let html = `<div>${this.escapeHtml(data.response)}</div>`;
-
-        if (data.suggestions && data.suggestions.length > 0) {
-            html += '<div class="message-suggestions">';
-            data.suggestions.slice(0, 2).forEach(s => {
-                html += `<span class="suggestion-chip" onclick="foodflowChatbot.sendQuickMessage('${this.escapeHtml(s)}')">${this.escapeHtml(s)}</span>`;
-            });
-            html += '</div>';
-        }
-
-        if (data.actions && data.actions.length > 0) {
-            html += '<div class="message-actions">';
-            data.actions.slice(0, 2).forEach(a => {
-                html += `<a href="${this.escapeHtml(a.url)}" class="action-button" target="_blank"><i class="bi ${a.icon}"></i> ${this.escapeHtml(a.text)}</a>`;
-            });
-            html += '</div>';
-        }
-
-        html += `<div class="message-time">${time}</div>`;
-        messageDiv.innerHTML = html;
-        wrapper.appendChild(messageDiv);
-        this.messagesContainer.appendChild(wrapper);
-        this.scrollToBottom();
-    }
-
-    sendMessage() {
-        if (this.isLoading) return;
-
-        const message = this.inputField.value.trim();
-        if (!message) return;
-
-        this.isLoading = true;
-        this.sendBtn.disabled = true;
-
-        this.addMessage(message, 'user');
-        this.messageCount++;
-        this.inputField.value = '';
-        this.inputField.style.height = 'auto';
-        
-        this.showTypingIndicator();
-
-        fetch('/api/chatbot/message', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: message,
-                context: this.conversationContext
-            })
-        })
-        .then(r => r.json())
-        .then(data => {
-            this.hideTypingIndicator();
-            if (data.success && data.response) {
-                this.addBotMessage(data);
-                this.conversationContext = (this.conversationContext + `U: ${message}\nB: ${data.response}\n`).slice(-1500);
-            } else {
-                this.addMessage('Errore nella risposta. Riprova!', 'bot');
-            }
-        })
-        .catch(e => {
-            this.hideTypingIndicator();
-            this.addMessage('Errore di connessione. Riprova!', 'bot');
-        })
-        .finally(() => {
-            this.isLoading = false;
-            this.sendBtn.disabled = false;
-            this.inputField.focus();
-        });
-    }
-
-    sendQuickMessage(msg) {
-        this.inputField.value = msg;
-        this.autoResizeInput();
-        setTimeout(() => this.sendMessage(), 100);
-    }
-
-    scrollToBottom() {
-        setTimeout(() => {
-            this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
-        }, 50);
-    }
-
-    escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-}
-
-// Inizializza il widget quando il DOM è pronto
-let foodflowChatbot;
-document.addEventListener('DOMContentLoaded', () => {
-    foodflowChatbot = new FoodFlowChatbotWidget();
-});
-</script>
 <body>
     <!-- === NAVBAR === -->
     <nav class="navbar navbar-expand-lg navbar-modern" id="mainNavbar">
         <div class="container">
             <a class="navbar-brand navbar-brand-modern" href="{{ url_for('index') }}">
-                <i class="bi bi-heart-pulse-fill me-2"></i>FoodFlow
+                <i class="bi bi-heart-pulse-fill"></i>FoodFlow
             </a>
             
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -1202,62 +733,68 @@ document.addEventListener('DOMContentLoaded', () => {
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link nav-link-modern {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
-                            <i class="bi bi-house-fill me-1"></i>Dashboard
+                            <i class="bi bi-house-fill"></i><span>Dashboard</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-modern {% if request.endpoint == 'products' %}active{% endif %}" href="{{ url_for('products') }}">
-                            <i class="bi bi-box-seam-fill me-1"></i>Dispensa
+                            <i class="bi bi-box-seam-fill"></i><span>Dispensa</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-modern {% if request.endpoint == 'shopping_list' %}active{% endif %}" href="{{ url_for('shopping_list') }}">
-                            <i class="bi bi-cart-check-fill me-1"></i>Lista Spesa
+                            <i class="bi bi-cart-check-fill"></i><span>Lista Spesa</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-modern {% if request.endpoint == 'recycling_suggestions' %}active{% endif %}" href="{{ url_for('recycling_suggestions') }}">
-                            <i class="bi bi-recycle me-1"></i>Riciclo
+                            <i class="bi bi-recycle"></i><span>Riciclo</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-modern {% if request.endpoint == 'chatbot' %}active{% endif %}" href="{{ url_for('chatbot') }}">
-                            <i class="bi bi-chat-dots me-1"></i>ChatBot
+                            <i class="bi bi-chat-dots"></i><span>ChatBot</span>
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link nav-link-modern {% if request.endpoint == 'analytics' %}active{% endif %}" href="{{ url_for('analytics') }}">
-                            <i class="bi bi-graph-up me-1"></i>Analytics
+                            <i class="bi bi-graph-up"></i><span>Analytics</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link nav-link-modern {% if request.endpoint == 'family' %}active{% endif %}" href="{{ url_for('family') }}">
+                            <i class="bi bi-people"></i><span>Famiglia</span>
                         </a>
                     </li>
                 </ul>
                 
                 <ul class="navbar-nav align-items-center">
+                    <li class="nav-item me-3">
+                        <div class="theme-toggle" id="themeToggle" title="Toggle theme">
+                            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                        </div>
+                    </li>
+                    
                     {% if current_user.is_authenticated %}
-                        <li class="nav-item me-3">
-                            <div class="theme-toggle" onclick="toggleDarkMode()" title="Toggle theme">
-                                <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-                            </div>
-                        </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link nav-link-modern dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle me-1"></i>{{ current_user.username }}
+                            <a class="nav-link nav-link-modern dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-circle"></i><span>{{ current_user.username }}</span>
                             </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('nutritional_profile') }}">
-                                        <i class="bi bi-heart-pulse me-2"></i>Profilo Nutrizionale
+                                        <i class="bi bi-heart-pulse"></i>Profilo Nutrizionale
                                     </a>
                                 </li>
                                 <li>
                                     <a class="dropdown-item" href="{{ url_for('gamification') }}">
-                                        <i class="bi bi-trophy me-2"></i>Gamification
+                                        <i class="bi bi-trophy"></i>Gamification
                                     </a>
                                 </li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <a class="dropdown-item text-danger" href="{{ url_for('logout') }}">
-                                        <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                        <i class="bi bi-box-arrow-right"></i>Logout
                                     </a>
                                 </li>
                             </ul>
@@ -1265,7 +802,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     {% else %}
                         <li class="nav-item">
                             <a class="nav-link nav-link-modern" href="{{ url_for('login') }}">
-                                <i class="bi bi-box-arrow-in-right me-1"></i>Login
+                                <i class="bi bi-box-arrow-in-right"></i><span>Login</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link nav-link-modern" href="{{ url_for('register') }}">
+                                <i class="bi bi-person-plus"></i><span>Registrati</span>
                             </a>
                         </li>
                     {% endif %}
@@ -1283,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="alert alert-modern alert-{{ category }}-modern alert-dismissible fade show fade-in-up" role="alert">
                             <i class="bi bi-{% if category == 'success' %}check-circle-fill{% elif category == 'danger' %}exclamation-triangle-fill{% elif category == 'warning' %}exclamation-circle-fill{% else %}info-circle-fill{% endif %} me-2"></i>
                             {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     {% endfor %}
                 </div>
@@ -1297,64 +839,86 @@ document.addEventListener('DOMContentLoaded', () => {
     <footer class="footer-modern">
         <div class="container">
             <div class="footer-content">
+                <!-- FoodFlow Info -->
                 <div class="footer-section">
-                    <h5><i class="bi bi-heart-pulse-fill me-2"></i>FoodFlow</h5>
-                    <p style="color: var(--neutral-400);">
-                        Il tuo ecosistema alimentare intelligente per ridurre gli sprechi e vivere in modo sostenibile.
-                    </p>
+                    <h5><i class="bi bi-heart-pulse-fill"></i>FoodFlow</h5>
+                    <p>Il tuo ecosistema alimentare intelligente per ridurre gli sprechi e vivere in modo sostenibile.</p>
                     <div class="social-links">
-                        <a href="#" class="social-link">
+                        <a href="#" class="social-link" title="Facebook" target="_blank">
                             <i class="bi bi-facebook"></i>
                         </a>
-                        <a href="#" class="social-link">
+                        <a href="#" class="social-link" title="Instagram" target="_blank">
                             <i class="bi bi-instagram"></i>
                         </a>
-                        <a href="#" class="social-link">
+                        <a href="#" class="social-link" title="Twitter" target="_blank">
                             <i class="bi bi-twitter"></i>
                         </a>
-                        <a href="#" class="social-link">
+                        <a href="#" class="social-link" title="LinkedIn" target="_blank">
                             <i class="bi bi-linkedin"></i>
                         </a>
                     </div>
                 </div>
                 
+                <!-- Risorse -->
                 <div class="footer-section">
-                    <h5>Risorse</h5>
-                    <a href="#" class="footer-link">Come funziona</a>
-                    <a href="#" class="footer-link">Blog</a>
-                    <a href="#" class="footer-link">Ricette</a>
-                    <a href="#" class="footer-link">Community</a>
+                    <h5><i class="bi bi-book-fill"></i>Risorse</h5>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Come funziona
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Blog
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Ricette
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Community
+                    </a>
                 </div>
                 
+                <!-- Supporto -->
                 <div class="footer-section">
-                    <h5>Supporto</h5>
-                    <a href="#" class="footer-link">Centro Assistenza</a>
-                    <a href="#" class="footer-link">FAQ</a>
-                    <a href="#" class="footer-link">Contattaci</a>
-                    <a href="#" class="footer-link">Termini di Servizio</a>
+                    <h5><i class="bi bi-headset"></i>Supporto</h5>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Centro Assistenza
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>FAQ
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Contattaci
+                    </a>
+                    <a href="#" class="footer-link">
+                        <i class="bi bi-arrow-right"></i>Termini di Servizio
+                    </a>
                 </div>
                 
+                <!-- Newsletter -->
                 <div class="footer-section">
-                    <h5>Newsletter</h5>
-                    <p style="color: var(--neutral-400);">
-                        Ricevi consigli settimanali su come ridurre gli sprechi alimentari.
-                    </p>
-                    <div class="input-group">
-                        <input type="email" class="form-control" placeholder="La tua email" 
-                               style="border-radius: var(--radius-md) 0 0 var(--radius-md);">
-                        <button class="btn btn-success" type="button" 
-                                style="border-radius: 0 var(--radius-md) var(--radius-md) 0;">
-                            Iscriviti
+                    <h5><i class="bi bi-envelope-fill"></i>Newsletter</h5>
+                    <p>Ricevi consigli settimanali su come ridurre gli sprechi alimentari.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="La tua email" />
+                        <button type="button">
+                            <i class="bi bi-send"></i>
                         </button>
                     </div>
                 </div>
+                
+                <!-- Partnership -->
+                <div class="footer-section">
+                    <h5><i class="bi bi-handshake"></i>Partnership</h5>
+                    <p>Interessato a collaborare con FoodFlow?</p>
+                    <a href="{{ url_for('sponsors') }}" class="btn btn-outline-light btn-sm mt-3" style="width: 100%;">
+                        <i class="bi bi-star-fill me-2"></i>Diventa Partner
+                    </a>
+                </div>
             </div>
             
+            <!-- Footer Bottom -->
             <div class="footer-bottom">
-                <p class="mb-0">
-                © 2025 FoodFlow. Tutti i diritti riservati.<br>
-                È vietata la riproduzione, distribuzione o modifica non autorizzata dei contenuti e del codice sorgente.
-                </p>
+                <p>© 2025 <strong>FoodFlow</strong>. Tutti i diritti riservati.<br>
+                È vietata la riproduzione, distribuzione o modifica non autorizzata dei contenuti e del codice sorgente.</p>
             </div>
         </div>
     </footer>
@@ -1363,8 +927,6 @@ document.addEventListener('DOMContentLoaded', () => {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/foodflow.js') }}"></script>
 
     <script>
         // Initialize AOS
@@ -1377,40 +939,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             // Load saved theme
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            const savedTheme = localStorage.getItem('foodflow-theme') || 'light';
             document.documentElement.setAttribute('data-bs-theme', savedTheme);
-            const themeIcon = document.getElementById('themeIcon');
-            if (savedTheme === 'dark' && themeIcon) {
-                themeIcon.classList.remove('bi-moon-stars-fill');
-                themeIcon.classList.add('bi-sun-fill');
-            }
-            
-            // Card hover effects
-            document.querySelectorAll('.card').forEach(card => {
-                card.addEventListener('mouseenter', function() {
-                    this.style.transform = 'translateY(-8px)';
-                    this.style.transition = 'all 0.3s ease';
-                });
-                card.addEventListener('mouseleave', function() {
-                    this.style.transform = 'translateY(0)';
-                });
-            });
-
-            // Global safety: clear orphan Bootstrap backdrops that can block clicks
-            function clearOrphanBackdrops() {
-                const anyOpenModal = document.querySelector('.modal.show');
-                if (!anyOpenModal) {
-                    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-                    document.body.classList.remove('modal-open');
-                    document.body.style.removeProperty('padding-right');
-                }
-            }
-            // Run on load and periodically for safety
-            clearOrphanBackdrops();
-            setInterval(clearOrphanBackdrops, 1500);
-            // Also on any click or ESC
-            document.addEventListener('click', clearOrphanBackdrops, true);
-            document.addEventListener('keydown', (e) => { if (e.key === 'Escape') clearOrphanBackdrops(); });
+            updateThemeIcon(savedTheme);
         });
 
         // Navbar scroll effect
@@ -1423,17 +954,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Dark Mode Toggle
-        function toggleDarkMode() {
-            const html = document.documentElement;
+        // Theme Toggle
+        function updateThemeIcon(theme) {
             const icon = document.getElementById('themeIcon');
-            const currentTheme = html.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('theme', newTheme);
-            
-            if (newTheme === 'dark') {
+            if (theme === 'dark') {
                 icon.classList.remove('bi-moon-stars-fill');
                 icon.classList.add('bi-sun-fill');
             } else {
@@ -1442,13 +966,38 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Auto-hide alerts
+        document.getElementById('themeToggle').addEventListener('click', function() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('foodflow-theme', newTheme);
+            updateThemeIcon(newTheme);
+        });
+
+        // Auto-hide alerts after 5 seconds
         setTimeout(() => {
             document.querySelectorAll('.alert-modern').forEach(alert => {
                 const bsAlert = new bootstrap.Alert(alert);
                 bsAlert.close();
             });
         }, 5000);
+
+        // Newsletter form handler
+        document.addEventListener('DOMContentLoaded', function() {
+            const newsletterButtons = document.querySelectorAll('.newsletter-form button');
+            newsletterButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const input = this.parentElement.querySelector('input');
+                    if (input.value) {
+                        alert('Grazie per esserti iscritto a FoodFlow Newsletter!');
+                        input.value = '';
+                    }
+                });
+            });
+        });
     </script>
 
     {% block extra_js %}{% endblock %}

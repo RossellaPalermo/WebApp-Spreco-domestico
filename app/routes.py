@@ -5,7 +5,7 @@ Gestisce tutte le routes dell'applicazione
 
 import re
 import json
-from flask import render_template, request, redirect, url_for, flash, jsonify
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import check_password_hash, generate_password_hash
 from datetime import datetime, timedelta
@@ -15,14 +15,16 @@ from . import db
 from .models import (
     User, Product, ShoppingList, ShoppingItem, UserStats,
     Badge, UserBadge, NutritionalProfile,
-    NutritionalGoal, MealPlan
+    NutritionalGoal, MealPlan, Family, FamilyMember
 )
 
 from .smart_functions import (
     get_expiring_products, get_low_stock_products, get_expired_products,
     get_recycling_suggestions, award_points, calculate_waste_reduction_score,
     calculate_nutritional_goals, smart_notification_system,
-    auto_update_shopping_from_meal_plan, upsert_missing_ingredients_to_shopping_list
+    auto_update_shopping_from_meal_plan, upsert_missing_ingredients_to_shopping_list,
+    create_family, join_family, get_user_family, get_family_members,
+    get_combined_products, get_combined_meal_plans, leave_family
 )
 
 from .ai_functions import (
@@ -71,6 +73,225 @@ def validate_username(username):
         return False, "Lo username può contenere solo lettere, numeri e underscore"
     return True, ""
 
+
+# ========================================
+# HELPER FUNCTION PER CHARTS
+# ========================================
+
+def _prepare_charts_data(analytics_data):
+    """
+    Trasforma i dati analytics in formato Chart.js
+    
+    Args:
+        analytics_data: dict ritornato da get_comprehensive_analytics
+    
+    Returns:
+        dict con datasets per ogni grafico
+    """
+    try:
+        # Estrai trends
+        trends = analytics_data.get('trends', {})
+        waste_trend = trends.get('waste_trend', [])
+        products_trend = trends.get('products_trend', [])
+        
+        # NUTRITION CHART (Doughnut)
+        nutrition = analytics_data.get('nutrition', {})
+        nutrition_chart = {
+            'labels': ['Proteine', 'Carboidrati', 'Grassi', 'Fibre'],
+            'datasets': [{
+                'data': [
+                    nutrition.get('avg_protein', 0),
+                    nutrition.get('avg_carbs', 0),
+                    nutrition.get('avg_fat', 0),
+                    nutrition.get('avg_fiber', 0)
+                ],
+                'backgroundColor': [
+                    '#10B981',  # success
+                    '#3B82F6',  # info
+                    '#F59E0B',  # warning
+                    '#9C27B0'   # purple
+                ],
+                'borderWidth': 0
+            }]
+        }
+        
+        # WASTE CHART (Line)
+        waste_labels = [w.get('date', '')[-5:] for w in waste_trend]  # MM-DD
+        waste_data = [w.get('kg_wasted', 0) for w in waste_trend]
+        waste_chart = {
+            'labels': waste_labels,
+            'datasets': [{
+                'label': 'Kg Sprecati',
+                'data': waste_data,
+                'borderColor': '#EF4444',
+                'backgroundColor': 'rgba(239,68,68,0.1)',
+                'tension': 0.4,
+                'fill': True,
+                'pointRadius': 4,
+                'pointHoverRadius': 6,
+                'pointBackgroundColor': '#EF4444'
+            }]
+        }
+        
+        # SHOPPING CHART (Bar)
+        shopping = analytics_data.get('shopping', {})
+        shopping_chart = {
+            'labels': ['Totali', 'AI Usati'],
+            'datasets': [{
+                'data': [
+                    shopping.get('total_items_purchased', 0),
+                    int(shopping.get('total_items_purchased', 0) * 
+                        shopping.get('ai_adoption_rate', 0) / 100)
+                ],
+                'backgroundColor': ['#3B82F6', '#00D563'],
+                'borderRadius': 8
+            }]
+        }
+        
+        # CATEGORY CHART (Polar)
+        waste = analytics_data.get('waste', {})
+        categories = waste.get('category_breakdown', {})
+        category_labels = list(categories.keys())[:5] or ['Frutta', 'Verdura', 'Latticini', 'Carne', 'Altro']
+        category_values = list(categories.values())[:5] or [25, 20, 15, 10, 30]
+        
+        category_chart = {
+            'labels': category_labels,
+            'datasets': [{
+                'data': category_values,
+                'backgroundColor': [
+                    '#10B981',
+                    '#00D563',
+                    '#3B82F6',
+                    '#EF4444',
+                    '#F59E0B'
+                ]
+            }]
+        }
+        
+        # SAVINGS CHART (Doughnut)
+        shopping_cost = shopping.get('total_cost', 0)
+        waste_cost = waste.get('total_cost', 0)
+        saved = max(0, shopping_cost - waste_cost)
+        
+        savings_chart = {
+            'labels': ['Risparmiato', 'Sprecato'],
+            'datasets': [{
+                'data': [saved, waste_cost],
+                'backgroundColor': ['#10B981', '#EF4444'],
+                'borderWidth': 0
+            }]
+        }
+        
+        # TIMELINE CHART (Line)
+        timeline_labels = [p.get('date', '')[-5:] for p in products_trend] if products_trend else []
+        timeline_data = [p.get('count', 0) for p in products_trend] if products_trend else []
+        
+        timeline_chart = {
+            'labels': timeline_labels,
+            'datasets': [{
+                'label': 'Prodotti in Dispensa',
+                'data': timeline_data,
+                'borderColor': '#00D563',
+                'backgroundColor': 'rgba(0,213,99,0.1)',
+                'tension': 0.4,
+                'fill': True
+            }]
+        }
+        
+        return {
+            'nutrition': nutrition_chart,
+            'waste': waste_chart,
+            'shopping': shopping_chart,
+            'category': category_chart,
+            'savings': savings_chart,
+            'timeline': timeline_chart
+        }
+        
+    except Exception as e:
+        current_app.logger.error(f"Error preparing charts data: {e}")
+        return {}
+
+
+# ========================================
+# ROUTE REGISTRATION
+# ========================================
+
+def register_routes(app):
+    """Registra tutte le routes dell'applicazione"""
+    
+    # ===== HOMEPAGE =====
+    @app.route('/')
+    def index():
+        # ... resto del codice rimane uguale
+        pass
+
+
+    # ========================================
+    # ANALYTICS SECTION
+    # ========================================
+    
+    @app.route('/analytics')
+    @login_required
+    def analytics():
+        """Pagina analytics"""
+        analytics_data = get_comprehensive_analytics(current_user.id, days=30)
+        return render_template('analytics.html', analytics=analytics_data)
+
+    @app.route('/api/analytics')
+    @login_required
+    def api_analytics():
+        """API per aggiornare KPI/chart in base al periodo."""
+        try:
+            days = request.args.get('days', default=30, type=int)
+            data = get_comprehensive_analytics(current_user.id, days=days)
+
+            # Mappa KPI nell'ordine delle card
+            kpis = [
+                data.get('nutrition', {}).get('goal_completion', 0),
+                data.get('waste', {}).get('total_kg_wasted', 0),
+                data.get('shopping', {}).get('total_items_purchased', 0),
+                data.get('waste', {}).get('total_cost', 0),
+            ]
+
+            # ✅ Popola i dati dei grafici in formato Chart.js
+            charts_data = _prepare_charts_data(data)
+
+            return jsonify({
+                'success': True,
+                'kpis': kpis,
+                'charts': charts_data
+            })
+        except Exception as e:
+            current_app.logger.error(f"Analytics API error: {e}")
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/api/analytics/export')
+    @login_required
+    def api_analytics_export():
+        """Esporta dati analytics base in CSV."""
+        import csv
+        from io import StringIO
+
+        days = request.args.get('days', default=30, type=int)
+        data = get_comprehensive_analytics(current_user.id, days=days)
+
+        output = StringIO()
+        writer = csv.writer(output, delimiter=';')
+
+        writer.writerow(['Section', 'Metric', 'Value'])
+        for key, val in (data.get('nutrition') or {}).items():
+            writer.writerow(['nutrition', key, val])
+        for key, val in (data.get('waste') or {}).items():
+            writer.writerow(['waste', key, val])
+        for key, val in (data.get('shopping') or {}).items():
+            writer.writerow(['shopping', key, val])
+
+        csv_bytes = output.getvalue().encode('utf-8')
+        return current_app.response_class(
+            csv_bytes,
+            mimetype='text/csv',
+            headers={'Content-Disposition': 'attachment; filename=analytics.csv'}
+        )
 
 # ========================================
 # ROUTE REGISTRATION
@@ -275,11 +496,8 @@ def register_routes(app):
     @app.route('/products')
     @login_required
     def products():
-        """Lista prodotti dispensa"""
-        products = Product.query.filter_by(
-            user_id=current_user.id,
-            wasted=False
-        ).order_by(Product.expiry_date.asc()).all()
+        """Lista prodotti dispensa (personali + condivisi famiglia)"""
+        products = get_combined_products(current_user.id)
         
         return render_template(
             'products.html',
@@ -339,6 +557,7 @@ def register_routes(app):
                     expiry_date=expiry_date,
                     category=request.form['category'],
                     min_quantity=float(request.form.get('min_quantity', 1)),
+                    is_shared=request.form.get('is_shared') == 'on',  # Checkbox
                     allergens=request.form.get('allergens', '').strip(),
                     notes=request.form.get('notes', '').strip()
                 )
@@ -388,6 +607,7 @@ def register_routes(app):
                 product.expiry_date = datetime.strptime(expiry_date_str, '%Y-%m-%d').date() if expiry_date_str else None
                 product.category = request.form['category']
                 product.min_quantity = float(request.form.get('min_quantity', 1))
+                product.is_shared = request.form.get('is_shared') == 'on'  # Checkbox
                 product.allergens = request.form.get('allergens', '').strip()
                 product.notes = request.form.get('notes', '').strip()
                 
@@ -833,7 +1053,8 @@ def register_routes(app):
                     user_id=current_user.id,
                     date=parsed_date,
                     meal_type=meal_type,
-                    custom_meal=custom_meal
+                    custom_meal=custom_meal,
+                    is_shared=request.form.get('is_shared') == 'on'  # Checkbox
                 )
                 db.session.add(meal_plan)
                 db.session.flush()  # Per ottenere l'ID
@@ -860,7 +1081,7 @@ def register_routes(app):
         
         profile = NutritionalProfile.query.filter_by(user_id=current_user.id).first()
         goals = NutritionalGoal.query.filter_by(user_id=current_user.id).first()
-        meal_plans = MealPlan.query.filter_by(user_id=current_user.id).order_by(MealPlan.date.desc()).all()
+        meal_plans = get_combined_meal_plans(current_user.id)
         # Serialize meal plans for frontend JSON usage
         meal_plans_json = [
             {
@@ -914,9 +1135,16 @@ def register_routes(app):
                 data.get('waste', {}).get('total_cost', 0),
             ]
 
-            # Non ricalcoliamo i dataset Chart.js qui; lasciamo vuoto per non aggiornare i grafici
-            return jsonify({'success': True, 'kpis': kpis, 'charts': {}})
+            # ✅ NUOVO: Popola i dati dei grafici in formato Chart.js
+            charts_data = _prepare_charts_data(data)
+
+            return jsonify({
+                'success': True,
+                'kpis': kpis,
+                'charts': charts_data
+            })
         except Exception as e:
+            app.logger.error(f"Analytics API error: {e}")
             return jsonify({'success': False, 'message': str(e)}), 500
 
     @app.route('/api/analytics/export')
@@ -1231,4 +1459,128 @@ def register_routes(app):
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'message': str(e)}), 500
+
+
+    # ========================================
+    # SISTEMA FAMIGLIA
+    # ========================================
+    
+    @app.route('/family')
+    @login_required
+    def family():
+        """Pagina gestione famiglia"""
+        family = get_user_family(current_user.id)
+        family_members = get_family_members(current_user.id) if family else []
+        
+        return render_template('family.html', family=family, family_members=family_members)
+    
+    
+    @app.route('/family/create', methods=['POST'])
+    @login_required
+    def create_family_route():
+        """Crea una nuova famiglia"""
+        try:
+            family_name = request.form.get('family_name', '').strip()
+            
+            if not family_name:
+                return jsonify({'success': False, 'message': 'Nome famiglia obbligatorio'}), 400
+            
+            result = create_family(current_user.id, family_name)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'message': result['message'],
+                    'family_code': result['family_code']
+                })
+            else:
+                return jsonify({'success': False, 'message': result['message']}), 400
+                
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Errore: {str(e)}'}), 500
+    
+    
+    @app.route('/family/join', methods=['POST'])
+    @login_required
+    def join_family_route():
+        """Unisciti a una famiglia tramite codice"""
+        try:
+            family_code = request.form.get('family_code', '').strip().upper()
+            
+            if not family_code:
+                return jsonify({'success': False, 'message': 'Codice famiglia obbligatorio'}), 400
+            
+            result = join_family(current_user.id, family_code)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'message': result['message']
+                })
+            else:
+                return jsonify({'success': False, 'message': result['message']}), 400
+                
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Errore: {str(e)}'}), 500
+    
+    
+    @app.route('/family/leave', methods=['POST'])
+    @login_required
+    def leave_family_route():
+        """Lascia la famiglia"""
+        try:
+            result = leave_family(current_user.id)
+            
+            if result['success']:
+                return jsonify({
+                    'success': True,
+                    'message': result['message']
+                })
+            else:
+                return jsonify({'success': False, 'message': result['message']}), 400
+                
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Errore: {str(e)}'}), 500
+    
+    
+    @app.route('/family/members')
+    @login_required
+    def family_members():
+        """API per ottenere membri della famiglia"""
+        try:
+            family = get_user_family(current_user.id)
+            if not family:
+                return jsonify({'success': False, 'message': 'Non sei membro di nessuna famiglia'}), 400
+            
+            members = get_family_members(current_user.id)
+            members_data = []
+            
+            for member in members:
+                members_data.append({
+                    'id': member.user.id,
+                    'username': member.user.username,
+                    'email': member.user.email,
+                    'is_admin': member.is_admin,
+                    'joined_at': member.joined_at.isoformat()
+                })
+            
+            return jsonify({
+                'success': True,
+                'family_name': family.name,
+                'family_code': family.family_code,
+                'members': members_data
+            })
+            
+        except Exception as e:
+            return jsonify({'success': False, 'message': f'Errore: {str(e)}'}), 500
+
+
+    # ========================================
+    # SPONSOR E PARTNERSHIP
+    # ========================================
+    
+    @app.route('/sponsors')
+    def sponsors():
+        """Pagina sponsor e partnership"""
+        return render_template('sponsors.html')
         

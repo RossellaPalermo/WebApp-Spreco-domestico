@@ -33,8 +33,60 @@ class User(UserMixin, db.Model):
     shopping_analytics = db.relationship('ShoppingAnalytics', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     reward_history = db.relationship('RewardHistory', backref='user', lazy='dynamic', cascade='all, delete-orphan')
     
+    # Relazioni famiglia
+    family_memberships = db.relationship('FamilyMember', backref='user', lazy='dynamic', cascade='all, delete-orphan')
+    
     def __repr__(self):
         return f'<User {self.username}>'
+
+
+# ========================================
+# SISTEMA FAMIGLIA
+# ========================================
+
+class Family(db.Model):
+    __tablename__ = 'family'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    family_code = db.Column(db.String(12), unique=True, nullable=False, index=True)  # Codice di 12 caratteri
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, index=True)
+    created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    is_active = db.Column(db.Boolean, default=True, index=True)
+    
+    # Relazioni
+    members = db.relationship('FamilyMember', backref='family', lazy='dynamic', cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Family {self.name} ({self.family_code})>'
+    
+    @property
+    def member_count(self):
+        """Numero di membri della famiglia"""
+        return self.members.count()
+    
+    @property
+    def admin_user(self):
+        """Utente amministratore della famiglia"""
+        return User.query.get(self.created_by)
+
+
+class FamilyMember(db.Model):
+    __tablename__ = 'family_member'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    family_id = db.Column(db.Integer, db.ForeignKey('family.id', ondelete='CASCADE'), nullable=False, index=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False, index=True)
+    joined_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
+    is_admin = db.Column(db.Boolean, default=False)
+    
+    # Constraint per evitare duplicati
+    __table_args__ = (
+        db.UniqueConstraint('family_id', 'user_id', name='unique_family_member'),
+    )
+    
+    def __repr__(self):
+        return f'<FamilyMember family_id={self.family_id} user_id={self.user_id}>'
 
 
 # ========================================
@@ -53,6 +105,7 @@ class Product(db.Model):
     category = db.Column(db.String(50), nullable=False, index=True)
     min_quantity = db.Column(db.Float, default=1.0)
     wasted = db.Column(db.Boolean, default=False, index=True)
+    is_shared = db.Column(db.Boolean, default=False, index=True)  # Indica se il prodotto è condiviso in famiglia
     allergens = db.Column(db.String(200), nullable=True)
     notes = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
@@ -305,6 +358,7 @@ class MealPlan(db.Model):
     date = db.Column(db.Date, nullable=False, index=True)
     meal_type = db.Column(db.String(20), nullable=False)  # breakfast, lunch, dinner, snack
     custom_meal = db.Column(db.Text, nullable=True)
+    is_shared = db.Column(db.Boolean, default=False, index=True)  # Indica se il pasto è condiviso in famiglia
     calories = db.Column(db.Float, nullable=True)
     protein = db.Column(db.Float, nullable=True)
     carbs = db.Column(db.Float, nullable=True)
