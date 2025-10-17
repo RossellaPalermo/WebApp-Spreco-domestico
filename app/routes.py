@@ -1042,6 +1042,7 @@ def register_routes(app):
                 raw_date = (request.form.get('date') or '').strip()
                 meal_type = (request.form.get('meal_type') or 'lunch').strip()
                 custom_meal = (request.form.get('custom_meal') or '').strip()
+                servings = request.form.get('servings', type=int) or 2
 
                 if not raw_date or not meal_type or not custom_meal:
                     flash('Compila data, tipo pasto e descrizione', 'warning')
@@ -1054,7 +1055,8 @@ def register_routes(app):
                     date=parsed_date,
                     meal_type=meal_type,
                     custom_meal=custom_meal,
-                    is_shared=request.form.get('is_shared') == 'on'  # Checkbox
+                    is_shared=request.form.get('is_shared') == 'on',  # Checkbox
+                    servings=servings
                 )
                 db.session.add(meal_plan)
                 db.session.flush()  # Per ottenere l'ID
@@ -1063,11 +1065,18 @@ def register_routes(app):
                 from .ai_functions import ai_estimate_meal_calories
                 nutrition = ai_estimate_meal_calories(custom_meal, meal_type)
                 
-                meal_plan.calories = nutrition['calories']
-                meal_plan.protein = nutrition['protein']
-                meal_plan.carbs = nutrition['carbs']
-                meal_plan.fat = nutrition['fat']
-                meal_plan.fiber = nutrition['fiber']
+                # Salva per porzione e scala in base alle porzioni impostate
+                per_serving_cals = float(nutrition['calories'] or 0)
+                per_serving_pro = float(nutrition['protein'] or 0)
+                per_serving_carbs = float(nutrition['carbs'] or 0)
+                per_serving_fat = float(nutrition['fat'] or 0)
+                per_serving_fiber = float(nutrition['fiber'] or 0)
+
+                meal_plan.calories = per_serving_cals * servings
+                meal_plan.protein = per_serving_pro * servings
+                meal_plan.carbs = per_serving_carbs * servings
+                meal_plan.fat = per_serving_fat * servings
+                meal_plan.fiber = per_serving_fiber * servings
                 
                 db.session.commit()
                 flash('Pasto aggiunto al piano!', 'success')
@@ -1093,7 +1102,8 @@ def register_routes(app):
                 'protein': mp.protein,
                 'carbs': mp.carbs,
                 'fat': mp.fat,
-                'fiber': mp.fiber
+                'fiber': mp.fiber,
+                'servings': getattr(mp, 'servings', None)
             }
             for mp in meal_plans
         ]
@@ -1308,6 +1318,8 @@ def register_routes(app):
         try:
             # Parametri
             days = request.json.get('days', 7) if request.is_json else 7
+            servings = request.json.get('servings') if request.is_json else None
+            share_with_family = bool(request.json.get('share_with_family')) if request.is_json else False
             
             # Genera piano pasti con AI
             meal_plan = ai_optimize_meal_planning(current_user.id, days)
@@ -1336,10 +1348,22 @@ def register_routes(app):
                     if existing:
                         # Aggiorna pasto esistente
                         existing.custom_meal = meal_data['description']
-                        existing.calories = meal_data.get('calories', 0)
-                        existing.protein = meal_data.get('protein', 0)
-                        existing.carbs = meal_data.get('carbs', 0)
-                        existing.fat = meal_data.get('fat', 0)
+                        existing.is_shared = share_with_family
+                        base_cal = float(meal_data.get('calories', 0) or 0)
+                        base_pro = float(meal_data.get('protein', 0) or 0)
+                        base_car = float(meal_data.get('carbs', 0) or 0)
+                        base_fat = float(meal_data.get('fat', 0) or 0)
+                        if servings:
+                            existing.calories = base_cal * int(servings)
+                            existing.protein = base_pro * int(servings)
+                            existing.carbs = base_car * int(servings)
+                            existing.fat = base_fat * int(servings)
+                            existing.servings = int(servings)
+                        else:
+                            existing.calories = base_cal
+                            existing.protein = base_pro
+                            existing.carbs = base_car
+                            existing.fat = base_fat
                         saved_meals.append(existing)
                     else:
                         # Crea nuovo pasto
@@ -1348,10 +1372,12 @@ def register_routes(app):
                             date=meal_date,
                             meal_type=meal_data['meal_type'],
                             custom_meal=meal_data['description'],
-                            calories=meal_data.get('calories', 0),
-                            protein=meal_data.get('protein', 0),
-                            carbs=meal_data.get('carbs', 0),
-                            fat=meal_data.get('fat', 0)
+                            is_shared=share_with_family,
+                            calories=(float(meal_data.get('calories', 0) or 0) * int(servings) if servings else float(meal_data.get('calories', 0) or 0)),
+                            protein=(float(meal_data.get('protein', 0) or 0) * int(servings) if servings else float(meal_data.get('protein', 0) or 0)),
+                            carbs=(float(meal_data.get('carbs', 0) or 0) * int(servings) if servings else float(meal_data.get('carbs', 0) or 0)),
+                            fat=(float(meal_data.get('fat', 0) or 0) * int(servings) if servings else float(meal_data.get('fat', 0) or 0)),
+                            servings=(int(servings) if servings else None)
                         )
                         db.session.add(meal)
                         saved_meals.append(meal)
@@ -1575,7 +1601,7 @@ def register_routes(app):
             return jsonify({'success': False, 'message': f'Errore: {str(e)}'}), 500
 
 
-    # ========================================
+# ========================================
     # SPONSOR E PARTNERSHIP
     # ========================================
     
@@ -1583,4 +1609,22 @@ def register_routes(app):
     def sponsors():
         """Pagina sponsor e partnership"""
         return render_template('sponsors.html')
+    
+    
+    @app.route('/meal-plan/<int:meal_id>', methods=['DELETE'])
+    @login_required
+    def delete_meal_plan(meal_id):
+        """Elimina un pasto dal piano"""
+        meal = MealPlan.query.get_or_404(meal_id)
         
+        if meal.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Accesso negato'}), 403
+        
+        try:
+            db.session.delete(meal)
+            db.session.commit()
+            return jsonify({'success': True, 'message': 'Pasto eliminato con successo'})
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Delete meal plan error: {e}")
+            return jsonify({'success': False, 'message': str(e)}), 500

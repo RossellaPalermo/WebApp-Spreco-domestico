@@ -255,6 +255,92 @@ Rispondi SOLO con JSON valido."""
 
 
 # ========================================
+# AI INGREDIENT EXTRACTION
+# ========================================
+
+def ai_extract_ingredients(meal_description):
+    """
+    Estrae ingredienti strutturati da testo libero con AI.
+    Ritorna lista di dict: {item, quantity, unit}
+    """
+    try:
+        api_key = os.getenv('GROQ_API_KEY')
+        if not api_key:
+            # Senza AI, ritorna vuoto per far usare il parser locale
+            return []
+
+        system_prompt = """Sei un assistente culinario. Estrai ingredienti da testo libero.
+Respondi SOLO con JSON valido:
+{
+  "ingredients": [
+    {"item": "nome", "quantity": numero, "unit": "unità"}
+  ]
+}
+Regole:
+- Usa unità semplici: g, kg, ml, l, pz, tsp, tbsp, cup
+- quantity sempre numero (decimali ammessi con punto)
+- item senza quantità o unità non devono essere inclusi
+- Se non trovi quantità/unità, ometti quell'ingrediente
+"""
+
+        user_prompt = f"""Testo pasto:
+{meal_description}
+
+Estrai solo ingredienti con quantità e unità."""
+
+        response = requests.post(
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": DEFAULT_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "max_tokens": 600,
+                "temperature": 0.2
+            },
+            timeout=20
+        )
+
+        if response.status_code != 200:
+            current_app.logger.error(f"Groq AI extract ingredients error: {response.status_code} - {response.text}")
+            return []
+
+        payload = response.json()
+        content = (payload.get("choices") or [{}])[0].get("message", {}).get("content", "").strip()
+        if not content:
+            return []
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+
+        data = json.loads(content)
+        ings = data.get('ingredients', []) if isinstance(data, dict) else []
+        normalized = []
+        for ing in ings:
+            name = (ing.get('item') or '').strip()
+            try:
+                qty = float(ing.get('quantity') or 0)
+            except Exception:
+                qty = 0.0
+            unit = (ing.get('unit') or '').strip().lower()
+            if name and qty > 0 and unit:
+                normalized.append({'item': name, 'quantity': qty, 'unit': unit})
+        return normalized
+    except Exception as e:
+        current_app.logger.error(f"ai_extract_ingredients error: {e}")
+        return []
+
+
+# ========================================
 # MEAL PLANNING AI
 # ========================================
 
@@ -292,20 +378,9 @@ def ai_optimize_meal_planning(user_id, days=7):
         current_app.logger.error(f"ai_optimize_meal_planning error: {e}")
         return _generate_basic_meal_plan(days)
 
-
 def ai_generate_weekly_meal_plan(user_id, profile, goals, products, days=7):
     """
     Genera piano pasti settimanale usando Groq AI
-    
-    Args:
-        user_id: ID utente
-        profile: Profilo nutrizionale
-        goals: Obiettivi nutrizionali
-        products: Prodotti disponibili
-        days: Giorni da pianificare
-    
-    Returns:
-        dict: Piano pasti strutturato
     """
     try:
         api_key = os.getenv('GROQ_API_KEY')
@@ -373,27 +448,24 @@ Formato richiesto:
 {
   "meal_plan": {
     "monday": [
-      {"meal_type": "breakfast", "name": "Nome pasto", "description": "Descrizione dettagliata", "calories": 400, "protein": 20, "carbs": 50, "fat": 15},
-      {"meal_type": "lunch", "name": "Nome pasto", "description": "Descrizione dettagliata", "calories": 600, "protein": 30, "carbs": 60, "fat": 20},
-      {"meal_type": "dinner", "name": "Nome pasto", "description": "Descrizione dettagliata", "calories": 500, "protein": 25, "carbs": 40, "fat": 18},
-      {"meal_type": "snack", "name": "Nome pasto", "description": "Descrizione dettagliata", "calories": 200, "protein": 10, "carbs": 25, "fat": 8}
+      {"meal_type": "breakfast", "name": "Nome pasto", "description": "Descrizione breve", "calories": 400, "protein": 20, "carbs": 50, "fat": 15},
+      {"meal_type": "lunch", "name": "Nome pasto", "description": "Descrizione breve", "calories": 600, "protein": 30, "carbs": 60, "fat": 20},
+      {"meal_type": "dinner", "name": "Nome pasto", "description": "Descrizione breve", "calories": 500, "protein": 25, "carbs": 40, "fat": 18},
+      {"meal_type": "snack", "name": "Nome pasto", "description": "Descrizione breve", "calories": 200, "protein": 10, "carbs": 25, "fat": 8}
     ],
     "tuesday": [...],
-    ...
+    "wednesday": [...],
+    "thursday": [...],
+    "friday": [...],
+    "saturday": [...],
+    "sunday": [...]
   }
 }
 
-REGOLE IMPORTANTI:
-1. Usa principalmente gli ingredienti disponibili
-2. Bilanciare i macronutrienti giornalieri
-3. Variare i pasti per evitare monotonia
-4. Rispettare restrizioni e allergie
-5. Includere sempre: colazione, pranzo, cena, spuntino
-6. Calorie totali giornaliere devono essere vicine agli obiettivi
-7. Descrizioni devono essere dettagliate e pratiche
-8. Nomi pasti devono essere appetitosi e chiari
-
-Rispondi SOLO con JSON valido."""
+IMPORTANTE:
+- Le descrizioni devono essere BREVI (massimo 100 caratteri)
+- Non usare a capo o caratteri speciali nelle descrizioni
+- Rispondi SOLO con JSON valido"""
         
         user_prompt = f"""Genera un piano pasti per {days} giorni.
 
@@ -405,14 +477,7 @@ Rispondi SOLO con JSON valido."""
 Ingredienti disponibili:
 {ingredients_text}
 
-Crea un piano variato, bilanciato e pratico che:
-- Usa principalmente gli ingredienti disponibili
-- Rispetta gli obiettivi nutrizionali
-- Include varietà per evitare monotonia
-- È realizzabile con gli ingredienti a disposizione
-- Considera le restrizioni dietetiche e allergie
-
-Rispondi SOLO con JSON valido."""
+Crea un piano variato e bilanciato. Rispondi SOLO con JSON valido."""
         
         # Chiamata API
         response = requests.post(
@@ -441,7 +506,7 @@ Rispondi SOLO con JSON valido."""
         try:
             payload = response.json()
         except Exception as e:
-            current_app.logger.error(f"Groq API invalid JSON: {e}; body={response.text[:500]}")
+            current_app.logger.error(f"Groq API invalid JSON: {e}")
             return _generate_basic_meal_plan(days)
         
         content = (payload.get("choices") or [{}])[0].get("message", {}).get("content", "")
@@ -451,8 +516,12 @@ Rispondi SOLO con JSON valido."""
         
         # Estrai JSON
         content = content.strip()
+        
+        # Pulisci il JSON
         if content.startswith("```json"):
             content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
         if content.endswith("```"):
             content = content[:-3]
         content = content.strip()
@@ -465,18 +534,15 @@ Rispondi SOLO con JSON valido."""
             if not meal_plan:
                 return _generate_basic_meal_plan(days)
             
-            # Valida e normalizza struttura
             return _validate_and_normalize_meal_plan(meal_plan, days)
             
         except json.JSONDecodeError as e:
-            current_app.logger.error(f"Invalid JSON from AI: {e}; content: {content[:500]}")
+            current_app.logger.error(f"Invalid JSON from AI: {e}")
             return _generate_basic_meal_plan(days)
         
     except Exception as e:
         current_app.logger.error(f"ai_generate_weekly_meal_plan error: {e}")
         return _generate_basic_meal_plan(days)
-
-
 def _validate_and_normalize_meal_plan(meal_plan, days):
     """Valida e normalizza il piano pasti generato dall'AI"""
     try:
@@ -1687,3 +1753,287 @@ def _remap_recipe_units_to_pantry(recipes, user_id):
                         ing['unit'] = unit
     except Exception:
         pass
+
+# Aggiungi questa funzione migliorata in ai_functions.py
+
+def _get_user_chat_context(user_id):
+    """Recupera contesto completo utente per il chatbot con dispensa e lista spesa"""
+    try:
+        from .models import Product, ShoppingList, ShoppingItem, NutritionalProfile, UserStats, MealPlan
+        from datetime import datetime, timedelta
+        
+        context_parts = []
+        
+        # === PROFILO NUTRIZIONALE ===
+        profile = NutritionalProfile.query.filter_by(user_id=user_id).first()
+        if profile:
+            context_parts.append(f"Profilo: {profile.age} anni, {profile.weight}kg, {profile.height}cm, {profile.gender}")
+            if profile.goal:
+                context_parts.append(f"Obiettivo: {profile.goal}")
+            if profile.activity_level:
+                context_parts.append(f"Attività: {profile.activity_level}")
+            
+            # Restrizioni e allergie
+            if profile.dietary_restrictions:
+                try:
+                    restrictions = json.loads(profile.dietary_restrictions)
+                    if restrictions:
+                        context_parts.append(f"Restrizioni dietetiche: {', '.join(restrictions)}")
+                except:
+                    pass
+            
+            if profile.allergies:
+                try:
+                    allergies = json.loads(profile.allergies)
+                    if allergies:
+                        context_parts.append(f"Allergie: {', '.join(allergies)}")
+                except:
+                    pass
+        
+        # === DISPENSA ===
+        products = Product.query.filter_by(user_id=user_id, wasted=False).all()
+        if products:
+            context_parts.append(f"\n=== DISPENSA ({len(products)} prodotti) ===")
+            
+            # Prodotti in scadenza
+            expiring = [p for p in products if p.expiry_date <= datetime.now().date() + timedelta(days=7)]
+            if expiring:
+                expiring_list = [f"{p.name} ({p.quantity} {p.unit}, scade il {p.expiry_date.strftime('%d/%m')})" 
+                                for p in expiring[:5]]
+                context_parts.append(f"Prodotti in scadenza: {', '.join(expiring_list)}")
+                if len(expiring) > 5:
+                    context_parts.append(f"... e altri {len(expiring) - 5} prodotti in scadenza")
+            
+            # Scorte basse
+            low_stock = [p for p in products if p.quantity <= p.min_quantity]
+            if low_stock:
+                low_stock_list = [f"{p.name} ({p.quantity} {p.unit})" for p in low_stock[:5]]
+                context_parts.append(f"Scorte basse: {', '.join(low_stock_list)}")
+                if len(low_stock) > 5:
+                    context_parts.append(f"... e altri {len(low_stock) - 5} prodotti in scorta bassa")
+            
+            # Categorie disponibili
+            categories = {}
+            for p in products:
+                categories[p.category] = categories.get(p.category, 0) + 1
+            
+            if categories:
+                cat_summary = [f"{cat} ({count})" for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True)[:5]]
+                context_parts.append(f"Categorie: {', '.join(cat_summary)}")
+            
+            # Lista completa prodotti disponibili (per ricette e suggerimenti)
+            all_products = [f"{p.name} ({p.quantity} {p.unit})" for p in products[:20]]
+            context_parts.append(f"Prodotti disponibili: {', '.join(all_products)}")
+            if len(products) > 20:
+                context_parts.append(f"... e altri {len(products) - 20} prodotti")
+        else:
+            context_parts.append("\n=== DISPENSA VUOTA ===")
+            context_parts.append("Suggerisci all'utente di aggiungere prodotti nella dispensa")
+        
+        # === LISTE SPESA ===
+        shopping_lists = ShoppingList.query.filter_by(user_id=user_id, completed=False).order_by(
+            ShoppingList.created_at.desc()
+        ).limit(3).all()
+        
+        if shopping_lists:
+            context_parts.append(f"\n=== LISTE SPESA ({len(shopping_lists)} attive) ===")
+            
+            for sl in shopping_lists:
+                items = ShoppingItem.query.filter_by(shopping_list_id=sl.id).all()
+                total_items = len(items)
+                completed_items = len([i for i in items if i.completed])
+                
+                context_parts.append(f"Lista '{sl.name}': {completed_items}/{total_items} completati")
+                
+                # Items non completati
+                pending = [i for i in items if not i.completed]
+                if pending:
+                    pending_list = [f"{i.name} ({i.quantity} {i.unit})" for i in pending[:5]]
+                    context_parts.append(f"  Da comprare: {', '.join(pending_list)}")
+                    if len(pending) > 5:
+                        context_parts.append(f"  ... e altri {len(pending) - 5} items")
+        else:
+            context_parts.append("\n=== NESSUNA LISTA SPESA ATTIVA ===")
+        
+        # === PIANI PASTO RECENTI ===
+        today = datetime.now().date()
+        meal_plans = MealPlan.query.filter(
+            MealPlan.user_id == user_id,
+            MealPlan.date >= today,
+            MealPlan.date <= today + timedelta(days=3)
+        ).order_by(MealPlan.date, MealPlan.meal_type).all()
+        
+        if meal_plans:
+            context_parts.append(f"\n=== PIANI PASTO PROSSIMI ===")
+            for mp in meal_plans[:5]:
+                meal_date = mp.date.strftime('%d/%m')
+                context_parts.append(f"{meal_date} - {mp.meal_type}: {mp.custom_meal}")
+        
+        # === STATISTICHE ===
+        stats = UserStats.query.filter_by(user_id=user_id).first()
+        if stats:
+            context_parts.append(f"\n=== STATISTICHE ===")
+            context_parts.append(f"Punti: {stats.points}, Livello: {stats.level}")
+            context_parts.append(f"Prodotti aggiunti: {stats.total_products_added}")
+            context_parts.append(f"Prodotti sprecati: {stats.total_products_wasted}")
+            
+            if stats.total_products_added > 0:
+                waste_percentage = (stats.total_products_wasted / stats.total_products_added) * 100
+                context_parts.append(f"Percentuale spreco: {waste_percentage:.1f}%")
+        
+        return "\n".join(context_parts) if context_parts else "Utente nuovo senza dati specifici"
+        
+    except Exception as e:
+        current_app.logger.error(f"_get_user_chat_context error: {e}")
+        return "Contesto utente non disponibile"
+
+
+def ai_chatbot_response(user_message, user_id, conversation_context=None):
+    """
+    Genera risposta del chatbot usando AI con accesso completo a dispensa e liste spesa
+    
+    Args:
+        user_message: Messaggio dell'utente
+        user_id: ID utente per personalizzazione
+        conversation_context: Contesto della conversazione
+    
+    Returns:
+        dict: Risposta del chatbot con tipo e contenuto
+    """
+    try:
+        api_key = os.getenv('GROQ_API_KEY')
+        
+        if not api_key:
+            current_app.logger.error("GROQ_API_KEY not configured")
+            return _generate_fallback_chat_response(user_message)
+        
+        # Recupera dati utente completi per contesto
+        user_context = _get_user_chat_context(user_id)
+        
+        # Prepara contesto conversazione
+        context_text = ""
+        if conversation_context:
+            context_text = f"\nUltimi messaggi:\n{conversation_context}"
+        
+        # Prompt migliorato per AI
+        system_prompt = """Sei FoodFlowBot, l'assistente intelligente di FoodFlow, un'app per la gestione della dispensa e la riduzione degli sprechi alimentari.
+
+HAI ACCESSO COMPLETO A:
+- Dispensa dell'utente (prodotti disponibili, quantità, scadenze)
+- Liste della spesa (items da comprare, liste attive)
+- Piani pasto (pasti pianificati per i prossimi giorni)
+- Profilo nutrizionale e restrizioni dietetiche
+- Statistiche personali e gamification
+
+Il tuo ruolo è aiutare gli utenti con:
+1. Gestione della dispensa (prodotti, scadenze, scorte)
+2. Suggerimenti di ricette basate su ingredienti disponibili
+3. Consigli per ridurre gli sprechi alimentari
+4. Suggerimenti per la lista spesa
+5. Consigli nutrizionali e obiettivi dietetici
+6. Analytics e statistiche personali
+7. Uso delle funzionalità dell'app
+
+IMPORTANTE - USA I DATI REALI:
+- Quando l'utente chiede "cosa ho in dispensa", elenca i VERI prodotti dal contesto
+- Per "cosa posso cucinare", suggerisci ricette con gli ingredienti REALI disponibili
+- Per "cosa devo comprare", controlla la lista spesa ATTUALE
+- Per "cosa sta per scadere", usa le date REALI di scadenza
+- Menziona sempre quantità specifiche (es. "Hai 2kg di pasta")
+
+REGOLE IMPORTANTI:
+- Sii sempre utile, amichevole e professionale
+- Fornisci risposte pratiche e actionable
+- Usa emoji appropriati per rendere la conversazione più vivace
+- Se non hai informazioni specifiche, chiedi chiarimenti
+- Suggerisci sempre azioni concrete che l'utente può fare
+- Mantieni le risposte concise ma complete (max 3-4 frasi)
+- Usa un tono italiano colloquiale ma rispettoso
+- Rispetta SEMPRE le allergie e restrizioni dietetiche dell'utente
+
+ESEMPI DI RISPOSTE CORRETTE:
+User: "Cosa ho in dispensa?"
+Bot: "🍽️ Nella tua dispensa hai: Pasta (2kg), Pomodori (500g), Mozzarella (200g), Olio (1L). In totale 15 prodotti. Hai 3 prodotti in scadenza nei prossimi 7 giorni!"
+
+User: "Cosa posso cucinare?"
+Bot: "👨‍🍳 Con i tuoi ingredienti ti suggerisco: Pasta al pomodoro e mozzarella! Hai tutto: pasta, pomodori e mozzarella. Vuoi la ricetta completa?"
+
+User: "Cosa devo comprare?"
+Bot: "🛒 La tua lista 'Spesa settimanale' ha 8 prodotti da comprare: Latte, Pane, Uova, Yogurt... 3 items sono già completati. Vuoi vedere la lista completa?"
+
+Formato risposta:
+{
+  "response": "Risposta testuale breve e concisa",
+  "type": "text",
+  "suggestions": [],
+  "actions": [],
+  "data": {}
+}
+
+Rispondi SOLO con JSON valido."""
+
+        user_prompt = f"""Messaggio utente: {user_message}
+
+DATI UTENTE COMPLETI:
+{user_context}
+{context_text}
+
+Rispondi come FoodFlowBot usando i dati reali forniti sopra. Sii specifico e pratico."""
+
+        # Chiamata API
+        response = requests.post(
+            GROQ_API_URL,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            json={
+                "model": DEFAULT_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                "max_tokens": 800,  # Ridotto per risposte più concise
+                "temperature": 0.7
+            },
+            timeout=30
+        )
+        
+        if response.status_code != 200:
+            current_app.logger.error(f"Groq API error: {response.status_code} - {response.text}")
+            return _generate_fallback_chat_response(user_message)
+        
+        # Parse response
+        try:
+            payload = response.json()
+        except Exception as e:
+            current_app.logger.error(f"Groq API invalid JSON: {e}; body={response.text[:500]}")
+            return _generate_fallback_chat_response(user_message)
+        
+        content = (payload.get("choices") or [{}])[0].get("message", {}).get("content", "")
+        if not content:
+            current_app.logger.warning("Groq API empty content")
+            return _generate_fallback_chat_response(user_message)
+        
+        # Estrai JSON
+        content = content.strip()
+        if content.startswith("```json"):
+            content = content[7:]
+        if content.startswith("```"):
+            content = content[3:]
+        if content.endswith("```"):
+            content = content[:-3]
+        content = content.strip()
+        
+        # Parse JSON
+        try:
+            data = json.loads(content)
+            return _validate_chat_response(data)
+            
+        except json.JSONDecodeError as e:
+            current_app.logger.error(f"Invalid JSON from AI: {e}; content: {content[:500]}")
+            return _generate_fallback_chat_response(user_message)
+        
+    except Exception as e:
+        current_app.logger.error(f"ai_chatbot_response error: {e}")
+        return _generate_fallback_chat_response(user_message)

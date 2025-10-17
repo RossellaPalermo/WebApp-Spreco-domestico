@@ -15,6 +15,7 @@ from .models import (
     NutritionalProfile, NutritionalGoal, MealPlan, RewardHistory,
     Family, FamilyMember
 )
+from .ai_functions import ai_extract_ingredients
 import json
 
 # ========================================
@@ -784,7 +785,85 @@ def _parse_meal_plan_ingredients(meal_plan):
                     return ingredients
             except Exception:
                 pass
-        # Fallback semplice: nessun parsing dal testo libero
+        # Fallback: parsing testuale avanzato con supporto formati italiani
+        try:
+            import re
+            raw = (meal_plan.custom_meal or '').replace('\r', '\n')
+            tokens = []
+            for part in raw.split('\n'):
+                part = part.strip()
+                if not part:
+                    continue
+                # Rimuovi prefissi comuni tipo "con "
+                if part.lower().startswith('con '):
+                    part = part[4:].strip()
+                tokens.extend([t.strip() for t in part.split(',') if t.strip()])
+
+            # Suddividi ulteriormente su " e " quando entrambe le parti iniziano con quantità
+            def _looks_like_qty(s: str) -> bool:
+                return re.match(r'^(?:\d+(?:[\.,]\d+)?|mezzo|mezza|1/2)\b', s.strip().lower()) is not None
+            expanded = []
+            for t in tokens:
+                parts = [p.strip() for p in t.split(' e ') if p.strip()]
+                if len(parts) == 2 and _looks_like_qty(parts[0]) and _looks_like_qty(parts[1]):
+                    expanded.extend(parts)
+                else:
+                    expanded.append(t)
+            tokens = expanded
+            # Supporta: "200 g pasta", "1.5 kg patate", "2 uova", "mezzo cucchiaino sale"
+            number_pattern = r'(?:\d+(?:[\.,]\d+)?|mezzo|mezza|1/2)'
+            unit_pattern = r'(?:kg|g|grammi|gr|l|lt|ml|cl|pz|pezzi|tazza|tazze|cucchiaino|cucchiaini|cucchiaio|cucchiai|spicchio|spicchi)'
+            pattern = re.compile(rf'^(?P<qty>{number_pattern})\s*(?:(?P<unit>{unit_pattern})\b)?\s*(?:di\s+)?(?P<name>.+)$', re.IGNORECASE)
+
+            def _parse_qty(qty_token: str) -> float:
+                qt = (qty_token or '').strip().lower()
+                if qt in ('mezzo', 'mezza', '1/2'):
+                    return 0.5
+                try:
+                    return float(qt.replace(',', '.'))
+                except Exception:
+                    return 0.0
+
+            countable_defaults = {'uovo': 'pz', 'uova': 'pz', 'banana': 'pz', 'banane': 'pz', 'avocado': 'pz', 'yogurt': 'pz'}
+
+            for token in tokens:
+                m = pattern.match(token)
+                if not m:
+                    continue
+                qty = _parse_qty(m.group('qty'))
+                unit = (m.group('unit') or '').strip().lower()
+                name = (m.group('name') or '').strip()
+                # Normalizza unità comuni
+                unit_map = {
+                    'grammi': 'g', 'gr': 'g', 'kg': 'kg',
+                    'lt': 'l', 'l': 'l', 'cl': 'ml', 'ml': 'ml',
+                    'pezzi': 'pz', 'pz': 'pz', 'uova': 'pz', 'uovo': 'pz',
+                    'cucchiaino': 'tsp', 'cucchiaini': 'tsp', 'cucchiaio': 'tbsp', 'cucchiai': 'tbsp',
+                    'tazza': 'cup', 'tazze': 'cup',
+                    'spicchio': 'pz', 'spicchi': 'pz',
+                }
+                # Se unità mancante, prova ad inferire da item
+                if not unit:
+                    # Se il nome inizia con unità (es. "cucchiaio di marmellata")
+                    head = name.split()[0].lower()
+                    if head in unit_map:
+                        unit = unit_map[head]
+                        name = ' '.join(name.split()[1:]).strip()
+                unit = unit_map.get(unit, unit or countable_defaults.get(name.split()[0].lower(), 'pz'))
+                if name and qty > 0:
+                    ingredients.append({'item': name, 'quantity': qty, 'unit': unit})
+            # Se non abbiamo estratto nulla con le regole locali, prova AI
+            if not ingredients:
+                try:
+                    ai_ings = ai_extract_ingredients(meal_plan.custom_meal)
+                    if ai_ings:
+                        return ai_ings
+                except Exception:
+                    pass
+            return ingredients
+        except Exception:
+            return []
+        
         return ingredients
     except Exception:
         return []
@@ -797,6 +876,31 @@ def _split_missing_vs_available(user_id, ingredients):
     missing = []
     available = []
     try:
+        # Helpers per normalizzare unità e quantità per confronto
+        def _normalize(name, qty, unit):
+            uname = (unit or '').strip().lower()
+            # Porta a unità base: g, ml, pz ove possibile
+            if uname == 'kg':
+                return name, qty * 1000.0, 'g'
+            if uname in ('l',):
+                return name, qty * 1000.0, 'ml'
+            if uname == 'cl':
+                return name, qty * 10.0, 'ml'
+            # già base o altro
+            if uname in ('grammi', 'gr'):
+                uname = 'g'
+            if uname in ('lt',):
+                uname = 'l'
+            if uname in ('pezzi', 'uova', 'uovo', 'spicchio', 'spicchi'):
+                uname = 'pz'
+            if uname in ('cucchiaino', 'cucchiaini'):
+                uname = 'tsp'
+            if uname in ('cucchiaio', 'cucchiai'):
+                uname = 'tbsp'
+            if uname in ('tazza', 'tazze'):
+                uname = 'cup'
+            return name, qty, uname or 'unit'
+
         # Mappa prodotti disponibili per nome normalizzato
         products = Product.query.filter_by(user_id=user_id, wasted=False).all()
         name_to_product = {p.name.strip().lower(): p for p in products}
@@ -808,8 +912,13 @@ def _split_missing_vs_available(user_id, ingredients):
                 continue
             key = name.lower()
             prod = name_to_product.get(key)
-            if prod and prod.unit == unit and prod.quantity >= qty:
-                available.append({'item': name, 'quantity': qty, 'unit': unit})
+            if prod:
+                # Normalizza ambedue per confronto
+                _, qty_norm, unit_norm = _normalize(name, qty, unit)
+                _, prod_qty_norm, prod_unit_norm = _normalize(prod.name, float(prod.quantity or 0), prod.unit)
+                if unit_norm == prod_unit_norm and prod_qty_norm >= qty_norm:
+                    available.append({'item': name, 'quantity': qty, 'unit': unit})
+                    continue
             else:
                 # Mancante o insufficiente: aggiungi quantità richiesta
                 missing.append({'item': name, 'quantity': qty, 'unit': unit})

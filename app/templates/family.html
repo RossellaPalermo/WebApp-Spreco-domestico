@@ -460,6 +460,12 @@
         border-width: 4px;
         color: #667eea;
     }
+
+    /* Fix stacking context: ensure modal is above any page elements */
+    /* Backdrop disabilitato per la pagina Famiglia: non bloccare i click sul resto della pagina */
+    .modal { z-index: 2000 !important; pointer-events: auto; }
+    .modal-backdrop { z-index: -1 !important; background: transparent !important; }
+    .modal-dialog { pointer-events: auto; }
 </style>
 {% endblock %}
 
@@ -561,11 +567,11 @@
                     </p>
 
                     <div class="d-flex gap-3 flex-wrap justify-content-center">
-                        <button class="btn btn-family" data-bs-toggle="modal" data-bs-target="#createFamilyModal">
+                        <button class="btn btn-family" type="button" data-bs-toggle="modal" data-bs-target="#createFamilyModal">
                             <i class="bi bi-plus-circle"></i>
                             Crea Famiglia
                         </button>
-                        <button class="btn btn-family btn-family-secondary" data-bs-toggle="modal" data-bs-target="#joinFamilyModal">
+                        <button class="btn btn-family btn-family-secondary" type="button" data-bs-toggle="modal" data-bs-target="#joinFamilyModal">
                             <i class="bi bi-box-arrow-in-right"></i>
                             Unisciti
                         </button>
@@ -578,7 +584,7 @@
 </div>
 
 <!-- Modal Crea Famiglia -->
-<div class="modal fade" id="createFamilyModal" tabindex="-1">
+<div class="modal fade" id="createFamilyModal" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -610,7 +616,7 @@
 </div>
 
 <!-- Modal Unisciti Famiglia -->
-<div class="modal fade" id="joinFamilyModal" tabindex="-1">
+<div class="modal fade" id="joinFamilyModal" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
@@ -646,6 +652,16 @@
 
 {% block extra_js %}
 <script>
+// Hard cleanup utility to remove any stuck Bootstrap modal backdrops
+function forceModalCleanup() {
+    try {
+        document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+        // Ensure pointer events restored
+        document.body.style.pointerEvents = '';
+    } catch (_) {}
+}
 // Copia codice famiglia
 function copyFamilyCode() {
     const code = document.getElementById('family-code').textContent;
@@ -708,48 +724,58 @@ function loadFamilyMembers() {
 // Crea famiglia
 document.getElementById('createFamilyForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
+    e.stopPropagation();
     const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.originalText = submitBtn.innerHTML; submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Creazione...'; }
     
-    fetch('/family/create', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
+    fetch('/family/create', { method: 'POST', body: formData })
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('createFamilyModal')).hide();
-            location.reload();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('createFamilyModal'));
+            if (modal) modal.hide();
+            setTimeout(() => { forceModalCleanup(); location.reload(); }, 100);
         } else {
-            alert('Errore: ' + data.message);
+            alert('Errore: ' + (data.message || 'Impossibile creare la famiglia'));
         }
     })
-    .catch(error => {
-        console.error('Errore:', error);
+    .catch(err => {
+        console.error('Errore:', err);
         alert('Errore nella creazione della famiglia');
+    })
+    .finally(() => {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = submitBtn.dataset.originalText || 'Crea Famiglia'; }
+        forceModalCleanup();
     });
 });
 
 // Unisciti a famiglia
 document.getElementById('joinFamilyForm')?.addEventListener('submit', function(e) {
     e.preventDefault();
+    e.stopPropagation();
     const formData = new FormData(this);
+    const submitBtn = this.querySelector('button[type="submit"]');
+    if (submitBtn) { submitBtn.disabled = true; submitBtn.dataset.originalText = submitBtn.innerHTML; submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Unione...'; }
     
-    fetch('/family/join', {
-        method: 'POST',
-        body: formData
-    })
-    .then(response => response.json())
+    fetch('/family/join', { method: 'POST', body: formData })
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
-            bootstrap.Modal.getInstance(document.getElementById('joinFamilyModal')).hide();
-            location.reload();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('joinFamilyModal'));
+            if (modal) modal.hide();
+            setTimeout(() => { forceModalCleanup(); location.reload(); }, 100);
         } else {
-            alert('Errore: ' + data.message);
+            alert('Errore: ' + (data.message || 'Impossibile unirsi alla famiglia'));
         }
     })
-    .catch(error => {
-        console.error('Errore:', error);
+    .catch(err => {
+        console.error('Errore:', err);
         alert('Errore nell\'unione alla famiglia');
+    })
+    .finally(() => {
+        if (submitBtn) { submitBtn.disabled = false; submitBtn.innerHTML = submitBtn.dataset.originalText || 'Unisciti'; }
+        forceModalCleanup();
     });
 });
 
@@ -778,6 +804,15 @@ function leaveFamily() {
 {% if family %}
 document.addEventListener('DOMContentLoaded', function() {
     loadFamilyMembers();
+    // Cleanup backdrop per sicurezza
+    ['createFamilyModal','joinFamilyModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('hidden.bs.modal', function() {
+                setTimeout(() => { forceModalCleanup(); }, 100);
+            });
+        }
+    });
 });
 {% endif %}
 

@@ -7,10 +7,10 @@
 .meal-planning-header {
     background: linear-gradient(135deg, #10B981 0%, #059669 100%);
     border-radius: 20px;
-    padding: 2rem;
+    padding: 2.5rem;
     color: white;
-    margin-bottom: 2rem;
-    box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+    margin-bottom: 2.5rem;
+    box-shadow: 0 15px 40px rgba(16,185,129,0.25);
 }
 
 .week-navigator {
@@ -18,51 +18,323 @@
     justify-content: space-between;
     align-items: center;
     background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin-bottom: 2rem;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.09);
+    margin-bottom: 2.5rem;
+    border: 2px solid #F1F5F9;
 }
 
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
+.week-navigator button {
+    padding: 0.75rem 1.5rem;
+    border: 2px solid #E5E7EB;
+    background: white;
+    border-radius: 10px;
+    font-weight: 600;
+    color: #1E293B;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.week-navigator button:hover {
+    border-color: #10B981;
+    color: #10B981;
+    background: rgba(16,185,129,0.05);
+    transform: translateY(-2px);
+}
+
+/* === SERVINGS SELECTOR === */
+.servings-selector-card {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    border: 2px solid #E5E7EB;
+    margin-bottom: 2.5rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.servings-selector-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.servings-info h5 {
+    color: #1E293B;
+    font-weight: 700;
+}
+
+.servings-control {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.servings-display {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+}
+
+.servings-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid #E5E7EB;
+    background: white;
+    color: #10B981;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.servings-btn:hover {
+    background: #10B981;
+    color: white;
+    border-color: #10B981;
+    transform: scale(1.1);
+}
+
+.servings-btn:active {
+    transform: scale(0.95);
+}
+
+.servings-value-container {
+    text-align: center;
+    min-width: 100px;
+}
+
+.servings-value {
+    font-size: 3.5rem;
+    font-weight: 900;
+    color: #10B981;
+    line-height: 1;
+    font-family: 'Poppins', sans-serif;
+    text-shadow: 0 2px 8px rgba(16,185,129,0.2);
+}
+
+.servings-label {
+    display: block;
+    color: #64748B;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+    margin-top: 0.5rem;
+}
+
+.servings-slider-container {
+    position: relative;
+}
+
+.servings-slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #E5E7EB 0%, #10B981 100%);
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.servings-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #10B981;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+    transition: all 0.3s ease;
+}
+
+.servings-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.6);
+}
+
+.servings-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #10B981;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.4);
+}
+
+.slider-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    color: #64748B;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.servings-presets {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.preset-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 0.5rem 1rem;
+    border: 2px solid #E5E7EB;
+    background: white;
+    border-radius: 10px;
+    color: #64748B;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.preset-btn:hover {
+    border-color: #10B981;
+    color: #10B981;
+    background: rgba(16,185,129,0.05);
+}
+
+.preset-btn.active {
+    background: #10B981;
+    color: white;
+    border-color: #10B981;
+}
+
+.servings-summary {
+    padding-top: 1.5rem;
+    border-top: 2px solid #F1F5F9;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
     gap: 1rem;
-    margin-bottom: 2rem;
-}
-
-.day-card {
+    padding: 1rem;
     background: white;
     border-radius: 12px;
-    padding: 1rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    min-height: 400px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
 }
 
-.day-header {
-    text-align: center;
-    padding-bottom: 1rem;
-    border-bottom: 2px solid #F1F5F9;
-    margin-bottom: 1rem;
+.summary-item i {
+    font-size: 1.8rem;
 }
 
-.day-name {
-    font-weight: 700;
+.summary-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.summary-text strong {
+    font-size: 1.2rem;
     color: #1E293B;
-    font-size: 0.875rem;
-    text-transform: uppercase;
+    font-weight: 700;
 }
 
-.day-date {
+.summary-text small {
     color: #64748B;
     font-size: 0.75rem;
 }
 
+/* === CALENDAR === */
+.calendar-wrapper {
+    overflow-x: auto;
+    margin-bottom: 2.5rem;
+    border-radius: 12px;
+    scroll-behavior: smooth;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(200px, 1fr));
+    gap: 1.25rem;
+    min-width: min-content;
+    padding: 0.5rem;
+}
+
+.day-card {
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+    min-height: 500px;
+    transition: all 0.3s ease;
+    border: 2px solid #F1F5F9;
+    position: relative;
+    flex-shrink: 0;
+}
+
+.day-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #E5E7EB, #CBD5E1);
+}
+
+.day-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.1);
+    border-color: #E5E7EB;
+}
+
+.day-card.today {
+    border: 2px solid #10B981;
+    background: linear-gradient(135deg, #F0FDF4 0%, #F8FAFC 100%);
+    box-shadow: 0 8px 24px rgba(16,185,129,0.15);
+}
+
+.day-card.today::before {
+    background: linear-gradient(90deg, #10B981, #059669);
+}
+
+.day-header {
+    text-align: center;
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 2px solid #F1F5F9;
+}
+
+.day-name {
+    font-weight: 800;
+    color: #1E293B;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+.day-date {
+    color: #64748B;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
 .day-card.today .day-header {
-    background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+    background: linear-gradient(135deg, #10B981, #059669);
     color: white;
-    border-radius: 8px;
-    padding: 0.75rem;
+    border-radius: 12px;
+    padding: 1rem;
+    margin: -1.5rem -1.5rem 1.25rem -1.5rem;
+    border: none;
 }
 
 .day-card.today .day-name,
@@ -70,19 +342,41 @@
     color: white;
 }
 
+.meals-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+}
+
 .meal-slot {
     background: #F8FAFC;
-    border-radius: 8px;
-    padding: 0.75rem;
-    margin-bottom: 0.75rem;
+    border-radius: 12px;
+    padding: 1rem;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
     border: 2px dashed #E2E8F0;
+    position: relative;
+    overflow: hidden;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.meal-slot::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 4px;
+    background: transparent;
 }
 
 .meal-slot:hover {
     border-color: #10B981;
     background: rgba(16,185,129,0.05);
+    transform: translateX(4px);
 }
 
 .meal-slot.filled {
@@ -91,239 +385,318 @@
     border-left: 4px solid;
 }
 
-.meal-slot.filled:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
 .meal-slot.breakfast { border-left-color: #F59E0B; }
+.meal-slot.breakfast::before { background: #F59E0B; }
 .meal-slot.lunch { border-left-color: #3B82F6; }
+.meal-slot.lunch::before { background: #3B82F6; }
 .meal-slot.dinner { border-left-color: #8B5CF6; }
+.meal-slot.dinner::before { background: #8B5CF6; }
 .meal-slot.snack { border-left-color: #10B981; }
+.meal-slot.snack::before { background: #10B981; }
 
 .meal-type-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.25rem 0.5rem;
-    border-radius: 4px;
+    gap: 0.35rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.35rem 0.75rem;
+    border-radius: 6px;
+    width: fit-content;
+    text-transform: uppercase;
 }
 
-.meal-type-badge.breakfast {
-    background: rgba(245,158,11,0.1);
-    color: #F59E0B;
-}
-
-.meal-type-badge.lunch {
-    background: rgba(59,130,246,0.1);
-    color: #3B82F6;
-}
-
-.meal-type-badge.dinner {
-    background: rgba(139,92,246,0.1);
-    color: #8B5CF6;
-}
-
-.meal-type-badge.snack {
-    background: rgba(16,185,129,0.1);
-    color: #10B981;
-}
+.meal-type-badge.breakfast { background: rgba(245,158,11,0.15); color: #D97706; }
+.meal-type-badge.lunch { background: rgba(59,130,246,0.15); color: #2563EB; }
+.meal-type-badge.dinner { background: rgba(139,92,246,0.15); color: #7C3AED; }
+.meal-type-badge.snack { background: rgba(16,185,129,0.15); color: #059669; }
 
 .meal-name {
-    font-weight: 600;
+    font-weight: 700;
     color: #1E293B;
-    font-size: 0.875rem;
-    margin: 0.5rem 0;
+    font-size: 0.95rem;
+    margin: 0.65rem 0;
+    word-break: break-word;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
 .meal-stats {
     display: flex;
     justify-content: space-between;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: #64748B;
+    gap: 0.5rem;
 }
 
 .add-meal-btn {
     width: 100%;
-    padding: 0.5rem;
+    padding: 0.65rem;
     border: 2px dashed #CBD5E1;
     background: transparent;
-    border-radius: 8px;
+    border-radius: 10px;
     color: #64748B;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
 }
 
 .add-meal-btn:hover {
     border-color: #10B981;
     color: #10B981;
-    background: rgba(16,185,129,0.05);
+    background: rgba(16,185,129,0.08);
 }
 
 .quick-actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
 }
 
 .action-card {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border-radius: 16px;
+    padding: 2rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
     text-align: center;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    border: 2px solid #F1F5F9;
 }
 
 .action-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.12);
 }
 
 .action-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
+    width: 70px;
+    height: 70px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.75rem;
-    margin: 0 auto 1rem;
+    font-size: 2rem;
+    margin: 0 auto 1.5rem;
+    transition: all 0.3s ease;
 }
 
 .stats-summary {
-    background: white;
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+    border: 2px solid #F1F5F9;
+    margin-top: 2rem;
 }
 
 .stat-item {
-    text-align: center;
-    padding: 1rem;
+    padding: 1.5rem;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.02) 100%);
 }
 
 .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
+    font-size: 2.2rem;
+    font-weight: 900;
     color: #1E293B;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+    display: block;
 }
 
 .stat-label {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     color: #64748B;
+    font-weight: 600;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1024px) {
     .calendar-grid {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, minmax(180px, 1fr));
     }
 }
 
 @media (max-width: 768px) {
-    .calendar-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    .quick-actions {
-        grid-template-columns: 1fr;
-    }
+    .meal-planning-header { padding: 2rem; }
+    .calendar-grid { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
+    .day-card { min-height: 400px; padding: 1rem; }
+    .quick-actions { grid-template-columns: 1fr; }
+    .servings-selector-card { padding: 1.5rem; }
+    .servings-display { gap: 1rem; }
+    .servings-value { font-size: 2.5rem; }
+    .servings-presets { flex-direction: column; }
+    .preset-btn { flex: auto; width: 100%; }
+}
+
+@media (max-width: 480px) {
+    .calendar-grid { grid-template-columns: 1fr; }
+    .day-card { min-height: auto; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid py-4">
-    <!-- Header -->
     <div class="meal-planning-header">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h1 class="mb-2">
-                    <i class="bi bi-calendar-week me-2"></i>
-                    Piano Pasti Settimanale
-                </h1>
-                <p class="mb-0 opacity-75">Pianifica i tuoi pasti per una nutrizione ottimale e zero sprechi</p>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                {% if nutritional_goals %}
-                <div class="d-flex gap-2 justify-content-md-end flex-wrap">
-                    <span class="badge bg-white text-dark px-3 py-2">
-                        <i class="bi bi-fire me-1"></i>{{ nutritional_goals.daily_calories }} cal/giorno
-                    </span>
-                    <span class="badge bg-white text-dark px-3 py-2">
-                        <i class="bi bi-check-circle me-1"></i>Profilo Attivo
-                    </span>
-                </div>
-                {% endif %}
-            </div>
-        </div>
+        <h1 class="mb-2">
+            <i class="bi bi-calendar-week me-2"></i>Piano Pasti Settimanale
+        </h1>
+        <p class="mb-0 opacity-75">Pianifica i tuoi pasti per una nutrizione ottimale</p>
     </div>
 
     {% if not nutritional_profile %}
-    <!-- Alert Profilo Mancante -->
     <div class="alert" style="background: rgba(59,130,246,0.1); border-left: 4px solid #3B82F6; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
         <div class="d-flex align-items-start gap-3">
             <i class="bi bi-info-circle-fill" style="font-size: 1.5rem; color: #3B82F6;"></i>
             <div>
                 <h6 style="color: #1E293B; margin-bottom: 0.5rem;">Configura il Profilo Nutrizionale</h6>
-                <p style="color: #64748B; margin-bottom: 1rem;">Per ricevere suggerimenti personalizzati e calcoli nutrizionali precisi, configura il tuo profilo.</p>
-                <a href="{{ url_for('nutritional_profile') }}" class="btn btn-primary btn-sm">
-                    <i class="bi bi-person-gear me-1"></i>Configura Ora
-                </a>
+                <a href="{{ url_for('nutritional_profile') }}" class="btn btn-primary btn-sm">Configura Ora</a>
             </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Week Navigator -->
+    <!-- Selettore Porzioni Famiglia -->
+    <div class="servings-selector-card">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <div class="servings-info">
+                    <h5 class="mb-2">
+                        <i class="bi bi-people-fill me-2"></i>
+                        Persone in Famiglia
+                    </h5>
+                    <p class="text-muted mb-0">
+                        Imposta quante persone mangeranno. Le porzioni verranno scalate automaticamente.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="servings-control">
+                    <div class="servings-display">
+                        <button class="servings-btn" onclick="changeServings(-1)">
+                            <i class="bi bi-dash-lg"></i>
+                        </button>
+                        
+                        <div class="servings-value-container">
+                            <div class="servings-value" id="servingsValue">2</div>
+                            <small class="servings-label">persone</small>
+                        </div>
+                        
+                        <button class="servings-btn" onclick="changeServings(1)">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Slider -->
+                    <div class="servings-slider-container mt-3">
+                        <input type="range" class="servings-slider" id="servingsSlider" 
+                               min="1" max="12" value="2" step="1"
+                               oninput="updateServingsFromSlider(this.value)">
+                        <div class="slider-labels">
+                            <span>1</span>
+                            <span>6</span>
+                            <span>12</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick presets -->
+                    <div class="servings-presets mt-3">
+                        <button class="preset-btn" onclick="setServings(1)">Solo io</button>
+                        <button class="preset-btn" onclick="setServings(2)">Coppia</button>
+                        <button class="preset-btn" onclick="setServings(4)">Famiglia</button>
+                        <button class="preset-btn" onclick="setServings(6)">Gruppo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Info sulle porzioni -->
+        <div class="servings-summary mt-4">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <i class="bi bi-calculator text-primary"></i>
+                        <div class="summary-text">
+                            <strong id="totalCaloriesPerDay">0</strong>
+                            <small>Cal/Giorno (totale)</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <i class="bi bi-person text-success"></i>
+                        <div class="summary-text">
+                            <strong id="caloriesPerPerson">0</strong>
+                            <small>Cal/Persona</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <i class="bi bi-egg-fried text-warning"></i>
+                        <div class="summary-text">
+                            <strong id="proteinPerPerson">0</strong>
+                            <small>Proteine/Persona</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="summary-item">
+                        <i class="bi bi-cart-check text-info"></i>
+                        <div class="summary-text">
+                            <strong>Auto-scala</strong>
+                            <small>Lista spesa</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="week-navigator">
-        <button class="btn btn-outline-secondary" onclick="changeWeek(-1)">
-            <i class="bi bi-chevron-left"></i> Settimana Prec.
-        </button>
+        <button onclick="changeWeek(-1)"><i class="bi bi-chevron-left"></i> Prec.</button>
         <div class="text-center">
             <h5 class="mb-0" id="weekTitle">Settimana Corrente</h5>
             <small class="text-muted" id="weekRange"></small>
         </div>
-        <button class="btn btn-outline-secondary" onclick="changeWeek(1)">
-            Settimana Succ. <i class="bi bi-chevron-right"></i>
-        </button>
+        <button onclick="changeWeek(1)">Succ. <i class="bi bi-chevron-right"></i></button>
     </div>
 
-    <!-- Calendar Grid -->
-    <div class="calendar-grid" id="calendarGrid">
-        <!-- Giorni generati dinamicamente -->
+    <script id="meal-plans-data" type="application/json">{{ meal_plans_json|tojson|safe }}</script>
+
+    <div class="calendar-wrapper">
+        <div class="calendar-grid" id="calendarGrid"></div>
     </div>
 
-    <!-- Quick Actions -->
     <div class="quick-actions">
         <div class="action-card">
             <div class="action-icon" style="background: rgba(139,92,246,0.1); color: #8B5CF6;">
                 <i class="bi bi-magic"></i>
             </div>
             <h6>Genera Piano AI</h6>
-            <p class="text-muted small mb-3">L'AI crea un piano settimanale bilanciato basato sui tuoi ingredienti</p>
-            <button class="btn btn-primary btn-sm" onclick="generateWeeklyPlan(this)" id="generateBtn">
+            <p class="text-muted small mb-3">L'AI crea un piano settimanale bilanciato</p>
+            <div class="form-check mb-2" style="text-align:left">
+                <input class="form-check-input" type="checkbox" id="aiShareFlag">
+                <label class="form-check-label" for="aiShareFlag">Condividi con la famiglia</label>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="generateWeeklyPlan(this)">
                 <i class="bi bi-robot me-1"></i>Genera Piano
             </button>
-            <div class="mt-2">
-                <small class="text-muted">
-                    <i class="bi bi-info-circle me-1"></i>
-                    Assicurati di avere ingredienti nella dispensa per risultati migliori
-                </small>
-            </div>
         </div>
 
         <div class="action-card">
             <div class="action-icon" style="background: rgba(16,185,129,0.1); color: #10B981;">
                 <i class="bi bi-cart-check"></i>
             </div>
-            <h6>Aggiorna Lista Spesa</h6>
-            <p class="text-muted small mb-3">Sincronizza automaticamente ingredienti</p>
-            <button class="btn btn-success btn-sm" onclick="updateShoppingList(this)">
+            <h6>Sincronizza Lista Spesa</h6>
+            <p class="text-muted small mb-3">Aggiungi ingredienti mancanti alla lista</p>
+            <button class="btn btn-success btn-sm" onclick="syncAllToShoppingList(this)">
                 <i class="bi bi-arrow-repeat me-1"></i>Sincronizza
             </button>
         </div>
@@ -333,45 +706,39 @@
                 <i class="bi bi-graph-up"></i>
             </div>
             <h6>Ottimizza Nutrizione</h6>
-            <p class="text-muted small mb-3">Bilancia macros per i tuoi obiettivi</p>
-            <button class="btn btn-warning btn-sm" onclick="optimizeNutrition(this)">
+            <p class="text-muted small mb-3">Ricalcola calorie con AI</p>
+            <button class="btn btn-warning btn-sm" onclick="optimizeNutritionAI(this)">
                 <i class="bi bi-heart-pulse me-1"></i>Ottimizza
             </button>
         </div>
     </div>
 
-    <!-- Stats Summary -->
     {% if meal_plans %}
     <div class="stats-summary">
-        <h5 class="mb-4">
-            <i class="bi bi-bar-chart me-2"></i>
-            Riepilogo Settimanale
-        </h5>
+        <h5 class="mb-4"><i class="bi bi-bar-chart me-2"></i>Riepilogo Settimanale</h5>
         <div class="row">
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-value text-primary">{{ meal_plans|length }}</div>
-                    <div class="stat-label">Pasti Pianificati</div>
+                    <span class="stat-value text-primary">{{ meal_plans|length }}</span>
+                    <span class="stat-label">Pasti Pianificati</span>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-value text-success">
-                        {{ (nutritional_goals.daily_calories * 7)|int if nutritional_goals else 0 }}
-                    </div>
-                    <div class="stat-label">Calorie Settimanali</div>
+                    <span class="stat-value text-success">{{ (nutritional_goals.daily_calories * 7)|int if nutritional_goals else 0 }}</span>
+                    <span class="stat-label">Cal/Settimana</span>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-value text-warning">85%</div>
-                    <div class="stat-label">Completamento</div>
+                    <span class="stat-value text-warning">{{ ((meal_plans|length / 28) * 100)|round|int }}%</span>
+                    <span class="stat-label">Completamento</span>
                 </div>
             </div>
             <div class="col-md-3">
                 <div class="stat-item">
-                    <div class="stat-value text-info">12</div>
-                    <div class="stat-label">Ingredienti Diversi</div>
+                    <span class="stat-value text-info">{{ meal_plans|length }}</span>
+                    <span class="stat-label">Ricette</span>
                 </div>
             </div>
         </div>
@@ -380,47 +747,46 @@
 </div>
 
 <!-- Modal Aggiungi Pasto -->
-<div class="modal fade" id="addMealModal" tabindex="-1" data-bs-backdrop="false" data-bs-keyboard="true">
+<div class="modal fade" id="addMealModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 16px; border: none;">
-            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; border: none;">
-                <h5 class="modal-title">
-                    <i class="bi bi-plus-circle me-2"></i>
-                    Aggiungi Pasto
-                </h5>
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white;">
+                <h5 class="modal-title"><i class="bi bi-plus-circle me-2"></i>Aggiungi Pasto</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body p-4">
-                <form method="POST" action="{{ url_for('meal_planning') }}" id="addMealForm" onsubmit="return validateAddMealForm()">
+                <form method="POST" action="{{ url_for('meal_planning') }}" id="addMealForm">
                     <input type="hidden" id="modalDate" name="date" required>
                     <input type="hidden" id="modalMealType" name="meal_type" required>
+                    <input type="hidden" id="modalServings" name="servings" value="2">
                     
                     <div class="mb-3">
                         <label class="form-label fw-bold">Data e Tipo</label>
                         <div class="alert alert-info mb-0">
-                            <i class="bi bi-calendar me-2"></i>
-                            <span id="modalDateDisplay"></span>
-                            <span class="mx-2">•</span>
-                            <span id="modalMealTypeDisplay"></span>
+                            <span id="modalDateDisplay"></span> • <span id="modalMealTypeDisplay"></span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Porzioni</label>
+                        <div class="alert alert-success mb-0">
+                            <i class="bi bi-people-fill me-2"></i>
+                            <span id="modalServingsDisplay">2 porzioni</span>
                         </div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="custom_meal" class="form-label fw-bold">Descrizione Pasto</label>
                         <textarea class="form-control" id="custom_meal" name="custom_meal" rows="3" 
-                                  placeholder="Es: Pasta al pomodoro con insalata mista..." required></textarea>
+                                  placeholder="Es: Pasta al pomodoro con basilico fresco..." required></textarea>
+                        <small class="text-muted">Descrivi il pasto in dettaglio per un calcolo più preciso delle calorie</small>
                     </div>
                     
-                    <!-- Checkbox per condivisione famiglia -->
-                    <div class="mb-3">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="is_shared" name="is_shared">
-                            <label class="form-check-label" for="is_shared">
-                                <i class="bi bi-people me-2 text-primary"></i>
-                                <strong>Condividi con la famiglia</strong>
-                                <small class="text-muted d-block">Questo pasto sarà visibile a tutti i membri della famiglia</small>
-                            </label>
-                        </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="is_shared" name="is_shared">
+                        <label class="form-check-label" for="is_shared">
+                            Condividi con la famiglia
+                        </label>
                     </div>
                     
                     <div class="d-grid">
@@ -433,27 +799,104 @@
         </div>
     </div>
 </div>
+
 {% endblock %}
 
 {% block extra_js %}
 <script>
 let currentWeekOffset = 0;
+let mealPlans = [];
+let currentServings = 2;
+
 const mealTypes = ['breakfast', 'lunch', 'dinner', 'snack'];
 const mealTypeLabels = {
-    breakfast: { icon: 'sunrise', label: 'Colazione', color: '#F59E0B' },
-    lunch: { icon: 'sun', label: 'Pranzo', color: '#3B82F6' },
-    dinner: { icon: 'moon', label: 'Cena', color: '#8B5CF6' },
-    snack: { icon: 'cup', label: 'Spuntino', color: '#10B981' }
+    breakfast: { icon: 'sunrise', label: 'Colazione' },
+    lunch: { icon: 'sun', label: 'Pranzo' },
+    dinner: { icon: 'moon', label: 'Cena' },
+    snack: { icon: 'cup', label: 'Spuntino' }
 };
 
-// Meal plans data from backend
-const mealPlans = {{ meal_plans_json|tojson if meal_plans_json else '[]'|safe }};
+// ========================================
+// GESTIONE PORZIONI
+// ========================================
+
+function loadServingsPreference() {
+    const saved = localStorage.getItem('foodflow_servings');
+    if (saved) {
+        currentServings = parseInt(saved);
+        updateServingsDisplay(currentServings);
+    }
+}
+
+function saveServingsPreference(servings) {
+    localStorage.setItem('foodflow_servings', servings);
+}
+
+function changeServings(delta) {
+    const newValue = currentServings + delta;
+    if (newValue >= 1 && newValue <= 12) {
+        setServings(newValue);
+    }
+}
+
+function setServings(value) {
+    currentServings = value;
+    updateServingsDisplay(value);
+    saveServingsPreference(value);
+    updateNutritionSummary();
+    
+    // Aggiorna preset buttons
+    document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    
+    // Evidenzia il preset corrispondente
+    const presetValues = { 0: 1, 1: 2, 2: 4, 3: 6 };
+    document.querySelectorAll('.preset-btn').forEach((btn, idx) => {
+        if (presetValues[idx] === value) {
+            btn.classList.add('active');
+        }
+    });
+}
+
+function updateServingsFromSlider(value) {
+    setServings(parseInt(value));
+}
+
+function updateServingsDisplay(value) {
+    document.getElementById('servingsValue').textContent = value;
+    document.getElementById('servingsSlider').value = value;
+}
+
+function updateNutritionSummary() {
+    let totalCalories = 0;
+    let totalProtein = 0;
+    
+    mealPlans.forEach(meal => {
+        const mealServings = meal.servings || 2;
+        const caloriesPerServing = (meal.calories || 0) / mealServings;
+        const proteinPerServing = (meal.protein || 0) / mealServings;
+        
+        totalCalories += caloriesPerServing;
+        totalProtein += proteinPerServing;
+    });
+    
+    const totalForAll = totalCalories * currentServings;
+    const proteinForAll = totalProtein * currentServings;
+    
+    document.getElementById('totalCaloriesPerDay').textContent = Math.round(totalForAll);
+    document.getElementById('caloriesPerPerson').textContent = Math.round(totalCalories);
+    document.getElementById('proteinPerPerson').textContent = Math.round(totalProtein) + 'g';
+}
+
+// ========================================
+// CALENDARIO
+// ========================================
 
 function initCalendar() {
     const today = new Date();
     const startOfWeek = new Date(today);
     startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (currentWeekOffset * 7));
-    
     updateWeekTitle(startOfWeek);
     renderCalendar(startOfWeek);
 }
@@ -461,12 +904,9 @@ function initCalendar() {
 function updateWeekTitle(startDate) {
     const endDate = new Date(startDate);
     endDate.setDate(startDate.getDate() + 6);
-    
     document.getElementById('weekTitle').textContent = 
         currentWeekOffset === 0 ? 'Settimana Corrente' :
-        currentWeekOffset > 0 ? `Settimana +${currentWeekOffset}` :
-        `Settimana ${currentWeekOffset}`;
-    
+        currentWeekOffset > 0 ? `Settimana +${currentWeekOffset}` : `Settimana ${currentWeekOffset}`;
     document.getElementById('weekRange').textContent = 
         `${startDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - ${endDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'short', year: 'numeric' })}`;
 }
@@ -474,21 +914,16 @@ function updateWeekTitle(startDate) {
 function renderCalendar(startDate) {
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
-    
     const today = new Date();
     today.setHours(0,0,0,0);
-    
     const days = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
     
     for (let i = 0; i < 7; i++) {
         const date = new Date(startDate);
         date.setDate(startDate.getDate() + i);
-        
         const dayCard = document.createElement('div');
         dayCard.className = 'day-card';
-        if (date.getTime() === today.getTime()) {
-            dayCard.classList.add('today');
-        }
+        if (date.getTime() === today.getTime()) dayCard.classList.add('today');
         
         const dateStr = date.toISOString().split('T')[0];
         const dayMeals = mealPlans.filter(m => m.date === dateStr);
@@ -502,7 +937,6 @@ function renderCalendar(startDate) {
                 ${mealTypes.map(type => renderMealSlot(date, type, dayMeals)).join('')}
             </div>
         `;
-        
         grid.appendChild(dayCard);
     }
 }
@@ -512,46 +946,53 @@ function renderMealSlot(date, mealType, dayMeals) {
     const typeInfo = mealTypeLabels[mealType];
     
     if (meal) {
+        const mealServings = meal.servings || 2;
+        const caloriesPerServing = Math.round((meal.calories || 0) / mealServings);
+        const proteinPerServing = Math.round((meal.protein || 0) / mealServings);
+        
         return `
             <div class="meal-slot filled ${mealType}">
                 <div class="meal-type-badge ${mealType}">
-                    <i class="bi bi-${typeInfo.icon}"></i>
-                    ${typeInfo.label}
+                    <i class="bi bi-${typeInfo.icon}"></i>${typeInfo.label}
                 </div>
-                <div class="meal-name">${meal.custom_meal || meal.recipe?.name || 'Pasto'}</div>
+                <div class="meal-name">${escapeHtml(meal.custom_meal)}</div>
                 <div class="meal-stats">
-                    <span><i class="bi bi-fire"></i> ${meal.calories || '~500'} cal</span>
-                    ${meal.protein ? `<span><i class="bi bi-droplet"></i> ${Math.round(meal.protein)}g P</span>` : ''}
+                    <span><i class="bi bi-fire"></i> ${caloriesPerServing * currentServings} cal</span>
+                    <span><i class="bi bi-people"></i> ${currentServings}×${mealServings}</span>
                 </div>
-                <div class="d-flex gap-2 mt-2">
-                    <button class="btn btn-sm btn-outline-success" onclick="addMealToShopping(${meal.id}, this)">
-                        <i class="bi bi-cart-plus me-1"></i>Aggiungi alla lista
+                <div class="d-flex gap-1 mt-2">
+                    <button class="btn btn-sm btn-outline-success" onclick="addMealToShopping(${meal.id}, event)" 
+                            title="Aggiungi a lista spesa">
+                        <i class="bi bi-cart-plus"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-secondary" onclick="consumeMeal(${meal.id}, this)">
-                        <i class="bi bi-check2-circle me-1"></i>Consuma
+                    <button class="btn btn-sm btn-outline-info" onclick="recalculateCalories(${meal.id}, event)" 
+                            title="Ricalcola calorie">
+                        <i class="bi bi-calculator"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-info" onclick="recalculateCalories(${meal.id}, this)">
-                        <i class="bi bi-calculator me-1"></i>Ricalcola
+                    <button class="btn btn-sm btn-outline-danger" onclick="deleteMeal(${meal.id}, event)" 
+                            title="Elimina">
+                        <i class="bi bi-trash"></i>
                     </button>
                 </div>
-                <div class="mt-2" id="meal-badge-${meal.id}" style="display:none;">
-                    <span class="badge bg-info"><i class="bi bi-shield-check me-1"></i>Sincronizzato</span>
-                </div>
-            </div>
-        `;
-    } else {
-        return `
-            <div class="meal-slot ${mealType}" onclick="openAddMealModal('${date.toISOString().split('T')[0]}', '${mealType}')">
-                <div class="meal-type-badge ${mealType}">
-                    <i class="bi bi-${typeInfo.icon}"></i>
-                    ${typeInfo.label}
-                </div>
-                <button class="add-meal-btn">
-                    <i class="bi bi-plus-circle"></i> Aggiungi
-                </button>
             </div>
         `;
     }
+    return `
+        <div class="meal-slot ${mealType}" onclick="openAddMealModal('${date.toISOString().split('T')[0]}', '${mealType}')">
+            <div class="meal-type-badge ${mealType}">
+                <i class="bi bi-${typeInfo.icon}"></i>${typeInfo.label}
+            </div>
+            <button class="add-meal-btn">
+                <i class="bi bi-plus-circle"></i> Aggiungi
+            </button>
+        </div>
+    `;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
 }
 
 function changeWeek(offset) {
@@ -559,238 +1000,319 @@ function changeWeek(offset) {
     initCalendar();
 }
 
+// ========================================
+// MODAL GESTIONE
+// ========================================
+
 function openAddMealModal(date, mealType) {
-    const modalEl = document.getElementById('addMealModal');
-    // Pulisci eventuali backdrop orfani prima di aprire
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-    document.body.classList.remove('modal-open');
-    document.body.style.removeProperty('padding-right');
-    const modal = new bootstrap.Modal(modalEl, { backdrop: false, keyboard: true });
     const typeInfo = mealTypeLabels[mealType];
-    
     document.getElementById('modalDate').value = date;
     document.getElementById('modalMealType').value = mealType;
+    document.getElementById('modalServings').value = currentServings;
     
-    const dateObj = new Date(date);
-    document.getElementById('modalDateDisplay').textContent = dateObj.toLocaleDateString('it-IT', { 
-        weekday: 'long', 
-        day: 'numeric', 
-        month: 'long' 
-    });
-    document.getElementById('modalMealTypeDisplay').innerHTML = `
-        <i class="bi bi-${typeInfo.icon}"></i> ${typeInfo.label}
-    `;
+    document.getElementById('modalDateDisplay').textContent = 
+        new Date(date + 'T00:00:00').toLocaleDateString('it-IT', { 
+            weekday: 'long', 
+            day: 'numeric', 
+            month: 'long' 
+        });
+    document.getElementById('modalMealTypeDisplay').innerHTML = 
+        `<i class="bi bi-${typeInfo.icon}"></i> ${typeInfo.label}`;
+    document.getElementById('modalServingsDisplay').textContent = 
+        `${currentServings} ${currentServings === 1 ? 'porzione' : 'porzioni'}`;
+    document.getElementById('custom_meal').value = '';
     
-    modal.show();
+    new bootstrap.Modal(document.getElementById('addMealModal')).show();
 }
 
-// Quick Actions
-function setLoading(button, loading) {
-    if (loading) {
-        button.disabled = true;
-        button.dataset.originalText = button.innerHTML;
-        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Caricamento...';
-    } else {
-        button.disabled = false;
-        button.innerHTML = button.dataset.originalText;
+// ========================================
+// AZIONI PASTI
+// ========================================
+
+async function deleteMeal(mealId, event) {
+    event.stopPropagation();
+    
+    if (!confirm('Sei sicuro di voler eliminare questo pasto?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/meal-plan/${mealId}`, {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', 'Pasto eliminato con successo');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('danger', data.message || 'Errore durante l\'eliminazione');
+        }
+    } catch (error) {
+        console.error('Delete error:', error);
+        showNotification('danger', 'Errore di connessione');
     }
 }
 
-function showNotification(type, message) {
-    const toast = document.createElement('div');
-    toast.className = `toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
-    toast.style.zIndex = '9999';
-    toast.setAttribute('role', 'alert');
-    toast.innerHTML = `
-        <div class="d-flex">
-            <div class="toast-body">${message}</div>
-            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
-        </div>
-    `;
-    document.body.appendChild(toast);
-    const bsToast = new bootstrap.Toast(toast);
-    bsToast.show();
-    setTimeout(() => toast.remove(), 5000);
-}
-
-async function generateWeeklyPlan(button) {
-    setLoading(button, true);
+async function addMealToShopping(mealId, event) {
+    event.stopPropagation();
     
-    // Mostra notifica di inizio
-    showNotification('info', '🤖 L\'AI sta generando il tuo piano pasti personalizzato...');
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
     
     try {
+        const response = await fetch(`/meal-plan/${mealId}/to-shopping-list`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            if (data.updated > 0) {
+                showNotification('success', `✅ ${data.updated} ingrediente(i) aggiunti alla lista spesa!`);
+            } else {
+                showNotification('info', 'Tutti gli ingredienti sono già disponibili!');
+            }
+        } else {
+            showNotification('warning', data.message || 'Nessun ingrediente da aggiungere');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('danger', 'Errore durante la sincronizzazione');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
+async function recalculateCalories(mealId, event) {
+    event.stopPropagation();
+    
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+    
+    try {
+        const response = await fetch(`/api/recalculate-calories/${mealId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', 'Calorie ricalcolate con successo!');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('danger', data.message || 'Errore nel ricalcolo');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('danger', 'Errore di connessione');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalHTML;
+    }
+}
+
+// ========================================
+// AZIONI GLOBALI
+// ========================================
+
+async function generateWeeklyPlan(button) {
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generando...';
+    
+    try {
+        const shareWithFamily = !!document.getElementById('aiShareFlag')?.checked;
         const response = await fetch('/api/ai-meal-plan', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                days: 7
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                days: 7,
+                servings: currentServings,
+                share_with_family: shareWithFamily
             })
         });
         
         const data = await response.json();
         
         if (data.success) {
-            showNotification('success', `✅ ${data.message}`);
-            // Mostra dettagli del piano generato
-            if (data.meals_created) {
-                showNotification('info', `📅 Creati ${data.meals_created} pasti per la settimana!`);
-            }
-            // Ricarica la pagina per mostrare i nuovi pasti
-            setTimeout(() => location.reload(), 2000);
+            showNotification('success', `Piano generato per ${currentServings} persona/e!`);
+            setTimeout(() => location.reload(), 1500);
         } else {
-            showNotification('danger', `❌ ${data.message || 'Errore nella generazione del piano'}`);
-            setLoading(button, false);
+            showNotification('danger', data.message || 'Errore nella generazione');
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-robot me-1"></i>Genera Piano';
         }
-        
     } catch (error) {
-        console.error('Error generating meal plan:', error);
-        showNotification('danger', '❌ Errore di connessione. Riprova più tardi.');
-        setLoading(button, false);
+        console.error('Error:', error);
+        showNotification('danger', 'Errore di connessione');
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-robot me-1"></i>Genera Piano';
     }
 }
 
-function updateShoppingList(button) {
-    setLoading(button, true);
-    // Aggiorna lista spesa per tutti i meal plan della settimana corrente
-    const mealIds = (mealPlans || []).map(m => m.id);
-    if (mealIds.length === 0) {
-        setLoading(button, false);
+async function syncAllToShoppingList(button) {
+    if (mealPlans.length === 0) {
         showNotification('warning', 'Nessun pasto pianificato da sincronizzare');
         return;
     }
-    Promise.all(
-        mealIds.map(id => fetch(`/meal-plan/${id}/to-shopping-list`, { method: 'POST' }))
-    ).then(responses => Promise.all(responses.map(r => r.json())))
-    .then(results => {
-        setLoading(button, false);
-        const updated = results.reduce((sum, r) => sum + (r.updated || 0), 0);
-        showNotification('success', `Lista spesa aggiornata: ${updated} ingredienti aggiunti/aggiornati`);
-    }).catch(() => {
-        setLoading(button, false);
-        showNotification('danger', 'Errore nella sincronizzazione della lista spesa');
-    });
-}
-
-function optimizeNutrition(button) {
-    setLoading(button, true);
-    setTimeout(() => {
-        setLoading(button, false);
-        showNotification('info', 'Nutrizione ottimizzata per i tuoi obiettivi!');
-    }, 1500);
-}
-
-async function addMealToShopping(mealId, btn){
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizzo...';
-    try{
-        const res = await fetch(`/meal-plan/${mealId}/to-shopping-list`, { method: 'POST' });
-        const data = await res.json();
-        btn.disabled = false;
-        btn.innerHTML = original;
-        if(data.success){
-            showNotification('success', `Aggiunti/aggiornati ${data.updated || 0} ingredienti in lista`);
-            const badge = document.getElementById(`meal-badge-${mealId}`);
-            if (badge) badge.style.display = 'block';
-        }else{
-            showNotification('warning', data.message || 'Nessun ingrediente da aggiungere');
-        }
-    }catch(e){
-        btn.disabled = false;
-        btn.innerHTML = original;
-        showNotification('danger', 'Errore durante la sincronizzazione');
-    }
-}
-
-async function consumeMeal(mealId, btn){
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Registrando...';
-    try{
-        const res = await fetch(`/meal-plan/${mealId}/consume`, { method: 'POST' });
-        const data = await res.json();
-        btn.disabled = false;
-        btn.innerHTML = original;
-        if(data.success){
-            const count = (data.decremented || []).length;
-            showNotification('success', `Consumo registrato per ${count} ingredienti`);
-        }else{
-            showNotification('warning', data.message || 'Nessun ingrediente disponibile da scalare');
-        }
-    }catch(e){
-        btn.disabled = false;
-        btn.innerHTML = original;
-        showNotification('danger', 'Errore nel registrare il consumo');
-    }
-}
-
-async function recalculateCalories(mealId, btn) {
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Calcolo...';
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sincronizzando...';
     
     try {
-        const res = await fetch(`/api/recalculate-calories/${mealId}`, { 
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const data = await res.json();
+        let totalAdded = 0;
+        let successCount = 0;
         
-        if (data.success) {
-            showNotification('success', 'Calorie ricalcolate con successo!');
-            // Ricarica la pagina per mostrare i nuovi valori
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            showNotification('danger', data.message || 'Errore nel ricalcolo');
+        for (const meal of mealPlans) {
+            try {
+                const response = await fetch(`/meal-plan/${meal.id}/to-shopping-list`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success && data.updated > 0) {
+                    totalAdded += data.updated;
+                    successCount++;
+                }
+            } catch (error) {
+                console.error(`Error syncing meal ${meal.id}:`, error);
+            }
         }
-    } catch (e) {
-        showNotification('danger', 'Errore di connessione');
+        
+        if (totalAdded > 0) {
+            showNotification('success', `✅ ${totalAdded} ingredienti aggiunti da ${successCount} pasti!`);
+        } else {
+            showNotification('info', 'Tutti gli ingredienti sono già disponibili!');
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('danger', 'Errore durante la sincronizzazione');
     } finally {
-        btn.disabled = false;
-        btn.innerHTML = original;
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Sincronizza';
     }
 }
 
-// Initialize
+async function optimizeNutritionAI(button) {
+    if (mealPlans.length === 0) {
+        showNotification('warning', 'Nessun pasto da ottimizzare');
+        return;
+    }
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Ottimizzando...';
+    
+    try {
+        let successCount = 0;
+        
+        for (const meal of mealPlans) {
+            try {
+                const response = await fetch(`/api/recalculate-calories/${meal.id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    successCount++;
+                }
+            } catch (error) {
+                console.error(`Error optimizing meal ${meal.id}:`, error);
+            }
+        }
+        
+        if (successCount > 0) {
+            showNotification('success', `✅ ${successCount} pasti ottimizzati!`);
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('danger', 'Nessun pasto ottimizzato');
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-heart-pulse me-1"></i>Ottimizza';
+        }
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('danger', 'Errore durante l\'ottimizzazione');
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-heart-pulse me-1"></i>Ottimizza';
+    }
+}
+
+// ========================================
+// UTILITY
+// ========================================
+
+function showNotification(type, message) {
+    const toast = document.createElement('div');
+    toast.className = `toast align-items-center text-bg-${type} border-0 position-fixed bottom-0 end-0 m-3`;
+    toast.style.zIndex = '9999';
+    toast.innerHTML = `
+        <div class="d-flex">
+            <div class="toast-body">${escapeHtml(message)}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    `;
+    document.body.appendChild(toast);
+    
+    const bsToast = new bootstrap.Toast(toast);
+    bsToast.show();
+    
+    setTimeout(() => toast.remove(), 5000);
+}
+
+// ========================================
+// INIZIALIZZAZIONE
+// ========================================
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Carica pasti
+    const jsonData = document.getElementById('meal-plans-data')?.textContent;
+    try {
+        mealPlans = jsonData ? JSON.parse(jsonData) : [];
+        console.log('Loaded meal plans:', mealPlans.length);
+    } catch (e) {
+        console.error('Error parsing meal plans:', e);
+        mealPlans = [];
+    }
+    
+    // Carica preferenze porzioni
+    loadServingsPreference();
+    
+    // Inizializza calendario
     initCalendar();
-    // Cleanup backdrop alla chiusura della modale
-    const addEl = document.getElementById('addMealModal');
-    if (addEl) {
-        addEl.addEventListener('hidden.bs.modal', function(){
-            document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-            document.body.classList.remove('modal-open');
-            document.body.style.removeProperty('padding-right');
-            // reset campi
-            const btn = document.querySelector('#addMealForm button[type="submit"]');
-            if (btn) btn.disabled = false;
-        });
-    }
+    
+    // Aggiorna summary nutrizionale
+    setTimeout(() => {
+        updateNutritionSummary();
+    }, 500);
+    
+    // Cleanup modali
+    const modals = ['addMealModal'];
+    modals.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener('hidden.bs.modal', function() {
+                setTimeout(() => {
+                    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                    document.body.classList.remove('modal-open');
+                    document.body.style.removeProperty('padding-right');
+                }, 100);
+            });
+        }
+    });
 });
-
-function validateAddMealForm(){
-    const date = document.getElementById('modalDate').value;
-    const type = document.getElementById('modalMealType').value;
-    const desc = document.getElementById('custom_meal').value.trim();
-    if(!date || !type || !desc){
-        showNotification('warning', 'Compila data, tipo pasto e descrizione');
-        return false;
-    }
-    // Mostra spinner e chiudi subito la modale per evitare blocchi visuali
-    const btn = document.querySelector('#addMealForm button[type="submit"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Salvataggio...';
-    }
-    const modalEl = document.getElementById('addMealModal');
-    try { bootstrap.Modal.getOrCreateInstance(modalEl).hide(); } catch(_) {}
-    document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-    document.body.classList.remove('modal-open');
-    document.body.style.removeProperty('padding-right');
-    return true;
-}
 </script>
 {% endblock %}
