@@ -41,6 +41,7 @@ POINTS_TABLE = {
     'shopping_list_created': 5,
     'shopping_completed': 20,
     'waste_reduction': 15,
+    'recycling': 10,  # Riciclo prodotti
     'achieve_nutrition_goal': 20,
     'create_recipe': 5,
     'first_product': 50,  # Badge milestone
@@ -54,20 +55,22 @@ POINTS_TABLE = {
 
 def get_expiring_products(user_id, days=7):
     """
-    Recupera prodotti in scadenza entro N giorni
+    Recupera prodotti in scadenza entro N giorni (NON scaduti)
     
     Args:
         user_id: ID utente
         days: Giorni di anticipo (default 7)
     
     Returns:
-        Lista di Product objects
+        Lista di Product objects in scadenza (ma non ancora scaduti)
     """
-    cutoff_date = datetime.now().date() + timedelta(days=days)
+    today = datetime.now().date()
+    cutoff_date = today + timedelta(days=days)
     
     return Product.query.filter(
         Product.user_id == user_id,
-        Product.expiry_date <= cutoff_date,
+        Product.expiry_date > today,  # NON scaduti
+        Product.expiry_date <= cutoff_date,  # Ma in scadenza entro N giorni
         Product.wasted == False
     ).order_by(Product.expiry_date.asc()).all()
 
@@ -83,54 +86,55 @@ def get_expired_products(user_id, days_overdue=0):
     Returns:
         Lista di Product objects scaduti
     """
-    cutoff_date = datetime.now().date() - timedelta(days=days_overdue)
+    today = datetime.now().date()
+    cutoff_date = today - timedelta(days=days_overdue)
     
     return Product.query.filter(
         Product.user_id == user_id,
-        Product.expiry_date < cutoff_date,
-        Product.wasted == False
+        Product.expiry_date < today,  # Scaduti prima di oggi
+        Product.wasted == False  # Non ancora riciclati
     ).order_by(Product.expiry_date.desc()).all()
 
-
 def get_recycling_suggestions(user_id):
-    """
-    Ottiene suggerimenti di riciclo per prodotti scaduti
-    
-    Args:
-        user_id: ID utente
-    
-    Returns:
-        dict: Suggerimenti di riciclo con AI
-    """
+    """Genera suggerimenti di riciclo per prodotti scaduti usando AI"""
     try:
-        # Recupera prodotti scaduti (ultimi 7 giorni)
-        expired_products = get_expired_products(user_id, days_overdue=7)
+        from .ai_functions import ai_suggest_food_recycling
+        
+        expired_products = Product.query.filter(
+            Product.user_id == user_id,
+            Product.expiry_date < datetime.now().date(),
+            Product.wasted == False
+        ).limit(10).all()
         
         if not expired_products:
             return {
                 'success': True,
                 'suggestions': [],
-                'total_products': 0,
-                'message': 'Nessun prodotto scaduto trovato'
+                'total_products': 0
             }
         
-        # Genera suggerimenti con AI
-        from .ai_functions import ai_suggest_food_recycling
-        suggestions = ai_suggest_food_recycling(expired_products, user_id)
+        result = ai_suggest_food_recycling(expired_products, user_id)
         
-        return suggestions
+        # ✅ Verifica tipo
+        if not isinstance(result, dict):
+            return {'success': False, 'suggestions': [], 'total_products': 0}
+        
+        suggestions = result.get('suggestions', [])
+        
+        # ✅ Assicura che sia una lista
+        if not isinstance(suggestions, list):
+            suggestions = []
+        
+        return {
+            'success': True,
+            'suggestions': suggestions,
+            'total_products': len(expired_products)
+        }
         
     except Exception as e:
-        from flask import current_app
         current_app.logger.error(f"get_recycling_suggestions error: {e}")
-        return {
-            'success': False,
-            'suggestions': [],
-            'total_products': 0,
-            'message': 'Errore nel recupero dei suggerimenti'
-        }
-
-
+        return {'success': False, 'suggestions': [], 'total_products': 0}
+    
 def get_low_stock_products(user_id, threshold_multiplier=1.0):
     """
     Recupera prodotti con scorte basse
@@ -468,6 +472,77 @@ def calculate_level(points):
     return max(1, int(math.sqrt(points / 100)) + 1)
 
 
+def check_recycling_badges(user_id):
+    """
+    Controlla e assegna badge di riciclo
+    
+    Args:
+        user_id: ID utente
+    
+    Returns:
+        Lista di badge assegnati
+    """
+    try:
+        from .models import Badge, UserBadge
+        
+        # Conta prodotti riciclati
+        recycled_count = Product.query.filter(
+            Product.user_id == user_id,
+            Product.wasted == True
+        ).count()
+        
+        new_badges = []
+        
+        # Badge per primo riciclo
+        if recycled_count >= 1:
+            badge = Badge.query.filter_by(condition='first_recycle').first()
+            if badge:
+                existing = UserBadge.query.filter_by(
+                    user_id=user_id, 
+                    badge_id=badge.id
+                ).first()
+                if not existing:
+                    user_badge = UserBadge(user_id=user_id, badge_id=badge.id)
+                    db.session.add(user_badge)
+                    new_badges.append(badge)
+        
+        # Badge per 10 ricicli
+        if recycled_count >= 10:
+            badge = Badge.query.filter_by(condition='recycle_10').first()
+            if badge:
+                existing = UserBadge.query.filter_by(
+                    user_id=user_id, 
+                    badge_id=badge.id
+                ).first()
+                if not existing:
+                    user_badge = UserBadge(user_id=user_id, badge_id=badge.id)
+                    db.session.add(user_badge)
+                    new_badges.append(badge)
+        
+        # Badge per 25 ricicli
+        if recycled_count >= 25:
+            badge = Badge.query.filter_by(condition='recycle_25').first()
+            if badge:
+                existing = UserBadge.query.filter_by(
+                    user_id=user_id, 
+                    badge_id=badge.id
+                ).first()
+                if not existing:
+                    user_badge = UserBadge(user_id=user_id, badge_id=badge.id)
+                    db.session.add(user_badge)
+                    new_badges.append(badge)
+        
+        if new_badges:
+            db.session.commit()
+        
+        return new_badges
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error checking recycling badges: {e}")
+        return []
+
+
 def get_level_progress(points):
     """Calcola progresso verso prossimo livello (0-100%)"""
     current_level = calculate_level(points)
@@ -498,6 +573,18 @@ def get_user_leaderboard(metric='points', top_n=10, timeframe='all'):
         list of dict con rank, username, score
     """
     try:
+        # Prima controlla se ci sono utenti
+        total_users = User.query.count()
+        if total_users == 0:
+            return []
+        
+        # Crea UserStats per tutti gli utenti che non ce l'hanno
+        users_without_stats = db.session.query(User).outerjoin(UserStats).filter(UserStats.id.is_(None)).all()
+        for user in users_without_stats:
+            stats = UserStats(user_id=user.id)
+            db.session.add(stats)
+        db.session.commit()
+        
         query = db.session.query(User, UserStats).join(UserStats)
         
         # Filtra per timeframe
@@ -522,13 +609,18 @@ def get_user_leaderboard(metric='points', top_n=10, timeframe='all'):
         
         leaderboard = []
         for rank, (user, stats) in enumerate(results, start=1):
+            # Conta badge dell'utente
+            badges_count = UserBadge.query.filter_by(user_id=user.id).count()
+            
             leaderboard.append({
                 'rank': rank,
+                'user_id': user.id,
                 'username': user.username,
-                'points': stats.points,
-                'level': stats.level,
-                'waste_reduction_score': stats.waste_reduction_score,
-                'products_added': stats.total_products_added
+                'points': stats.points or 0,
+                'level': stats.level or 1,
+                'badges_count': badges_count,
+                'waste_reduction_score': stats.waste_reduction_score or 0,
+                'products_added': stats.total_products_added or 0
             })
         
         return leaderboard

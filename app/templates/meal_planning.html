@@ -537,6 +537,85 @@
     .calendar-grid { grid-template-columns: 1fr; }
     .day-card { min-height: auto; }
 }
+
+/* === MODAL FIXES === */
+#addMealModal {
+    z-index: 2000 !important;
+}
+
+/* Rimuoviamo completamente il backdrop */
+.modal-backdrop {
+    display: none !important;
+}
+
+body.modal-open {
+    overflow: auto !important; /* Permette scroll normale */
+}
+
+/* === NUTRITION GRID === */
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.nutrition-item {
+    text-align: center;
+    padding: 1rem;
+    background: #F8FAFC;
+    border-radius: 12px;
+    border: 2px solid #E2E8F0;
+    transition: all 0.3s ease;
+}
+
+.nutrition-item:hover {
+    background: #F1F5F9;
+    border-color: #CBD5E1;
+    transform: translateY(-2px);
+}
+
+.nutrition-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.nutrition-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #64748B;
+    margin-bottom: 0.25rem;
+}
+
+/* === RECIPE SECTION === */
+.recipe-section {
+    background: #F8FAFC;
+    border-radius: 12px;
+    padding: 1.5rem;
+    border: 2px solid #E2E8F0;
+}
+
+.recipe-content {
+    margin-bottom: 1.5rem;
+}
+
+.recipe-content:last-child {
+    margin-bottom: 0;
+}
+
+.recipe-text {
+    background: white;
+    border: 1px solid #E2E8F0;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin: 0;
+    color: #374151;
+}
 </style>
 {% endblock %}
 
@@ -545,8 +624,11 @@
     <div class="meal-planning-header">
         <h1 class="mb-2">
             <i class="bi bi-calendar-week me-2"></i>Piano Pasti Settimanale
+            <span class="badge bg-warning ms-2" style="font-size: 0.7rem;">
+                <i class="bi bi-people-fill me-1"></i>Famiglia
+            </span>
         </h1>
-        <p class="mb-0 opacity-75">Pianifica i tuoi pasti per una nutrizione ottimale</p>
+        <p class="mb-0 opacity-75">Pianifica i tuoi pasti per una nutrizione ottimale (include pasti condivisi della famiglia)</p>
     </div>
 
     {% if not nutritional_profile %}
@@ -616,47 +698,6 @@
             </div>
         </div>
         
-        <!-- Info sulle porzioni -->
-        <div class="servings-summary mt-4">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="summary-item">
-                        <i class="bi bi-calculator text-primary"></i>
-                        <div class="summary-text">
-                            <strong id="totalCaloriesPerDay">0</strong>
-                            <small>Cal/Giorno (totale)</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="summary-item">
-                        <i class="bi bi-person text-success"></i>
-                        <div class="summary-text">
-                            <strong id="caloriesPerPerson">0</strong>
-                            <small>Cal/Persona</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="summary-item">
-                        <i class="bi bi-egg-fried text-warning"></i>
-                        <div class="summary-text">
-                            <strong id="proteinPerPerson">0</strong>
-                            <small>Proteine/Persona</small>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="summary-item">
-                        <i class="bi bi-cart-check text-info"></i>
-                        <div class="summary-text">
-                            <strong>Auto-scala</strong>
-                            <small>Lista spesa</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="week-navigator">
@@ -711,39 +752,42 @@
                 <i class="bi bi-heart-pulse me-1"></i>Ottimizza
             </button>
         </div>
+
+        <div class="action-card">
+            <div class="action-icon" style="background: rgba(59,130,246,0.1); color: #3B82F6;">
+                <i class="bi bi-arrow-clockwise"></i>
+            </div>
+            <h6>Aggiorna Dati</h6>
+            <p class="text-muted small mb-3">Sincronizza analytics familiari</p>
+            <button class="btn btn-info btn-sm" onclick="updateFamilyNutritionalData(this)">
+                <i class="bi bi-people-fill me-1"></i>Aggiorna
+            </button>
+        </div>
     </div>
 
-    {% if meal_plans %}
-    <div class="stats-summary">
-        <h5 class="mb-4"><i class="bi bi-bar-chart me-2"></i>Riepilogo Settimanale</h5>
-        <div class="row">
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-value text-primary">{{ meal_plans|length }}</span>
-                    <span class="stat-label">Pasti Pianificati</span>
+</div>
+
+<!-- Modal Dettagli Pasto -->
+<div class="modal fade" id="mealDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header" style="background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: white;">
+                <h5 class="modal-title"><i class="bi bi-info-circle me-2"></i>Dettagli Pasto</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="mealDetailsContent">
+                    <!-- Contenuto dinamico -->
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-value text-success">{{ (nutritional_goals.daily_calories * 7)|int if nutritional_goals else 0 }}</span>
-                    <span class="stat-label">Cal/Settimana</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-value text-warning">{{ ((meal_plans|length / 28) * 100)|round|int }}%</span>
-                    <span class="stat-label">Completamento</span>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-item">
-                    <span class="stat-value text-info">{{ meal_plans|length }}</span>
-                    <span class="stat-label">Ricette</span>
-                </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Chiudi</button>
+                <button type="button" class="btn btn-primary" onclick="editMeal()">
+                    <i class="bi bi-pencil me-1"></i>Modifica
+                </button>
             </div>
         </div>
     </div>
-    {% endif %}
 </div>
 
 <!-- Modal Aggiungi Pasto -->
@@ -843,7 +887,6 @@ function setServings(value) {
     currentServings = value;
     updateServingsDisplay(value);
     saveServingsPreference(value);
-    updateNutritionSummary();
     
     // Aggiorna preset buttons
     document.querySelectorAll('.preset-btn').forEach(btn => {
@@ -868,26 +911,6 @@ function updateServingsDisplay(value) {
     document.getElementById('servingsSlider').value = value;
 }
 
-function updateNutritionSummary() {
-    let totalCalories = 0;
-    let totalProtein = 0;
-    
-    mealPlans.forEach(meal => {
-        const mealServings = meal.servings || 2;
-        const caloriesPerServing = (meal.calories || 0) / mealServings;
-        const proteinPerServing = (meal.protein || 0) / mealServings;
-        
-        totalCalories += caloriesPerServing;
-        totalProtein += proteinPerServing;
-    });
-    
-    const totalForAll = totalCalories * currentServings;
-    const proteinForAll = totalProtein * currentServings;
-    
-    document.getElementById('totalCaloriesPerDay').textContent = Math.round(totalForAll);
-    document.getElementById('caloriesPerPerson').textContent = Math.round(totalCalories);
-    document.getElementById('proteinPerPerson').textContent = Math.round(totalProtein) + 'g';
-}
 
 // ========================================
 // CALENDARIO
@@ -951,7 +974,7 @@ function renderMealSlot(date, mealType, dayMeals) {
         const proteinPerServing = Math.round((meal.protein || 0) / mealServings);
         
         return `
-            <div class="meal-slot filled ${mealType}">
+            <div class="meal-slot filled ${mealType}" onclick="showMealDetails(${meal.id}, event)" style="cursor: pointer;">
                 <div class="meal-type-badge ${mealType}">
                     <i class="bi bi-${typeInfo.icon}"></i>${typeInfo.label}
                 </div>
@@ -960,7 +983,7 @@ function renderMealSlot(date, mealType, dayMeals) {
                     <span><i class="bi bi-fire"></i> ${caloriesPerServing * currentServings} cal</span>
                     <span><i class="bi bi-people"></i> ${currentServings}×${mealServings}</span>
                 </div>
-                <div class="d-flex gap-1 mt-2">
+                <div class="d-flex gap-1 mt-2" onclick="event.stopPropagation()">
                     <button class="btn btn-sm btn-outline-success" onclick="addMealToShopping(${meal.id}, event)" 
                             title="Aggiungi a lista spesa">
                         <i class="bi bi-cart-plus"></i>
@@ -1022,7 +1045,15 @@ function openAddMealModal(date, mealType) {
         `${currentServings} ${currentServings === 1 ? 'porzione' : 'porzioni'}`;
     document.getElementById('custom_meal').value = '';
     
-    new bootstrap.Modal(document.getElementById('addMealModal')).show();
+    // Crea e mostra il modal SENZA backdrop
+    const modalElement = document.getElementById('addMealModal');
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: false,  // DISABILITA COMPLETAMENTE IL BACKDROP
+        keyboard: true,
+        focus: true
+    });
+    
+    modal.show();
 }
 
 // ========================================
@@ -1119,6 +1150,165 @@ async function recalculateCalories(mealId, event) {
         btn.disabled = false;
         btn.innerHTML = originalHTML;
     }
+}
+
+// ========================================
+// DETTAGLI PASTO
+// ========================================
+
+async function showMealDetails(mealId, event) {
+    event.stopPropagation();
+    
+    // Mostra loading
+    document.getElementById('mealDetailsContent').innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Caricamento...</span>
+            </div>
+            <p class="mt-2">Caricamento dettagli pasto...</p>
+        </div>
+    `;
+    
+    // Mostra il modal
+    const modal = new bootstrap.Modal(document.getElementById('mealDetailsModal'), {
+        backdrop: false,
+        keyboard: true,
+        focus: true
+    });
+    modal.show();
+    
+    try {
+        // Chiama API per dettagli completi
+        const response = await fetch(`/api/meal/${mealId}/details`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.message || 'Errore nel caricamento');
+        }
+        
+        const meal = data.meal;
+        const typeInfo = mealTypeLabels[meal.meal_type];
+        const mealServings = meal.servings || 2;
+        const caloriesPerServing = Math.round((meal.calories || 0) / mealServings);
+        const proteinPerServing = Math.round((meal.protein || 0) / mealServings);
+        const carbsPerServing = Math.round((meal.carbs || 0) / mealServings);
+        const fatPerServing = Math.round((meal.fat || 0) / mealServings);
+        const fiberPerServing = Math.round((meal.fiber || 0) / mealServings);
+        
+        const totalCalories = caloriesPerServing * currentServings;
+        const totalProtein = proteinPerServing * currentServings;
+        const totalCarbs = carbsPerServing * currentServings;
+        const totalFat = fatPerServing * currentServings;
+        const totalFiber = fiberPerServing * currentServings;
+        
+        const content = `
+            <div class="row">
+                <div class="col-md-6">
+                    <h6 class="text-primary mb-3">
+                        <i class="bi bi-${typeInfo.icon} me-2"></i>${typeInfo.label}
+                    </h6>
+                    <h4 class="mb-3">${escapeHtml(meal.name)}</h4>
+                    
+                    <div class="mb-3">
+                        <strong>Data:</strong> ${new Date(meal.date).toLocaleDateString('it-IT', { 
+                            weekday: 'long', 
+                            day: 'numeric', 
+                            month: 'long',
+                            year: 'numeric'
+                        })}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Porzioni:</strong> ${mealServings} per ricetta × ${currentServings} persone = ${mealServings * currentServings} porzioni totali
+                    </div>
+                    
+                    ${meal.ai_generated ? '<div class="mb-3"><span class="badge bg-info"><i class="bi bi-robot me-1"></i>Generato da AI</span></div>' : ''}
+                </div>
+                
+                <div class="col-md-6">
+                    <h6 class="text-success mb-3">
+                        <i class="bi bi-graph-up me-2"></i>Valori Nutrizionali
+                    </h6>
+                    
+                    <div class="nutrition-grid">
+                        <div class="nutrition-item">
+                            <div class="nutrition-value text-danger">${totalCalories}</div>
+                            <div class="nutrition-label">Calorie Totali</div>
+                            <small class="text-muted">${caloriesPerServing} per porzione</small>
+                        </div>
+                        
+                        <div class="nutrition-item">
+                            <div class="nutrition-value text-primary">${totalProtein}g</div>
+                            <div class="nutrition-label">Proteine</div>
+                            <small class="text-muted">${proteinPerServing}g per porzione</small>
+                        </div>
+                        
+                        <div class="nutrition-item">
+                            <div class="nutrition-value text-warning">${totalCarbs}g</div>
+                            <div class="nutrition-label">Carboidrati</div>
+                            <small class="text-muted">${carbsPerServing}g per porzione</small>
+                        </div>
+                        
+                        <div class="nutrition-item">
+                            <div class="nutrition-value text-info">${totalFat}g</div>
+                            <div class="nutrition-label">Grassi</div>
+                            <small class="text-muted">${fatPerServing}g per porzione</small>
+                        </div>
+                        
+                        <div class="nutrition-item">
+                            <div class="nutrition-value text-success">${totalFiber}g</div>
+                            <div class="nutrition-label">Fibre</div>
+                            <small class="text-muted">${fiberPerServing}g per porzione</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row mt-4">
+                <div class="col-12">
+                    <h6 class="text-warning mb-3">
+                        <i class="bi bi-book me-2"></i>Ricetta e Procedimento
+                    </h6>
+                    
+                    <div class="recipe-section">
+                        <div class="recipe-content">
+                            <h6 class="text-primary">Ingredienti:</h6>
+                            <pre class="recipe-text">${escapeHtml(meal.recipe)}</pre>
+                        </div>
+                        
+                        <div class="recipe-content">
+                            <h6 class="text-success">Procedimento:</h6>
+                            <pre class="recipe-text">${escapeHtml(meal.procedure)}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.getElementById('mealDetailsContent').innerHTML = content;
+        
+    } catch (error) {
+        console.error('Error loading meal details:', error);
+        document.getElementById('mealDetailsContent').innerHTML = `
+            <div class="text-center py-4">
+                <i class="bi bi-exclamation-triangle text-warning" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">Errore nel caricamento</h5>
+                <p class="text-muted">Impossibile caricare i dettagli del pasto.</p>
+                <button class="btn btn-primary" onclick="showMealDetails(${mealId}, event)">Riprova</button>
+            </div>
+        `;
+    }
+}
+
+function editMeal() {
+    // Chiudi il modal dettagli
+    const detailsModal = bootstrap.Modal.getInstance(document.getElementById('mealDetailsModal'));
+    if (detailsModal) {
+        detailsModal.hide();
+    }
+    
+    // Qui potresti aprire un modal di modifica o reindirizzare
+    showNotification('info', 'Funzione di modifica in arrivo!');
 }
 
 // ========================================
@@ -1252,6 +1442,44 @@ async function optimizeNutritionAI(button) {
 }
 
 // ========================================
+// AGGIORNAMENTO DATI FAMILIARI
+// ========================================
+
+async function updateFamilyNutritionalData(button) {
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Aggiornamento...';
+    
+    try {
+        const response = await fetch('/api/analytics/update-family', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showNotification('success', '✅ Analytics familiari aggiornate con successo!');
+            // Ricarica la pagina per mostrare i dati aggiornati
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification('danger', 'Errore nell\'aggiornamento: ' + data.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('danger', 'Errore di connessione');
+    } finally {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    }
+}
+
+// ========================================
 // UTILITY
 // ========================================
 
@@ -1294,10 +1522,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inizializza calendario
     initCalendar();
     
-    // Aggiorna summary nutrizionale
-    setTimeout(() => {
-        updateNutritionSummary();
-    }, 500);
     
     // Cleanup modali
     const modals = ['addMealModal'];

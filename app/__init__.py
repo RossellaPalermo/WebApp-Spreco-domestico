@@ -10,6 +10,10 @@ from flask_sqlalchemy import SQLAlchemy
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from dotenv import load_dotenv
+
+# Carica variabili d'ambiente dal file .env
+load_dotenv()
 
 # ===== INIZIALIZZA ESTENSIONI =====
 db = SQLAlchemy()
@@ -168,6 +172,27 @@ def initialize_database(app):
             'icon': 'bi-heart-pulse-fill',
             'points_required': 300,
             'condition': 'nutrition_30_days'
+        },
+        {
+            'name': 'Riciclatore',
+            'description': 'Hai riciclato il primo prodotto',
+            'icon': 'bi-recycle',
+            'points_required': 10,
+            'condition': 'first_recycle'
+        },
+        {
+            'name': 'Eco-Hero',
+            'description': 'Hai riciclato 10 prodotti',
+            'icon': 'bi-leaf-fill',
+            'points_required': 100,
+            'condition': 'recycle_10'
+        },
+        {
+            'name': 'Amico dell\'Ambiente',
+            'description': 'Hai riciclato 25 prodotti',
+            'icon': 'bi-globe',
+            'points_required': 250,
+            'condition': 'recycle_25'
         }
     ]
     

@@ -35,7 +35,7 @@ from .ai_functions import (
     ai_chatbot_response
 )
 
-from .analytics import get_comprehensive_analytics
+from .analytics import get_comprehensive_analytics, _prepare_charts_data, update_all_analytics
 
 
 # ========================================
@@ -212,58 +212,278 @@ def _prepare_charts_data(analytics_data):
         return {}
 
 
+
+
 # ========================================
 # ROUTE REGISTRATION
 # ========================================
-
 def register_routes(app):
     """Registra tutte le routes dell'applicazione"""
     
     # ===== HOMEPAGE =====
     @app.route('/')
     def index():
-        # ... resto del codice rimane uguale
-        pass
-
-
+        """Homepage / Dashboard"""
+        if not current_user.is_authenticated:
+            return render_template('index_modern.html')
+        
+        try:
+            # Recupera dati dashboard
+            expiring_products = get_expiring_products(current_user.id, days=7)  # Prossimi 7 giorni
+            low_stock_products = get_low_stock_products(current_user.id)
+            expired_products = get_expired_products(current_user.id, days_overdue=0)  # Scaduti oggi o prima
+            
+            # Debug logging
+            current_app.logger.info(f"Dashboard - Expiring products: {len(expiring_products)}")
+            current_app.logger.info(f"Dashboard - Expired products: {len(expired_products)}")
+            current_app.logger.info(f"Dashboard - Low stock products: {len(low_stock_products)}")
+            recycling_data = get_recycling_suggestions(current_user.id)
+            recycling_suggestions = recycling_data.get('suggestions', []) if isinstance(recycling_data, dict) else []
+            
+            # User stats (crea se non esiste)
+            stats = UserStats.query.filter_by(user_id=current_user.id).first()
+            if not stats:
+                stats = UserStats(user_id=current_user.id)
+                db.session.add(stats)
+                db.session.commit()
+            
+            # Altri dati
+            waste_score = calculate_waste_reduction_score(current_user.id)
+            
+            badges = [
+                Badge.query.get(ub.badge_id)
+                for ub in UserBadge.query.filter_by(user_id=current_user.id).all()
+                if Badge.query.get(ub.badge_id)
+            ]
+            
+            ai_shopping_data = ai_suggest_shopping_list(current_user.id)
+            ai_shopping_suggestions = ai_shopping_data.get("suggestions", [])[:3]
+            
+            ai_meal_plan = ai_optimize_meal_planning(current_user.id)
+            for day in ai_meal_plan:
+                ai_meal_plan[day] = ai_meal_plan[day][:3]
+            
+            nutritional_profile = NutritionalProfile.query.filter_by(user_id=current_user.id).first()
+            nutritional_goals = NutritionalGoal.query.filter_by(user_id=current_user.id).first()
+            
+            # Aggiorna analytics nutrizionali se necessario (solo dati personali per dashboard)
+            from .analytics import update_daily_nutrition
+            today = datetime.now().date()
+            update_daily_nutrition(current_user.id, today, include_family=False)
+            
+            analytics = get_comprehensive_analytics(current_user.id, days=30, include_family=False)
+            smart_notifications = smart_notification_system(current_user.id)
+            shopping_lists = ShoppingList.query.filter_by(user_id=current_user.id).limit(5).all()
+            
+            return render_template(
+                'dashboard_modern.html',
+                expiring_products=expiring_products,
+                low_stock_products=low_stock_products,
+                expired_products=expired_products,
+                recycling_suggestions=recycling_suggestions,
+                stats=stats,
+                waste_score=waste_score,
+                badges=badges,
+                ai_shopping_suggestions=ai_shopping_suggestions,
+                ai_meal_plan=ai_meal_plan,
+                nutritional_profile=nutritional_profile,
+                nutritional_goals=nutritional_goals,
+                analytics=analytics,
+                smart_notifications=smart_notifications,
+                shopping_lists=shopping_lists,
+                today=datetime.now().date()
+            )
+            
+        except Exception as e:
+            app.logger.error(f"Error loading dashboard: {e}")
+            flash('Errore nel caricamento della dashboard', 'danger')
+            
+            # ✅ CORREZIONE: Inizializza tutte le variabili necessarie anche in caso di errore
+            stats = UserStats.query.filter_by(user_id=current_user.id).first()
+            if not stats:
+                stats = UserStats(user_id=current_user.id)
+                db.session.add(stats)
+                try:
+                    db.session.commit()
+                except:
+                    db.session.rollback()
+            
+            # Valori di fallback per tutte le variabili
+            return render_template(
+                'dashboard_modern.html',
+                expiring_products=[],
+                low_stock_products=[],
+                expired_products=[],
+                recycling_suggestions=[],
+                stats=stats,
+                waste_score=0,
+                badges=[],
+                ai_shopping_suggestions=[],
+                ai_meal_plan={},
+                nutritional_profile=None,
+                nutritional_goals=None,
+                analytics={
+                    'nutrition': {'goal_completion': 0, 'avg_calories': 0, 'avg_protein': 0, 'avg_carbs': 0, 'avg_fat': 0, 'avg_fiber': 0},
+                    'waste': {'total_kg_wasted': 0, 'total_cost': 0},
+                    'shopping': {'total_items_purchased': 0},
+                    'trends': {'waste_trend': [], 'products_trend': []}
+                },
+                smart_notifications=[],
+                shopping_lists=[],
+                today=datetime.now().date()
+            )
+    
     # ========================================
-    # ANALYTICS SECTION
+    # ANALYTICS
     # ========================================
     
     @app.route('/analytics')
     @login_required
     def analytics():
         """Pagina analytics"""
-        analytics_data = get_comprehensive_analytics(current_user.id, days=30)
+        from .models import Product, MealPlan, UserStats
+        
+        # Crea analytics semplici basate sui dati esistenti
+        products = Product.query.filter_by(user_id=current_user.id).all()
+        meals = MealPlan.query.filter_by(user_id=current_user.id).all()
+        stats = UserStats.query.filter_by(user_id=current_user.id).first()
+        
+        if not stats:
+            stats = UserStats(user_id=current_user.id)
+            db.session.add(stats)
+            db.session.commit()
+        
+        # Calcola dati reali
+        total_products = len(products)
+        total_meals = len(meals)
+        wasted_products = [p for p in products if p.wasted]
+        total_wasted_kg = sum(p.quantity for p in wasted_products if p.quantity)
+        total_wasted_cost = total_wasted_kg * 5.0  # Stima 5€/kg
+        
+        # Calcola calorie totali dai meal plans
+        total_calories = sum(m.calories or 0 for m in meals)
+        avg_calories = total_calories / max(1, total_meals) if total_meals > 0 else 0
+        
+        # Crea analytics data
+        analytics_data = {
+            'nutrition': {
+                'goal_completion': min(100, (avg_calories / 2000) * 100) if avg_calories > 0 else 0,
+                'avg_calories': round(avg_calories, 1),
+                'avg_protein': round(sum(m.protein or 0 for m in meals) / max(1, total_meals), 1),
+                'avg_carbs': round(sum(m.carbs or 0 for m in meals) / max(1, total_meals), 1),
+                'avg_fat': round(sum(m.fat or 0 for m in meals) / max(1, total_meals), 1),
+                'avg_fiber': round(sum(m.fiber or 0 for m in meals) / max(1, total_meals), 1)
+            },
+            'waste': {
+                'total_kg_wasted': round(total_wasted_kg, 1),
+                'total_cost': round(total_wasted_cost, 2),
+                'total_products_wasted': len(wasted_products)
+            },
+            'shopping': {
+                'total_items_purchased': total_products,
+                'total_cost': round(total_products * 3.0, 2)  # Stima 3€ per prodotto
+            },
+            'trends': {
+                'waste_trend': [len(wasted_products)],
+                'products_trend': [total_products]
+            }
+        }
+        
         return render_template('analytics.html', analytics=analytics_data)
 
-    @app.route('/api/analytics')
+
+
+    @app.route('/api/meal/<int:meal_id>/details')
     @login_required
-    def api_analytics():
-        """API per aggiornare KPI/chart in base al periodo."""
+    def api_meal_details(meal_id):
+        """API per ottenere dettagli completi di un pasto"""
         try:
-            days = request.args.get('days', default=30, type=int)
-            data = get_comprehensive_analytics(current_user.id, days=days)
-
-            # Mappa KPI nell'ordine delle card
-            kpis = [
-                data.get('nutrition', {}).get('goal_completion', 0),
-                data.get('waste', {}).get('total_kg_wasted', 0),
-                data.get('shopping', {}).get('total_items_purchased', 0),
-                data.get('waste', {}).get('total_cost', 0),
-            ]
-
-            # ✅ Popola i dati dei grafici in formato Chart.js
-            charts_data = _prepare_charts_data(data)
-
+            from .models import MealPlan
+            
+            meal = MealPlan.query.filter_by(id=meal_id, user_id=current_user.id).first()
+            if not meal:
+                return jsonify({'success': False, 'message': 'Pasto non trovato'}), 404
+            
+            # Genera ricetta e procedimento se non esistono
+            # Controlla se i campi esistono (per compatibilità con database non migrato)
+            has_recipe = hasattr(meal, 'recipe')
+            has_procedure = hasattr(meal, 'procedure')
+            has_ai_generated = hasattr(meal, 'ai_generated')
+            
+            if not has_recipe or not has_procedure:
+                # Simula generazione ricetta basata sul nome del pasto
+                recipe, procedure = generate_recipe_for_meal(meal.custom_meal)
+                if has_recipe:
+                    meal.recipe = recipe
+                if has_procedure:
+                    meal.procedure = procedure
+                if has_ai_generated:
+                    meal.ai_generated = False
+                db.session.commit()
+            
+            # Genera ricetta e procedimento se i campi non esistono
+            recipe = getattr(meal, 'recipe', None) or generate_recipe_for_meal(meal.custom_meal)[0]
+            procedure = getattr(meal, 'procedure', None) or generate_recipe_for_meal(meal.custom_meal)[1]
+            ai_generated = getattr(meal, 'ai_generated', False)
+            
             return jsonify({
                 'success': True,
-                'kpis': kpis,
-                'charts': charts_data
+                'meal': {
+                    'id': meal.id,
+                    'name': meal.custom_meal,
+                    'date': meal.date.isoformat(),
+                    'meal_type': meal.meal_type,
+                    'servings': meal.servings,
+                    'calories': meal.calories,
+                    'protein': meal.protein,
+                    'carbs': meal.carbs,
+                    'fat': meal.fat,
+                    'fiber': meal.fiber,
+                    'recipe': recipe,
+                    'procedure': procedure,
+                    'ai_generated': ai_generated
+                }
             })
         except Exception as e:
-            current_app.logger.error(f"Analytics API error: {e}")
+            current_app.logger.error(f"Meal details API error: {e}")
             return jsonify({'success': False, 'message': str(e)}), 500
+
+    def generate_recipe_for_meal(meal_name):
+        """Genera ricetta e procedimento per un pasto"""
+        # Lista di ingredienti comuni per tipo di pasto
+        ingredients_map = {
+            'pasta': ['Pasta', 'Pomodoro', 'Aglio', 'Basilico', 'Olio extravergine', 'Parmigiano'],
+            'risotto': ['Riso', 'Brodo vegetale', 'Cipolla', 'Parmigiano', 'Burro', 'Vino bianco'],
+            'pollo': ['Petto di pollo', 'Olio', 'Spezie', 'Limone', 'Rosmarino'],
+            'pesce': ['Filetto di pesce', 'Olio', 'Limone', 'Erbe aromatiche', 'Sale'],
+            'insalata': ['Lattuga', 'Pomodori', 'Cetrioli', 'Olio', 'Aceto', 'Sale'],
+            'pizza': ['Farina', 'Lievito', 'Pomodoro', 'Mozzarella', 'Basilico', 'Olio']
+        }
+        
+        # Trova ingredienti appropriati
+        ingredients = []
+        for key, items in ingredients_map.items():
+            if key in meal_name.lower():
+                ingredients = items
+                break
+        
+        if not ingredients:
+            ingredients = ['Ingredienti base', 'Olio', 'Sale', 'Pepe', 'Spezie']
+        
+        recipe = f"Ingredienti per {meal_name}:\n" + "\n".join([f"• {ing}" for ing in ingredients])
+        
+        procedure = f"""Procedimento per {meal_name}:
+
+1. Preparare tutti gli ingredienti
+2. Riscaldare una padella con un filo d'olio
+3. Cuocere gli ingredienti principali per 10-15 minuti
+4. Aggiungere le spezie e i condimenti
+5. Mescolare bene e servire caldo
+
+Tempo di preparazione: 20-30 minuti
+Difficoltà: Media"""
+        
+        return recipe, procedure
 
     @app.route('/api/analytics/export')
     @login_required
@@ -292,82 +512,6 @@ def register_routes(app):
             mimetype='text/csv',
             headers={'Content-Disposition': 'attachment; filename=analytics.csv'}
         )
-
-# ========================================
-# ROUTE REGISTRATION
-# ========================================
-
-def register_routes(app):
-    """Registra tutte le routes dell'applicazione"""
-    
-    # ===== HOMEPAGE =====
-    @app.route('/')
-    def index():
-        """Homepage / Dashboard"""
-        if not current_user.is_authenticated:
-            return render_template('index_modern.html')
-        
-        try:
-            # Recupera dati dashboard
-            expiring_products = get_expiring_products(current_user.id)
-            low_stock_products = get_low_stock_products(current_user.id)
-            expired_products = get_expired_products(current_user.id, days_overdue=7)
-            recycling_suggestions = get_recycling_suggestions(current_user.id)
-            
-            # User stats (crea se non esiste)
-            stats = UserStats.query.filter_by(user_id=current_user.id).first()
-            if not stats:
-                stats = UserStats(user_id=current_user.id)
-                db.session.add(stats)
-                db.session.commit()
-            
-            # Altri dati
-            waste_score = calculate_waste_reduction_score(current_user.id)
-            
-            badges = [
-                Badge.query.get(ub.badge_id)
-                for ub in UserBadge.query.filter_by(user_id=current_user.id).all()
-                if Badge.query.get(ub.badge_id)
-            ]
-            
-            ai_shopping_data = ai_suggest_shopping_list(current_user.id)
-            ai_shopping_suggestions = ai_shopping_data.get("suggestions", [])[:3]
-            
-            ai_meal_plan = ai_optimize_meal_planning(current_user.id)
-            for day in ai_meal_plan:
-                ai_meal_plan[day] = ai_meal_plan[day][:3]
-            
-            nutritional_profile = NutritionalProfile.query.filter_by(user_id=current_user.id).first()
-            nutritional_goals = NutritionalGoal.query.filter_by(user_id=current_user.id).first()
-            
-            analytics = get_comprehensive_analytics(current_user.id, days=30)
-            smart_notifications = smart_notification_system(current_user.id)
-            shopping_lists = ShoppingList.query.filter_by(user_id=current_user.id).limit(5).all()
-            
-            return render_template(
-                'dashboard_modern.html',
-                expiring_products=expiring_products,
-                low_stock_products=low_stock_products,
-                expired_products=expired_products,
-                recycling_suggestions=recycling_suggestions,
-                stats=stats,
-                waste_score=waste_score,
-                badges=badges,
-                ai_shopping_suggestions=ai_shopping_suggestions,
-                ai_meal_plan=ai_meal_plan,
-                nutritional_profile=nutritional_profile,
-                nutritional_goals=nutritional_goals,
-                analytics=analytics,
-                smart_notifications=smart_notifications,
-                shopping_lists=shopping_lists,
-                today=datetime.now().date()
-            )
-            
-        except Exception as e:
-            app.logger.error(f"Error loading dashboard: {e}")
-            flash('Errore nel caricamento della dashboard', 'danger')
-            return render_template('dashboard_modern.html')
-    
     
     # ========================================
     # AUTENTICAZIONE
@@ -573,6 +717,9 @@ def register_routes(app):
                     stats.total_products_added += 1
                     db.session.commit()
                 
+                # Aggiorna analytics
+                update_all_analytics(current_user.id)
+                
                 flash(f'Prodotto "{name}" aggiunto con successo!', 'success')
                 return redirect(url_for('products'))
                 
@@ -670,11 +817,62 @@ def register_routes(app):
             points = int(5 * (waste_percentage / 100))
             award_points(current_user.id, 'waste_reduction', points)
             
+            # Aggiorna analytics
+            update_all_analytics(current_user.id)
+            
             return jsonify({'success': True})
             
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'error': str(e)}), 500
+    
+    
+    @app.route('/products/recycle/<int:product_id>', methods=['POST'])
+    @login_required
+    def recycle_product(product_id):
+        """Marca prodotto come riciclato e rimuove dalla dispensa"""
+        product = Product.query.get_or_404(product_id)
+        
+        if product.user_id != current_user.id:
+            return jsonify({'success': False, 'message': 'Accesso negato'}), 403
+        
+        try:
+            # Marca come sprecato (riciclato)
+            product.wasted = True
+            
+            db.session.commit()
+            
+            # Aggiorna stats
+            stats = UserStats.query.filter_by(user_id=current_user.id).first()
+            if stats:
+                stats.total_products_wasted += 1
+                db.session.commit()
+            
+            # Award points per riciclo
+            award_points(current_user.id, 'recycling', 10)
+            
+            # Controlla badge di riciclo
+            from .smart_functions import check_recycling_badges
+            new_badges = check_recycling_badges(current_user.id)
+            
+            # Aggiorna analytics
+            update_all_analytics(current_user.id)
+            
+            # Prepara messaggio con badge
+            message = f'Prodotto "{product.name}" riciclato con successo!'
+            if new_badges:
+                badge_names = [badge.name for badge in new_badges]
+                message += f' 🏆 Nuovo badge: {", ".join(badge_names)}!'
+            
+            return jsonify({
+                'success': True, 
+                'message': message,
+                'new_badges': [{'name': badge.name, 'description': badge.description} for badge in new_badges]
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)}), 500
     
     
     # ========================================
@@ -714,6 +912,9 @@ def register_routes(app):
             db.session.commit()
             
             award_points(current_user.id, 'shopping_list_created', 5)
+            
+            # Aggiorna analytics
+            update_all_analytics(current_user.id)
             
             return jsonify({
                 'success': True,
@@ -819,6 +1020,9 @@ def register_routes(app):
             
             db.session.add(item)
             db.session.commit()
+            
+            # Aggiorna analytics
+            update_all_analytics(current_user.id)
             
             return jsonify({
                 'success': True,
@@ -950,6 +1154,8 @@ def register_routes(app):
     @login_required
     def gamification():
         """Pagina gamification"""
+        from .models import User, UserStats, UserBadge, Badge
+        
         stats = UserStats.query.filter_by(user_id=current_user.id).first()
         
         if not stats:
@@ -963,7 +1169,42 @@ def register_routes(app):
             if Badge.query.get(ub.badge_id)
         ]
         
-        return render_template('gamification.html', stats=stats, badges=badges)
+        # Crea leaderboard semplice
+        
+        # Assicurati che tutti gli utenti abbiano UserStats
+        all_users = User.query.all()
+        for user in all_users:
+            if not UserStats.query.filter_by(user_id=user.id).first():
+                user_stats = UserStats(user_id=user.id)
+                db.session.add(user_stats)
+        db.session.commit()
+        
+        # Crea leaderboard semplice
+        leaderboard_data = []
+        for i, user in enumerate(all_users[:10], 1):  # Top 10 utenti
+            user_stats = UserStats.query.filter_by(user_id=user.id).first()
+            badges_count = UserBadge.query.filter_by(user_id=user.id).count()
+            
+            leaderboard_data.append({
+                'rank': i,
+                'user_id': user.id,
+                'username': user.username,
+                'points': user_stats.points if user_stats else 0,
+                'level': user_stats.level if user_stats else 1,
+                'badges_count': badges_count,
+                'waste_reduction_score': user_stats.waste_reduction_score if user_stats else 0,
+                'products_added': user_stats.total_products_added if user_stats else 0
+            })
+        
+        # Ordina per punti
+        leaderboard_data.sort(key=lambda x: x['points'], reverse=True)
+        
+        # Riassegna i rank
+        for i, entry in enumerate(leaderboard_data, 1):
+            entry['rank'] = i
+        
+        return render_template('gamification.html', stats=stats, badges=badges, leaderboard=leaderboard_data)
+
     
     
     # ========================================
@@ -1079,6 +1320,11 @@ def register_routes(app):
                 meal_plan.fiber = per_serving_fiber * servings
                 
                 db.session.commit()
+                
+                # Aggiorna analytics nutrizionali (solo personali per dashboard)
+                from .analytics import update_daily_nutrition
+                update_daily_nutrition(current_user.id, parsed_date, include_family=False)
+                
                 flash('Pasto aggiunto al piano!', 'success')
                 return redirect(url_for('meal_planning'))
 
@@ -1091,6 +1337,10 @@ def register_routes(app):
         profile = NutritionalProfile.query.filter_by(user_id=current_user.id).first()
         goals = NutritionalGoal.query.filter_by(user_id=current_user.id).first()
         meal_plans = get_combined_meal_plans(current_user.id)
+        
+        # Analytics per meal planning (include dati familiari)
+        from .analytics import get_comprehensive_analytics
+        meal_analytics = get_comprehensive_analytics(current_user.id, days=30, include_family=True)
         # Serialize meal plans for frontend JSON usage
         meal_plans_json = [
             {
@@ -1114,76 +1364,11 @@ def register_routes(app):
             nutritional_goals=goals,
             meal_plans=meal_plans,
             meal_plans_json=meal_plans_json,
+            meal_analytics=meal_analytics,
             today=datetime.now().date()
         )
     
     
-    # ========================================
-    # ANALYTICS
-    # ========================================
-    
-    @app.route('/analytics')
-    @login_required
-    def analytics():
-        """Pagina analytics"""
-        analytics_data = get_comprehensive_analytics(current_user.id, days=30)
-        return render_template('analytics.html', analytics=analytics_data)
-
-    @app.route('/api/analytics')
-    @login_required
-    def api_analytics():
-        """API per aggiornare KPI/chart in base al periodo."""
-        try:
-            days = request.args.get('days', default=30, type=int)
-            data = get_comprehensive_analytics(current_user.id, days=days)
-
-            # Mappa KPI nell'ordine delle card
-            kpis = [
-                data.get('nutrition', {}).get('goal_completion', 0),
-                data.get('waste', {}).get('total_kg_wasted', 0),
-                data.get('shopping', {}).get('total_items_purchased', 0),
-                data.get('waste', {}).get('total_cost', 0),
-            ]
-
-            # ✅ NUOVO: Popola i dati dei grafici in formato Chart.js
-            charts_data = _prepare_charts_data(data)
-
-            return jsonify({
-                'success': True,
-                'kpis': kpis,
-                'charts': charts_data
-            })
-        except Exception as e:
-            app.logger.error(f"Analytics API error: {e}")
-            return jsonify({'success': False, 'message': str(e)}), 500
-
-    @app.route('/api/analytics/export')
-    @login_required
-    def api_analytics_export():
-        """Esporta dati analytics base in CSV."""
-        import csv
-        from io import StringIO
-
-        days = request.args.get('days', default=30, type=int)
-        data = get_comprehensive_analytics(current_user.id, days=days)
-
-        output = StringIO()
-        writer = csv.writer(output, delimiter=';')
-
-        writer.writerow(['Section', 'Metric', 'Value'])
-        for key, val in (data.get('nutrition') or {}).items():
-            writer.writerow(['nutrition', key, val])
-        for key, val in (data.get('waste') or {}).items():
-            writer.writerow(['waste', key, val])
-        for key, val in (data.get('shopping') or {}).items():
-            writer.writerow(['shopping', key, val])
-
-        csv_bytes = output.getvalue().encode('utf-8')
-        return current_app.response_class(
-            csv_bytes,
-            mimetype='text/csv',
-            headers={'Content-Disposition': 'attachment; filename=analytics.csv'}
-        )
 
 
     # ========================================
@@ -1384,6 +1569,12 @@ def register_routes(app):
             
             db.session.commit()
             
+            # Aggiorna analytics nutrizionali per tutti i giorni del piano (solo personali per dashboard)
+            from .analytics import update_daily_nutrition
+            for day_offset in meal_plan.keys():
+                meal_date = today + timedelta(days=day_offset)
+                update_daily_nutrition(current_user.id, meal_date, include_family=False)
+            
             # Award points per generazione piano
             award_points(current_user.id, 'meal_plan_generated', 25)
             
@@ -1422,6 +1613,10 @@ def register_routes(app):
             meal_plan.fiber = nutrition['fiber']
             
             db.session.commit()
+            
+            # Aggiorna analytics nutrizionali (solo personali per dashboard)
+            from .analytics import update_daily_nutrition
+            update_daily_nutrition(current_user.id, meal_plan.date, include_family=False)
             
             return jsonify({
                 'success': True,

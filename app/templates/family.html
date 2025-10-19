@@ -462,9 +462,8 @@
     }
 
     /* Fix stacking context: ensure modal is above any page elements */
-    /* Backdrop disabilitato per la pagina Famiglia: non bloccare i click sul resto della pagina */
     .modal { z-index: 2000 !important; pointer-events: auto; }
-    .modal-backdrop { z-index: -1 !important; background: transparent !important; }
+    .modal-backdrop { z-index: 1990 !important; background: rgba(0, 0, 0, 0.5) !important; }
     .modal-dialog { pointer-events: auto; }
 </style>
 {% endblock %}

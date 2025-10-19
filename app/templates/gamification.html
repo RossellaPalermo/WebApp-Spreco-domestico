@@ -481,7 +481,7 @@
 
                 {% if leaderboard %}
                 <div id="leaderboardContainer">
-                    {% for entry in leaderboard.leaderboard %}
+                    {% for entry in leaderboard %}
                     <div class="leaderboard-row {% if entry.user_id == current_user.id %}current-user{% endif %}">
                         <div class="rank-badge {% if entry.rank == 1 %}gold{% elif entry.rank == 2 %}silver{% elif entry.rank == 3 %}bronze{% else %}default{% endif %}">
                             {% if entry.rank == 1 %}

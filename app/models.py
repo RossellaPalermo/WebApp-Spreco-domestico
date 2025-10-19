@@ -365,6 +365,9 @@ class MealPlan(db.Model):
     fat = db.Column(db.Float, nullable=True)
     fiber = db.Column(db.Float, nullable=True)
     servings = db.Column(db.Integer, default=2)
+    recipe = db.Column(db.Text, nullable=True)
+    procedure = db.Column(db.Text, nullable=True)
+    ai_generated = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, nullable=False, server_default=db.func.now())
     
     # Indice composito per query efficienti

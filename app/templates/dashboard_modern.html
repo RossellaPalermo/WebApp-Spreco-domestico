@@ -501,12 +501,16 @@
         </div>
     </div>
 
-    <!-- Alert Banner (se ci sono prodotti in scadenza urgente) -->
-    {% if expiring_products and (expiring_products[0].expiry_date - today).days <= 2 %}
+    <!-- Alert Banner (se ci sono prodotti scaduti o in scadenza urgente) -->
+    {% if expired_products or (expiring_products and expiring_products|length > 0) %}
     <div class="alert-banner">
         <i class="bi bi-exclamation-triangle-fill"></i>
         <div>
-            <strong>Azione urgente!</strong> Hai {{ expiring_products|length }} prodotto(i) che scade(n)o nei prossimi 2 giorni. 
+            {% if expired_products %}
+                <strong>Attenzione!</strong> Hai {{ expired_products|length }} prodotto(i) scaduto(i) che puoi riciclare. 
+            {% elif expiring_products %}
+                <strong>Azione urgente!</strong> Hai {{ expiring_products|length }} prodotto(i) che scade(n)o nei prossimi 7 giorni. 
+            {% endif %}
             <a href="{{ url_for('recycling_suggestions') }}" style="color: inherit; text-decoration: underline; font-weight: 600;">Scopri come riciclarli</a>
         </div>
     </div>
@@ -659,6 +663,9 @@
                     <div class="section-title">
                         <i class="bi bi-heart-pulse-fill text-success"></i>
                         Piano Nutrizionale
+                        <span class="badge bg-primary ms-2" style="font-size: 0.7rem;">
+                            <i class="bi bi-person-fill me-1"></i>Personale
+                        </span>
                     </div>
                     <div class="section-action">
                         <a href="{{ url_for('meal_planning') }}" class="btn btn-sm btn-outline-success">
@@ -707,6 +714,9 @@
                         <i class="bi bi-calendar-check me-2"></i>Pianifica Pasti
                     </a>
                     {% endif %}
+                    <button class="btn btn-outline-primary" onclick="updateNutritionalData()">
+                        <i class="bi bi-arrow-clockwise me-2"></i>Aggiorna Dati
+                    </button>
                     <a href="{{ url_for('nutritional_profile') }}" class="btn btn-outline-success">
                         <i class="bi bi-person-gear me-2"></i>Profilo Nutrizionale
                     </a>
@@ -739,20 +749,22 @@
                     {% for suggestion in recycling_suggestions[:2] %}
                     <div class="product-item" style="flex-direction: column; align-items: flex-start;">
                         <div class="product-info" style="width: 100%;">
-                            <h6>{{ suggestion.product_name }}</h6>
-                            <small>{{ suggestion.product.category }} • Scaduto il {{ suggestion.product.expiry_date.strftime('%d/%m') }}</small>
-                            
-                            {% if suggestion.recycling_options %}
-                            <div style="margin-top: 0.5rem;">
-                                <span class="badge bg-success me-2">
-                                    <i class="bi {{ suggestion.recycling_options[0].icon }} me-1"></i>
-                                    {{ suggestion.recycling_options[0].title }}
-                                </span>
-                                {% if suggestion.recycling_options|length > 1 %}
-                                <small style="color: #6B7280;">+{{ suggestion.recycling_options|length - 1 }} opzioni</small>
-                                {% endif %}
-                            </div>
-                            {% endif %}
+                                <div>
+                                    <h6>{{ suggestion.product_name }}</h6>
+                                    <small>{{ suggestion.product.category }} • Scaduto il {{ suggestion.product.expiry_date.strftime('%d/%m') }}</small>
+                                    
+                                    {% if suggestion.recycling_options %}
+                                    <div style="margin-top: 0.5rem;">
+                                        <span class="badge bg-success me-2">
+                                            <i class="bi {{ suggestion.recycling_options[0].icon }} me-1"></i>
+                                            {{ suggestion.recycling_options[0].title }}
+                                        </span>
+                                        {% if suggestion.recycling_options|length > 1 %}
+                                        <small style="color: #6B7280;">+{{ suggestion.recycling_options|length - 1 }} opzioni</small>
+                                        {% endif %}
+                                    </div>
+                                    {% endif %}
+                                </div>
                         </div>
                     </div>
                     {% endfor %}
@@ -967,6 +979,42 @@ function showRecipeModal(recipe) {
     modal.show();
 }
 
+// Aggiorna dati nutrizionali
+function updateNutritionalData() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    
+    button.disabled = true;
+    button.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Aggiornamento...';
+    
+    fetch('/api/analytics/update', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', '✅ Dati nutrizionali aggiornati con successo!');
+            // Ricarica la pagina per mostrare i dati aggiornati
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
+        } else {
+            showNotification('danger', 'Errore nell\'aggiornamento: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('danger', 'Errore di connessione');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+}
+
 // Notifiche toast
 function showNotification(type, message) {
     const toast = document.createElement('div');
@@ -985,9 +1033,9 @@ function showNotification(type, message) {
     
     setTimeout(() => toast.remove(), 5000);
 }
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // ...existing code...
 });
 </script>
 {% endblock %}

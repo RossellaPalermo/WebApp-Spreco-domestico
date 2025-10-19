@@ -12,6 +12,13 @@
       .modal { z-index: 2000 !important; }
       .modal-backdrop { z-index: 1990 !important; }
       body.modal-open { overflow: hidden; }
+      
+      /* Fix for meal planning modal - ensure proper backdrop */
+      #addMealModal .modal-backdrop {
+        z-index: 1990 !important;
+        background-color: rgba(0, 0, 0, 0.5) !important;
+        pointer-events: auto !important;
+      }
     </style>
 
     <!-- Bootstrap Icons -->
@@ -225,39 +232,6 @@
             font-size: 1.1rem;
         }
 
-        /* Theme Toggle */
-        .theme-toggle {
-            width: 48px;
-            height: 48px;
-            border-radius: var(--radius-full);
-            background: rgba(255,255,255,0.8);
-            border: 2px solid var(--neutral-200);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: var(--transition-normal);
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .theme-toggle:hover {
-            transform: scale(1.1) rotate(15deg);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-green);
-            background: white;
-        }
-
-        .theme-toggle i {
-            font-size: 1.25rem;
-            color: var(--neutral-700);
-            transition: var(--transition-normal);
-        }
-
-        .theme-toggle:hover i {
-            color: var(--primary-green);
-        }
 
         /* Dropdown Menu */
         .dropdown-menu {
@@ -709,14 +683,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .theme-toggle {
-                width: 44px;
-                height: 44px;
-            }
-
-            .theme-toggle i {
-                font-size: 1.1rem;
-            }
         }
     </style>
 
@@ -1446,12 +1412,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 </ul>
                 
                 <ul class="navbar-nav align-items-center">
-                    <li class="nav-item me-3">
-                        <div class="theme-toggle" id="themeToggle" title="Toggle theme">
-                            <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
-                        </div>
-                    </li>
-                    
                     {% if current_user.is_authenticated %}
                         <li class="nav-item dropdown">
                             <a class="nav-link nav-link-modern dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1625,10 +1585,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 offset: 100
             });
             
-            // Load saved theme
-            const savedTheme = localStorage.getItem('foodflow-theme') || 'light';
-            document.documentElement.setAttribute('data-bs-theme', savedTheme);
-            updateThemeIcon(savedTheme);
         });
 
         // Navbar scroll effect
@@ -1641,27 +1597,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Theme Toggle
-        function updateThemeIcon(theme) {
-            const icon = document.getElementById('themeIcon');
-            if (theme === 'dark') {
-                icon.classList.remove('bi-moon-stars-fill');
-                icon.classList.add('bi-sun-fill');
-            } else {
-                icon.classList.remove('bi-sun-fill');
-                icon.classList.add('bi-moon-stars-fill');
-            }
-        }
-
-        document.getElementById('themeToggle').addEventListener('click', function() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-bs-theme');
-            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-            
-            html.setAttribute('data-bs-theme', newTheme);
-            localStorage.setItem('foodflow-theme', newTheme);
-            updateThemeIcon(newTheme);
-        });
 
         // Auto-hide alerts after 5 seconds
         setTimeout(() => {

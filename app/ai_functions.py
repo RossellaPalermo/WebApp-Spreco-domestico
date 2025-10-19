@@ -909,7 +909,7 @@ Stima realistica basata su porzioni normali per {meal_type}.
             'messages': [
                 {'role': 'user', 'content': prompt}
             ],
-            'model': 'llama-3.1-70b-versatile',
+            'model': 'llama-3.1-8b-instant',
             'temperature': 0.3,
             'max_tokens': 200
         }
