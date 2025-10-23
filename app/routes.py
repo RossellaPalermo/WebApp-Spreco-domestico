@@ -1506,8 +1506,8 @@ Difficoltà: Media"""
             servings = request.json.get('servings') if request.is_json else None
             share_with_family = bool(request.json.get('share_with_family')) if request.is_json else False
             
-            # Genera piano pasti con AI
-            meal_plan = ai_optimize_meal_planning(current_user.id, days)
+            # Genera piano pasti con AI (considera vincoli famiglia se condiviso)
+            meal_plan = ai_optimize_meal_planning(current_user.id, days, share_with_family)
             
             if not meal_plan:
                 return jsonify({

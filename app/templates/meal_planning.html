@@ -724,8 +724,17 @@ body.modal-open {
             <p class="text-muted small mb-3">L'AI crea un piano settimanale bilanciato</p>
             <div class="form-check mb-2" style="text-align:left">
                 <input class="form-check-input" type="checkbox" id="aiShareFlag">
-                <label class="form-check-label" for="aiShareFlag">Condividi con la famiglia</label>
+                <label class="form-check-label" for="aiShareFlag">
+                    Condividi con la famiglia
+                    <i class="bi bi-info-circle text-info ms-1" 
+                       data-bs-toggle="tooltip" 
+                       data-bs-placement="right"
+                       title="Il piano terrà conto delle allergie e restrizioni dietetiche di tutti i membri della famiglia"></i>
+                </label>
             </div>
+            <small class="text-muted d-block mb-2" id="familyConstraintsInfo" style="display: none !important; font-size: 0.75rem; text-align: left;">
+                <i class="bi bi-shield-check text-success"></i> Rispetterà i vincoli nutrizionali di tutta la famiglia
+            </small>
             <button class="btn btn-primary btn-sm" onclick="generateWeeklyPlan(this)">
                 <i class="bi bi-robot me-1"></i>Genera Piano
             </button>
@@ -1537,6 +1546,29 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     });
+    
+    // ========================================
+    // FAMIGLIA - INFO VINCOLI
+    // ========================================
+    
+    // Inizializza tooltip Bootstrap
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+    
+    // Mostra/nascondi info vincoli famiglia quando si seleziona la checkbox
+    const aiShareFlag = document.getElementById('aiShareFlag');
+    const familyConstraintsInfo = document.getElementById('familyConstraintsInfo');
+    
+    if (aiShareFlag && familyConstraintsInfo) {
+        aiShareFlag.addEventListener('change', function() {
+            if (this.checked) {
+                familyConstraintsInfo.style.display = 'block';
+                familyConstraintsInfo.style.removeProperty('display');
+            } else {
+                familyConstraintsInfo.style.display = 'none';
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

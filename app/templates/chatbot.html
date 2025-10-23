@@ -628,17 +628,26 @@
                             <div class="message-content">
                                 <div class="welcome-message">
                                     <strong>Ciao! 👋 Sono FoodFlowBot</strong>
-                                    <p style="margin: 0.5rem 0; color: #6b7280;">Il tuo assistente per una gestione alimentare intelligente</p>
-                                    <ul>
-                                        <li>🍳 Suggerimenti di ricette personalizzate</li>
-                                        <li>📅 Gestione intelligente della dispensa</li>
-                                        <li>♻️ Consigli per il riciclo sostenibile</li>
-                                        <li>📊 Analytics e statistiche dettagliate</li>
-                                        <li>⚡ Risposte istantanee 24/7</li>
+                                    <p style="margin: 0.5rem 0; color: #6b7280;">Il tuo assistente personale per gestire la dispensa e ridurre gli sprechi</p>
+                                    <p style="margin: 0.5rem 0; color: #4b5563; font-size: 0.95rem;">Posso aiutarti con:</p>
+                                    <ul style="margin-top: 0.5rem;">
+                                        <li>Suggerimenti di ricette con i tuoi ingredienti</li>
+                                        <li>Monitoraggio scadenze e gestione scorte</li>
+                                        <li>Consigli per ridurre sprechi e riciclare</li>
+                                        <li>Liste della spesa intelligenti</li>
                                     </ul>
+                                    <p style="margin: 0.8rem 0 0.3rem 0; color: #059669; font-size: 0.9rem; font-style: italic;">
+                                        💬 Chiedimi cosa vuoi sapere! Puoi usare un linguaggio naturale.
+                                    </p>
+                                    <div class="suggestions" style="margin-top: 1rem;">
+                                        <span class="suggestion-chip" onclick="sendQuickMessage('Cosa ho in dispensa?')">Cosa ho in dispensa?</span>
+                                        <span class="suggestion-chip" onclick="sendQuickMessage('Cosa posso cucinare oggi?')">Cosa posso cucinare?</span>
+                                        <span class="suggestion-chip" onclick="sendQuickMessage('Cosa sta per scadere?')">Prodotti in scadenza</span>
+                                        <span class="suggestion-chip" onclick="sendQuickMessage('Dammi consigli anti-spreco')">Consigli anti-spreco</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="message-time">Benvenuto!</div>
+                            <div class="message-time">Sempre disponibile</div>
                         </div>
                     </div>
                 </div>
@@ -742,8 +751,8 @@ function sendMessage() {
             // Add bot response
             addBotMessage(data);
             
-            // Update conversation context (limit to 1000 chars to avoid bloat)
-            conversationContext = (conversationContext + `Utente: ${message}\nBot: ${data.response}\n`).slice(-1000);
+            // Update conversation context (limit to 2000 chars for better context)
+            conversationContext = (conversationContext + `Utente: ${message}\nBot: ${data.response}\n`).slice(-2000);
         } else {
             addMessage('Mi dispiace, si è verificato un errore. Riprova!', 'bot');
         }

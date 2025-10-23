@@ -344,13 +344,84 @@ Estrai solo ingredienti con quantità e unità."""
 # MEAL PLANNING AI
 # ========================================
 
-def ai_optimize_meal_planning(user_id, days=7):
+def _get_family_nutritional_constraints(user_id):
+    """
+    Raccoglie allergie e restrizioni dietetiche di tutti i membri della famiglia
+    
+    Args:
+        user_id: ID dell'utente
+    
+    Returns:
+        dict: Dizionario con allergie e restrizioni aggregate della famiglia
+    """
+    try:
+        from .smart_functions import get_user_family
+        from .models import User
+        
+        family = get_user_family(user_id)
+        if not family:
+            return {'allergies': [], 'restrictions': [], 'members_count': 1, 'members_info': []}
+        
+        all_allergies = set()
+        all_restrictions = set()
+        members_info = []
+        
+        # Itera sui membri della famiglia
+        for member in family.members:
+            user = User.query.get(member.user_id)
+            if not user:
+                continue
+            
+            profile = NutritionalProfile.query.filter_by(user_id=user.id).first()
+            if not profile:
+                continue
+            
+            # Aggiungi info membro
+            member_data = {'name': user.username}
+            
+            # Raccogli allergie
+            if profile.allergies:
+                try:
+                    member_allergies = json.loads(profile.allergies)
+                    if member_allergies:
+                        all_allergies.update(member_allergies)
+                        member_data['allergies'] = member_allergies
+                except:
+                    pass
+            
+            # Raccogli restrizioni
+            if profile.dietary_restrictions:
+                try:
+                    member_restrictions = json.loads(profile.dietary_restrictions)
+                    if member_restrictions:
+                        all_restrictions.update(member_restrictions)
+                        member_data['restrictions'] = member_restrictions
+                except:
+                    pass
+            
+            if 'allergies' in member_data or 'restrictions' in member_data:
+                members_info.append(member_data)
+        
+        return {
+            'allergies': sorted(list(all_allergies)),
+            'restrictions': sorted(list(all_restrictions)),
+            'members_count': family.members.count(),
+            'members_info': members_info
+        }
+        
+    except Exception as e:
+        current_app.logger.error(f"_get_family_nutritional_constraints error: {e}")
+        return {'allergies': [], 'restrictions': [], 'members_count': 1, 'members_info': []}
+
+
+def ai_optimize_meal_planning(user_id, days=7, share_with_family=False):
     """
     Genera piano pasti settimanale ottimizzato usando AI
     
     Args:
         user_id: ID utente
         days: Giorni da pianificare
+        share_with_family: Se True, considera i vincoli nutrizionali di tutta la famiglia
     
     Returns:
         dict: Piano pasti per giorni {day: [meals]}
@@ -366,8 +437,8 @@ def ai_optimize_meal_planning(user_id, days=7):
         if not products:
             return _generate_basic_meal_plan(days)
         
-        # Genera piano con AI
-        meal_plan = ai_generate_weekly_meal_plan(user_id, profile, goals, products, days)
+        # Genera piano con AI considerando eventualmente i vincoli della famiglia
+        meal_plan = ai_generate_weekly_meal_plan(user_id, profile, goals, products, days, share_with_family)
         
         if not meal_plan:
             return _generate_basic_meal_plan(days)
@@ -378,9 +449,17 @@ def ai_optimize_meal_planning(user_id, days=7):
         current_app.logger.error(f"ai_optimize_meal_planning error: {e}")
         return _generate_basic_meal_plan(days)
 
-def ai_generate_weekly_meal_plan(user_id, profile, goals, products, days=7):
+def ai_generate_weekly_meal_plan(user_id, profile, goals, products, days=7, share_with_family=False):
     """
     Genera piano pasti settimanale usando Groq AI
+    
+    Args:
+        user_id: ID utente
+        profile: Profilo nutrizionale utente
+        goals: Obiettivi nutrizionali utente
+        products: Lista prodotti disponibili
+        days: Giorni da pianificare
+        share_with_family: Se True, considera vincoli di tutta la famiglia
     """
     try:
         api_key = os.getenv('GROQ_API_KEY')
@@ -411,7 +490,7 @@ Obiettivi nutrizionali giornalieri:
         profile_info = ""
         if profile:
             profile_info = f"""
-Profilo utente:
+Profilo utente principale:
 - Età: {profile.age} anni
 - Peso: {profile.weight} kg
 - Altezza: {profile.height} cm
@@ -420,25 +499,71 @@ Profilo utente:
 - Obiettivo: {profile.goal}
 """
         
-        # Restrizioni dietetiche
+        # Gestione vincoli: individuali o familiari
         restrictions = ""
-        if profile and profile.dietary_restrictions:
-            try:
-                restrictions_list = json.loads(profile.dietary_restrictions)
-                if restrictions_list:
-                    restrictions = f"Restrizioni dietetiche: {', '.join(restrictions_list)}\n"
-            except:
-                pass
-        
-        # Allergie
         allergies = ""
-        if profile and profile.allergies:
-            try:
-                allergies_list = json.loads(profile.allergies)
-                if allergies_list:
-                    allergies = f"Allergie: {', '.join(allergies_list)}\n"
-            except:
-                pass
+        family_info = ""
+        
+        if share_with_family:
+            # Recupera vincoli di TUTTA la famiglia
+            family_constraints = _get_family_nutritional_constraints(user_id)
+            
+            if family_constraints['members_count'] > 1:
+                family_info = f"\n🏠 PASTO CONDIVISO CON LA FAMIGLIA ({family_constraints['members_count']} persone)\n"
+                
+                # Info dettagliata sui vincoli dei membri
+                if family_constraints['members_info']:
+                    family_info += "Vincoli nutrizionali dei membri della famiglia:\n"
+                    for member in family_constraints['members_info']:
+                        member_constraints = []
+                        if member.get('allergies'):
+                            member_constraints.append(f"Allergie: {', '.join(member['allergies'])}")
+                        if member.get('restrictions'):
+                            member_constraints.append(f"Restrizioni: {', '.join(member['restrictions'])}")
+                        if member_constraints:
+                            family_info += f"- {member['name']}: {'; '.join(member_constraints)}\n"
+                
+                # Allergie aggregate (TUTTE devono essere rispettate)
+                if family_constraints['allergies']:
+                    allergies = f"\n⚠️ ALLERGIE DA RISPETTARE (di tutti i membri): {', '.join(family_constraints['allergies'])}\n"
+                
+                # Restrizioni aggregate
+                if family_constraints['restrictions']:
+                    restrictions = f"Restrizioni dietetiche (di tutti i membri): {', '.join(family_constraints['restrictions'])}\n"
+            else:
+                # Nessuna famiglia, usa solo vincoli individuali
+                if profile and profile.dietary_restrictions:
+                    try:
+                        restrictions_list = json.loads(profile.dietary_restrictions)
+                        if restrictions_list:
+                            restrictions = f"Restrizioni dietetiche: {', '.join(restrictions_list)}\n"
+                    except:
+                        pass
+                
+                if profile and profile.allergies:
+                    try:
+                        allergies_list = json.loads(profile.allergies)
+                        if allergies_list:
+                            allergies = f"Allergie: {', '.join(allergies_list)}\n"
+                    except:
+                        pass
+        else:
+            # Solo vincoli individuali
+            if profile and profile.dietary_restrictions:
+                try:
+                    restrictions_list = json.loads(profile.dietary_restrictions)
+                    if restrictions_list:
+                        restrictions = f"Restrizioni dietetiche: {', '.join(restrictions_list)}\n"
+                except:
+                    pass
+            
+            if profile and profile.allergies:
+                try:
+                    allergies_list = json.loads(profile.allergies)
+                    if allergies_list:
+                        allergies = f"Allergie: {', '.join(allergies_list)}\n"
+                except:
+                    pass
         
         # Prompt per AI
         system_prompt = """Sei un nutrizionista esperto e chef professionista. 
@@ -462,6 +587,13 @@ Formato richiesto:
   }
 }
 
+⚠️ REGOLE CRITICHE PER ALLERGIE E RESTRIZIONI:
+1. Se vengono specificate ALLERGIE, NON includere MAI quegli ingredienti o derivati
+2. Le allergie sono SEMPRE prioritarie - un singolo errore può essere pericoloso
+3. Se il pasto è per la FAMIGLIA, rispetta i vincoli di TUTTI i membri
+4. Le restrizioni dietetiche devono essere sempre rispettate
+5. Cerca alternative sicure per sostituire ingredienti problematici
+
 IMPORTANTE:
 - Le descrizioni devono essere BREVI (massimo 100 caratteri)
 - Non usare a capo o caratteri speciali nelle descrizioni
@@ -471,13 +603,16 @@ IMPORTANTE:
 
 {profile_info}
 {nutritional_info}
-{restrictions}
+{family_info}
 {allergies}
+{restrictions}
 
 Ingredienti disponibili:
 {ingredients_text}
 
-Crea un piano variato e bilanciato. Rispondi SOLO con JSON valido."""
+{"⚠️ IMPORTANTE: Questo piano sarà condiviso con la famiglia. DEVI rispettare TUTTE le allergie e restrizioni elencate sopra." if share_with_family and family_info else ""}
+
+Crea un piano variato, bilanciato e SICURO per tutti. Rispondi SOLO con JSON valido."""
         
         # Chiamata API
         response = requests.post(
@@ -1019,18 +1154,20 @@ def ai_suggest_food_recycling(expired_products, user_id=None):
         if not expired_products:
             return {'success': True, 'suggestions': []}
         
-        # Prepara lista prodotti scaduti
+        # Prepara lista prodotti scaduti con informazioni dettagliate
+        from datetime import datetime
+        today = datetime.now().date()
         products_text = "\n".join([
-            f"- {p.name} (categoria: {p.category}, quantità: {p.quantity} {p.unit})" 
+            f"- {p.name} (categoria: {p.category}, quantità: {p.quantity} {p.unit}, scaduto da {(today - p.expiry_date).days} giorni)" 
             for p in expired_products
         ])
         
         # Recupera preferenze utente se disponibili
         dietary_info = _get_user_dietary_info(user_id) if user_id else "Nessuna preferenza specificata"
         
-        # Prompt per AI
-        system_prompt = """Sei un esperto di sostenibilità alimentare e riciclo. 
-Genera suggerimenti pratici per riciclare/riutilizzare cibo scaduto in formato JSON.
+        # Prompt per AI - completamente rinnovato per essere più realistico
+        system_prompt = """Sei un esperto di sostenibilità ambientale e gestione rifiuti alimentari.
+Genera suggerimenti PRATICI, REALISTICI e SICURI per riciclare cibo scaduto in formato JSON.
 
 Formato richiesto:
 {
@@ -1039,60 +1176,84 @@ Formato richiesto:
       "product_name": "Nome Prodotto",
       "recycling_options": [
         {
-          "type": "donation",
-          "title": "Donazione a Canile",
-          "description": "Descrizione dettagliata",
-          "instructions": ["passo 1", "passo 2"],
+          "type": "composting|reuse|animal_feed",
+          "title": "Titolo breve e chiaro",
+          "description": "Descrizione pratica di cosa fare",
+          "instructions": ["step 1", "step 2", "step 3"],
           "benefits": ["beneficio 1", "beneficio 2"],
-          "contact_info": "Info contatto se disponibile",
-          "requirements": "Requisiti specifici"
-        },
-        {
-          "type": "composting",
-          "title": "Compostaggio",
-          "description": "Come compostare questo prodotto",
-          "instructions": ["passo 1", "passo 2"],
-          "benefits": ["beneficio 1", "beneficio 2"],
-          "requirements": "Requisiti per compostaggio"
-        },
-        {
-          "type": "reuse",
-          "title": "Riutilizzo Creativo",
-          "description": "Idee per riutilizzare",
-          "instructions": ["passo 1", "passo 2"],
-          "benefits": ["beneficio 1", "beneficio 2"],
-          "requirements": "Materiali necessari"
+          "contact_info": "Info se necessario",
+          "requirements": "Cosa serve per farlo"
         }
       ]
     }
   ]
 }
 
-REGOLE IMPORTANTI:
-1. Fornisci suggerimenti pratici e realizzabili
-2. Includi sempre opzioni di donazione (canili, centri, banchi alimentari)
-3. Suggerisci compostaggio per prodotti organici
-4. Proponi riutilizzi creativi quando appropriato
-5. Includi informazioni di contatto locali quando possibile
-6. Considera la sicurezza alimentare
-7. Sii specifico e dettagliato nelle istruzioni
+🚨 REGOLE CRITICHE PER LA SICUREZZA:
 
-Rispondi SOLO con JSON valido."""
+1. **CIBO SCADUTO NON È MAI SICURO PER CONSUMO UMANO**
+   - NON suggerire MAI di mangiarlo o donarlo a banchi alimentari
+   - NON proporre ricette per "recuperare" cibo scaduto
+
+2. **DONAZIONE ANIMALI** (type: "animal_feed")
+   - OK SOLO per: verdure/frutta integre scadute da max 3-5 giorni
+   - OK per: pane raffermo (non ammuffito), pasta secca
+   - MAI per: latticini, carne, pesce, prodotti con muffa
+   - Sempre specificare: "Contatta prima il canile/rifugio per verificare"
+
+3. **COMPOSTAGGIO** (type: "composting") - LA SOLUZIONE MIGLIORE
+   - OK per: tutta la frutta, verdura, scarti vegetali, fondi caffè, gusci uovo
+   - OK con moderazione: pane, pasta, riso (attirano roditori)
+   - MAI per: carne, pesce, latticini, oli, prodotti animali
+   - Spiega come fare compost domestico o dove trovare compostiere comunali
+
+4. **RIUTILIZZO NON ALIMENTARE** (type: "reuse")
+   - Bucce di agrumi: detergenti naturali, profumatori
+   - Fondi di caffè: fertilizzante, scrub corpo, assorbi-odori
+   - Gusci d'uovo: fertilizzante ricco di calcio
+   - Acqua di cottura verdure: annaffiare piante
+
+5. **COSA EVITARE**
+   - Prodotti con muffa: NON compostabili, solo smaltimento
+   - Latticini scaduti: rischio batterico alto, solo smaltimento
+   - Carne/pesce: rischio sanitario, solo smaltimento differenziato
+   - Oli e grassi: NON nel compost, portare in isole ecologiche
+
+📋 STRUTTURA SUGGERIMENTI:
+
+Per ogni prodotto, fornisci 2-3 opzioni in ordine di priorità:
+1. PRIMA SCELTA: Compostaggio (se applicabile)
+2. SECONDA SCELTA: Riutilizzo creativo/donazione animali (se sicuro)
+3. TERZA SCELTA: Smaltimento corretto
+
+Sii SPECIFICO nelle istruzioni:
+- Non "compostalo" ma "Taglia in pezzi da 5cm, mescola con foglie secche, tempo decomposizione: 2-3 mesi"
+- Non "dona al canile" ma "Contatta canile locale prima, porta entro 24h, no prodotti ammuffiti"
+- Includi TEMPI: "Decomposizione: 1-2 mesi", "Conservazione: max 3 giorni"
+
+🌍 CONTATTI UTILI DA SUGGERIRE:
+- Compostiere comunali: "Cerca 'compostaggio + [tua città]' online"
+- Centri raccolta rifiuti: "Isola ecologica più vicina"
+- Rifugi animali: "Cerca 'canile + [tua città]' e chiama prima"
+
+Rispondi SOLO con JSON valido. Priorità: SICUREZZA > PRATICITÀ > CREATIVITÀ."""
         
         user_prompt = f"""Prodotti scaduti da riciclare:
 {products_text}
 
-Preferenze utente:
-{dietary_info}
+IMPORTANTE: Per ogni prodotto, considera i GIORNI DI SCADENZA specificati:
+- Scaduto da 1-5 giorni: potenzialmente ancora sicuro per donazione animali (se integro, no muffa)
+- Scaduto da 6-14 giorni: solo compostaggio o riutilizzo non alimentare
+- Scaduto da 15+ giorni: compostaggio o smaltimento, NON donazione
 
-Genera suggerimenti di riciclo per ogni prodotto. Includi:
-- Donazioni a canili, centri di recupero, banchi alimentari
-- Compostaggio per prodotti organici
-- Riutilizzi creativi (es. bucce per cosmetici, ossa per brodo)
-- Informazioni su centri di raccolta locali
-- Istruzioni dettagliate per ogni opzione
+Genera suggerimenti di riciclo REALISTICI per ogni prodotto seguendo le regole di sicurezza:
+1. Priorità al compostaggio per prodotti organici
+2. Donazione animali SOLO se sicuro (max 5 giorni, no muffa, no latticini/carne)
+3. Riutilizzi creativi non alimentari (detergenti, fertilizzanti, etc)
+4. NO donazioni a banchi alimentari (cibo scaduto non è legale)
 
-Sii pratico e considera la situazione italiana."""
+Sii MOLTO specifico nelle istruzioni (tempi, temperature, quantità).
+Considera la situazione italiana (isole ecologiche, compostiere comunali, rifugi locali)."""
 
         # Chiamata API
         response = requests.post(
@@ -1218,101 +1379,186 @@ def _validate_and_enrich_recycling_suggestions(suggestions, expired_products):
 
 
 def _generate_fallback_recycling_suggestions(expired_products):
-    """Genera suggerimenti di base se AI non funziona"""
+    """Genera suggerimenti realistici e sicuri se AI non funziona"""
     try:
+        from datetime import datetime, timedelta
         suggestions = []
+        today = datetime.now().date()
         
         for product in expired_products:
             recycling_options = []
+            category = product.category.lower()
+            days_expired = (today - product.expiry_date).days
             
-            # Suggerimenti generici basati sulla categoria
-            if product.category.lower() in ['verdura', 'frutta', 'ortaggi']:
-                recycling_options.extend([
-                    {
-                        'type': 'composting',
-                        'title': 'Compostaggio',
-                        'description': 'Trasforma in compost per il giardino',
+            # === FRUTTA E VERDURA ===
+            if category in ['verdura', 'frutta', 'ortaggi']:
+                # Compostaggio - sempre prima opzione
+                recycling_options.append({
+                    'type': 'composting',
+                    'title': 'Compostaggio Domestico',
+                    'description': f'Il compost è la soluzione migliore per {product.name}. Crea fertilizzante naturale ricco di nutrienti per piante e giardino.',
+                    'instructions': [
+                        f'Taglia {product.name} in pezzi di 3-5 cm per accelerare la decomposizione',
+                        'Mescola con materiale "marrone" (foglie secche, cartone, segatura) in rapporto 1:2',
+                        'Aggiungi alla compostiera o crea un cumulo in giardino',
+                        'Mescola ogni 2-3 settimane per areazione',
+                        f'Tempo di decomposizione: 2-4 mesi (più veloce in estate)'
+                    ],
+                    'benefits': [
+                        'Fertilizzante naturale gratuito per piante',
+                        'Riduce i rifiuti del 30% in casa',
+                        'Migliora la struttura del suolo',
+                        'Zero emissioni rispetto allo smaltimento'
+                    ],
+                    'contact_info': 'Se non hai compostiera: cerca "compostiera comunale + [tua città]" online per punti di raccolta gratuiti',
+                    'requirements': 'Compostiera domestica o spazio in giardino. Se abiti in appartamento: compostiera da balcone o vermicompostaggio',
+                    'icon': 'bi-recycle',
+                    'priority': 'high'
+                })
+                
+                # Donazione animali solo se scaduto da poco e integro
+                if days_expired <= 5:
+                    recycling_options.append({
+                        'type': 'animal_feed',
+                        'title': 'Donazione a Rifugi Animali',
+                        'description': f'{product.name} può essere utilizzato come cibo per animali se ancora integro (no muffa, no marciume).',
                         'instructions': [
-                            'Taglia in pezzi piccoli',
-                            'Aggiungi al compost o seppellisci nel terreno',
-                            'Mescola con materiale secco (foglie, cartone)'
+                            'Verifica che NON ci siano muffe o marciume',
+                            'Contatta prima un canile/rifugio locale (cerca online "canile + [tua città]")',
+                            'Chiedi quali verdure/frutti accettano (alcuni evitano cipolle, aglio, avocado)',
+                            'Porta entro 24 ore in contenitore pulito',
+                            'Specifica la data di scadenza al rifugio'
                         ],
-                        'benefits': ['Fertilizzante naturale', 'Riduce rifiuti', 'Migliora il suolo'],
-                        'contact_info': '',
-                        'requirements': 'Area per compostaggio o giardino',
-                        'icon': 'bi-recycle',
+                        'benefits': [
+                            'Aiuti animali bisognosi',
+                            'Risparmi ai rifugi costi di alimentazione',
+                            'Riduci sprechi alimentari'
+                        ],
+                        'contact_info': '⚠️ IMPORTANTE: Chiama PRIMA di portare. Alcuni rifugi hanno restrizioni specifiche.',
+                        'requirements': f'Prodotto integro, senza muffa. Scaduto da max 5 giorni. {product.name} deve essere nella lista accettata dal rifugio.',
+                        'icon': 'bi-heart-fill',
                         'priority': 'high'
-                    },
-                    {
-                        'type': 'donation',
-                        'title': 'Donazione a Canile',
-                        'description': 'Alcune verdure possono essere donate agli animali',
-                        'instructions': [
-                            'Contatta canili locali',
-                            'Verifica quali verdure accettano',
-                            'Porta in giornata per evitare ulteriore deterioramento'
-                        ],
-                        'benefits': ['Aiuta animali bisognosi', 'Riduce sprechi'],
-                        'contact_info': 'Cerca "canili" + nome della tua città',
-                        'requirements': 'Contatto preventivo con il canile',
-                        'icon': 'bi-heart',
-                        'priority': 'medium'
-                    }
-                ])
+                    })
             
-            elif product.category.lower() in ['pane', 'pasta', 'cereali']:
-                recycling_options.extend([
-                    {
+            # === PANE E CEREALI ===
+            elif category in ['pane', 'pasta', 'cereali', 'farina']:
+                if 'pane' in product.name.lower() and days_expired <= 7:
+                    # Pane raffermo può avere riutilizzo
+                    recycling_options.append({
                         'type': 'reuse',
-                        'title': 'Pane Raffermo - Croutons',
-                        'description': 'Trasforma il pane raffermo in croutons',
+                        'title': 'Pangrattato Casalingo',
+                        'description': 'Trasforma il pane raffermo in pangrattato da conservare per mesi.',
                         'instructions': [
-                            'Taglia il pane a cubetti',
-                            'Tosta in forno a 180°C per 10-15 minuti',
-                            'Conserva in contenitore ermetico'
+                            'Verifica che NON ci sia muffa (se c\'è, vai al compostaggio)',
+                            'Taglia il pane a fette sottili',
+                            'Asciuga in forno a 100°C per 30-40 minuti',
+                            'Frulla fino a ottenere briciole fini',
+                            'Conserva in barattolo di vetro per 3-6 mesi'
                         ],
-                        'benefits': ['Snack croccante', 'Non sprechi nulla'],
+                        'benefits': [
+                            'Pangrattato sempre pronto per impanature',
+                            'Risparmi denaro (non compri più pangrattato)',
+                            'Zero sprechi'
+                        ],
                         'contact_info': '',
-                        'requirements': 'Forno e contenitore ermetico',
+                        'requirements': 'Forno, mixer o frullatore, barattolo ermetico. Pane SENZA muffa.',
                         'icon': 'bi-lightbulb',
                         'priority': 'high'
-                    },
-                    {
-                        'type': 'donation',
-                        'title': 'Banco Alimentare',
-                        'description': 'Donazione a organizzazioni caritatevoli',
-                        'instructions': [
-                            'Contatta banchi alimentari locali',
-                            'Verifica orari di consegna',
-                            'Porta prodotti ancora commestibili'
-                        ],
-                        'benefits': ['Aiuta famiglie bisognose', 'Riduce sprechi'],
-                        'contact_info': 'Cerca "banco alimentare" + nome della tua città',
-                        'requirements': 'Contatto preventivo',
-                        'icon': 'bi-heart',
-                        'priority': 'high'
-                    }
-                ])
+                    })
+                
+                # Compostaggio per pane (con cautela)
+                recycling_options.append({
+                    'type': 'composting',
+                    'title': 'Compostaggio (con moderazione)',
+                    'description': f'{product.name} può essere compostato ma attira roditori. Usa con cautela.',
+                    'instructions': [
+                        'Sbriciola finemente il prodotto',
+                        'Mescola BENE con materiale marrone (foglie, terra)',
+                        'Interra al centro della compostiera (non in superficie)',
+                        'Aggiungi PICCOLE quantità alla volta (max 10% del compost)',
+                        'Copri subito con terriccio o foglie'
+                    ],
+                    'benefits': [
+                        'Arricchisce il compost di carboidrati',
+                        'Riduce i rifiuti domestici'
+                    ],
+                    'contact_info': '⚠️ ATTENZIONE: Pane e cereali attraggono topi e ratti. Usa solo se hai compostiera chiusa.',
+                    'requirements': 'Compostiera CHIUSA (no cumulo aperto). Non usare se hai problemi di roditori.',
+                    'icon': 'bi-recycle',
+                    'priority': 'medium'
+                })
             
+            # === LATTICINI ===
+            elif category in ['latticini', 'formaggi', 'latte', 'yogurt']:
+                recycling_options.append({
+                    'type': 'disposal',
+                    'title': 'Smaltimento Sicuro nell\'Organico',
+                    'description': f'{product.name} scaduto NON è sicuro né per compost né per animali. Smaltisci correttamente.',
+                    'instructions': [
+                        'NON compostare (attira animali e crea odori)',
+                        'Butta nel bidone dell\'organico/umido',
+                        'Svuota liquidi nel lavandino prima di buttare il contenitore',
+                        'Risciacqua e ricicla la confezione (plastica/cartone)',
+                        'Lavati bene le mani dopo'
+                    ],
+                    'benefits': [
+                        'Smaltimento igienico e sicuro',
+                        'Evita contaminazioni batteriche',
+                        'Previene cattivi odori'
+                    ],
+                    'contact_info': 'Per dubbi: cerca le indicazioni per la raccolta differenziata del tuo comune',
+                    'requirements': 'Seguire le norme di raccolta differenziata locali',
+                    'icon': 'bi-trash',
+                    'priority': 'high'
+                })
+            
+            # === CARNE E PESCE ===
+            elif category in ['carne', 'pesce', 'salumi']:
+                recycling_options.append({
+                    'type': 'disposal',
+                    'title': 'Smaltimento Immediato nell\'Umido',
+                    'description': f'{product.name} scaduto è ad ALTO RISCHIO BATTERICO. Smaltisci immediatamente in modo sicuro.',
+                    'instructions': [
+                        'NON compostare mai carne/pesce (batteri pericolosi + cattivi odori)',
+                        'Sigilla in sacchetto chiuso',
+                        'Butta nel bidone dell\'organico/umido',
+                        'Porta subito il bidone fuori (evita odori in casa)',
+                        'Lava mani e superfici con sapone',
+                        'Disinfetta il frigo se era presente liquido'
+                    ],
+                    'benefits': [
+                        'Previene rischi sanitari gravi',
+                        'Evita proliferazione batteri',
+                        'Previene cattivi odori'
+                    ],
+                    'contact_info': '🚨 PERICOLO SANITARIO: Non riutilizzare in alcun modo.',
+                    'requirements': 'Smaltimento immediato. Igienizzazione superfici.',
+                    'icon': 'bi-trash',
+                    'priority': 'high'
+                })
+            
+            # === ALTRI PRODOTTI ===
             else:
-                # Suggerimenti generici
-                recycling_options.extend([
-                    {
-                        'type': 'donation',
-                        'title': 'Centro di Raccolta Alimentare',
-                        'description': 'Donazione a centri specializzati',
-                        'instructions': [
-                            'Cerca centri di raccolta alimentare locali',
-                            'Verifica cosa accettano',
-                            'Porta i prodotti in giornata'
-                        ],
-                        'benefits': ['Aiuta la comunità', 'Riduce sprechi'],
-                        'contact_info': 'Cerca "raccolta alimentare" + nome della tua città',
-                        'requirements': 'Contatto preventivo',
-                        'icon': 'bi-heart',
-                        'priority': 'medium'
-                    }
-                ])
+                # Suggerimento generico per prodotti non categorizzati
+                recycling_options.append({
+                    'type': 'composting',
+                    'title': 'Compostaggio (verifica compatibilità)',
+                    'description': 'Se è un prodotto di origine vegetale, probabilmente può essere compostato.',
+                    'instructions': [
+                        'Verifica che sia di origine vegetale (no carne, latticini, oli)',
+                        'Taglia in pezzi piccoli',
+                        'Aggiungi alla compostiera mescolando con materiale secco',
+                        'Se hai dubbi, chiedi all\'isola ecologica locale'
+                    ],
+                    'benefits': [
+                        'Fertilizzante naturale',
+                        'Riduce rifiuti in discarica'
+                    ],
+                    'contact_info': 'Per dubbi: contatta l\'isola ecologica comunale',
+                    'requirements': 'Compostiera o punto di raccolta comunale',
+                    'icon': 'bi-recycle',
+                    'priority': 'medium'
+                })
             
             if recycling_options:
                 suggestions.append({
@@ -1336,10 +1582,12 @@ def _get_recycling_icon(recycling_type):
     """Restituisce icona appropriata per tipo di riciclo"""
     icon_map = {
         'donation': 'bi-heart',
+        'animal_feed': 'bi-heart-fill',
         'composting': 'bi-recycle',
         'reuse': 'bi-lightbulb',
         'repair': 'bi-tools',
-        'exchange': 'bi-arrow-left-right'
+        'exchange': 'bi-arrow-left-right',
+        'disposal': 'bi-trash'
     }
     return icon_map.get(recycling_type, 'bi-arrow-clockwise')
 
@@ -1347,9 +1595,11 @@ def _get_recycling_icon(recycling_type):
 def _get_recycling_priority(recycling_type):
     """Restituisce priorità per tipo di riciclo"""
     priority_map = {
-        'donation': 'high',
-        'composting': 'high',
-        'reuse': 'medium',
+        'composting': 'high',  # Compostaggio sempre priorità alta
+        'animal_feed': 'high',  # Donazione animali alta priorità
+        'reuse': 'high',  # Riutilizzo creativo alta priorità
+        'donation': 'medium',  # Donazione centri media priorità
+        'disposal': 'low',  # Smaltimento bassa priorità
         'repair': 'low',
         'exchange': 'medium'
     }
@@ -1359,175 +1609,6 @@ def _get_recycling_priority(recycling_type):
 # ========================================
 # CHATBOT AI FUNCTIONS
 # ========================================
-
-def ai_chatbot_response(user_message, user_id, conversation_context=None):
-    """
-    Genera risposta del chatbot usando AI
-    
-    Args:
-        user_message: Messaggio dell'utente
-        user_id: ID utente per personalizzazione
-        conversation_context: Contesto della conversazione
-    
-    Returns:
-        dict: Risposta del chatbot con tipo e contenuto
-    """
-    try:
-        api_key = os.getenv('GROQ_API_KEY')
-        
-        if not api_key:
-            current_app.logger.error("GROQ_API_KEY not configured")
-            return _generate_fallback_chat_response(user_message)
-        
-        # Recupera dati utente per contesto
-        user_context = _get_user_chat_context(user_id)
-        
-        # Prepara contesto conversazione
-        context_text = ""
-        if conversation_context:
-            context_text = f"\nContesto conversazione:\n{conversation_context}"
-        
-        # Prompt per AI
-        system_prompt = """Sei FoodFlowBot, l'assistente intelligente di FoodFlow, un'app per la gestione della dispensa e la riduzione degli sprechi alimentari.
-
-Il tuo ruolo è aiutare gli utenti con:
-1. Gestione della dispensa (prodotti, scadenze, scorte)
-2. Suggerimenti di ricette basate su ingredienti disponibili
-3. Consigli per ridurre gli sprechi alimentari
-4. Suggerimenti di riciclo per cibo scaduto
-5. Consigli nutrizionali e obiettivi dietetici
-6. Analytics e statistiche personali
-7. Uso delle funzionalità dell'app
-
-REGOLE IMPORTANTI:
-- Sii sempre utile, amichevole e professionale
-- Fornisci risposte pratiche e actionable
-- Usa emoji appropriati per rendere la conversazione più vivace
-- Se non hai informazioni specifiche, chiedi chiarimenti
-- Suggerisci sempre azioni concrete che l'utente può fare
-- Mantieni le risposte concise ma complete
-- Usa un tono italiano colloquiale ma rispettoso
-
-Formato risposta:
-{
-  "response": "Risposta testuale",
-  "type": "text|suggestion|action|recipe|recycling",
-  "suggestions": ["suggerimento1", "suggerimento2"],
-  "actions": [
-    {
-      "text": "Testo azione",
-      "url": "/path",
-      "icon": "bi-icon-name"
-    }
-  ],
-  "data": {} // Dati aggiuntivi se necessari
-}
-
-Rispondi SOLO con JSON valido."""
-
-        user_prompt = f"""Messaggio utente: {user_message}
-
-{user_context}
-{context_text}
-
-Rispondi come FoodFlowBot, fornendo aiuto specifico e pratico per la gestione alimentare."""
-
-        # Chiamata API
-        response = requests.post(
-            GROQ_API_URL,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json"
-            },
-            json={
-                "model": DEFAULT_MODEL,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt}
-                ],
-                "max_tokens": 1000,
-                "temperature": 0.7
-            },
-            timeout=30
-        )
-        
-        if response.status_code != 200:
-            current_app.logger.error(f"Groq API error: {response.status_code} - {response.text}")
-            return _generate_fallback_chat_response(user_message)
-        
-        # Parse response
-        try:
-            payload = response.json()
-        except Exception as e:
-            current_app.logger.error(f"Groq API invalid JSON: {e}; body={response.text[:500]}")
-            return _generate_fallback_chat_response(user_message)
-        
-        content = (payload.get("choices") or [{}])[0].get("message", {}).get("content", "")
-        if not content:
-            current_app.logger.warning("Groq API empty content")
-            return _generate_fallback_chat_response(user_message)
-        
-        # Estrai JSON
-        content = content.strip()
-        if content.startswith("```json"):
-            content = content[7:]
-        if content.startswith("```"):
-            content = content[3:]
-        if content.endswith("```"):
-            content = content[:-3]
-        content = content.strip()
-        
-        # Parse JSON
-        try:
-            data = json.loads(content)
-            return _validate_chat_response(data)
-            
-        except json.JSONDecodeError as e:
-            current_app.logger.error(f"Invalid JSON from AI: {e}; content: {content[:500]}")
-            return _generate_fallback_chat_response(user_message)
-        
-    except Exception as e:
-        current_app.logger.error(f"ai_chatbot_response error: {e}")
-        return _generate_fallback_chat_response(user_message)
-
-
-def _get_user_chat_context(user_id):
-    """Recupera contesto utente per il chatbot"""
-    try:
-        context_parts = []
-        
-        # Profilo nutrizionale
-        profile = NutritionalProfile.query.filter_by(user_id=user_id).first()
-        if profile:
-            context_parts.append(f"Profilo: {profile.age} anni, {profile.weight}kg, {profile.height}cm, {profile.gender}")
-            if profile.goal:
-                context_parts.append(f"Obiettivo: {profile.goal}")
-            if profile.activity_level:
-                context_parts.append(f"Attività: {profile.activity_level}")
-        
-        # Prodotti in dispensa
-        products = Product.query.filter_by(user_id=user_id, wasted=False).all()
-        if products:
-            expiring = [p for p in products if p.is_expiring_soon]
-            low_stock = [p for p in products if p.is_low_stock]
-            
-            context_parts.append(f"Dispensa: {len(products)} prodotti totali")
-            if expiring:
-                context_parts.append(f"Prodotti in scadenza: {', '.join([p.name for p in expiring[:5]])}")
-            if low_stock:
-                context_parts.append(f"Scorte basse: {', '.join([p.name for p in low_stock[:5]])}")
-        
-        # Statistiche recenti
-        stats = UserStats.query.filter_by(user_id=user_id).first()
-        if stats:
-            context_parts.append(f"Punti: {stats.points}, Livello: {stats.level}")
-            context_parts.append(f"Prodotti aggiunti: {stats.total_products_added}, Sprechi: {stats.total_products_wasted}")
-        
-        return "\n".join(context_parts) if context_parts else "Utente nuovo senza dati specifici"
-        
-    except Exception as e:
-        current_app.logger.error(f"_get_user_chat_context error: {e}")
-        return "Contesto utente non disponibile"
 
 
 def _validate_chat_response(data):
@@ -1548,57 +1629,72 @@ def _validate_chat_response(data):
 
 
 def _generate_fallback_chat_response(user_message):
-    """Genera risposta di fallback se AI non funziona"""
+    """Genera risposta di fallback se AI non funziona - più naturale e contestuale"""
     try:
         message_lower = user_message.lower()
         
-        # Risposte predefinite basate su parole chiave
-        if any(word in message_lower for word in ['ricetta', 'cucinare', 'pasto']):
+        # Risposte predefinite più naturali basate su parole chiave
+        if any(word in message_lower for word in ['ricetta', 'cucinare', 'cucino', 'pasto', 'pranzo', 'cena']):
             return {
                 'success': True,
-                'response': '🍳 Per suggerimenti di ricette, vai alla sezione "Ricette AI" nella dashboard! Posso aiutarti a trovare ricette basate sui tuoi ingredienti disponibili.',
-                'type': 'suggestion',
-                'suggestions': ['Vai alle ricette AI', 'Mostra ingredienti disponibili'],
-                'actions': [
-                    {'text': 'Vai alle Ricette', 'url': '/', 'icon': 'bi-magic'}
-                ],
-                'data': {},
-                'timestamp': datetime.now().isoformat()
-            }
-        
-        elif any(word in message_lower for word in ['scadenza', 'scaduto', 'scade']):
-            return {
-                'success': True,
-                'response': '📅 Controlla la sezione "Dispensa" per vedere i prodotti in scadenza. Posso anche suggerirti come riciclare il cibo scaduto!',
-                'type': 'suggestion',
-                'suggestions': ['Vai alla dispensa', 'Suggerimenti di riciclo'],
-                'actions': [
-                    {'text': 'Vai alla Dispensa', 'url': '/products', 'icon': 'bi-box-seam'},
-                    {'text': 'Suggerimenti Riciclo', 'url': '/recycling-suggestions', 'icon': 'bi-recycle'}
-                ],
-                'data': {},
-                'timestamp': datetime.now().isoformat()
-            }
-        
-        elif any(word in message_lower for word in ['riciclo', 'riciclare', 'spreco']):
-            return {
-                'success': True,
-                'response': '♻️ Ottima domanda! Vai alla sezione "Suggerimenti di Riciclo" per scoprire come trasformare il cibo scaduto in risorse preziose.',
-                'type': 'action',
-                'suggestions': ['Vai ai suggerimenti di riciclo'],
-                'actions': [
-                    {'text': 'Suggerimenti Riciclo', 'url': '/recycling-suggestions', 'icon': 'bi-recycle'}
-                ],
-                'data': {},
-                'timestamp': datetime.now().isoformat()
-            }
-        
-        elif any(word in message_lower for word in ['aiuto', 'help', 'come funziona']):
-            return {
-                'success': True,
-                'response': '👋 Ciao! Sono FoodFlowBot, il tuo assistente per la gestione alimentare. Posso aiutarti con ricette, gestione dispensa, suggerimenti di riciclo e molto altro! Cosa vorresti sapere?',
+                'response': 'Perfetto! Posso aiutarti a trovare ricette basate su quello che hai in dispensa. Controlla la sezione Ricette AI per suggerimenti personalizzati, oppure dimmi che ingredienti hai e ti suggerisco qualcosa!',
                 'type': 'text',
-                'suggestions': ['Come funziona la dispensa', 'Suggerimenti di ricette', 'Ridurre gli sprechi'],
+                'suggestions': ['Mostra i miei ingredienti', 'Suggerisci ricette veloci', 'Ricette con prodotti in scadenza'],
+                'actions': [],
+                'data': {},
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        elif any(word in message_lower for word in ['scadenza', 'scaduto', 'scade', 'scaduti', 'vecchio']):
+            return {
+                'success': True,
+                'response': 'Per controllare le scadenze vai alla tua Dispensa - lì puoi vedere tutti i prodotti, quelli in scadenza e quelli già scaduti. Per i prodotti scaduti, posso suggerirti modi creativi per riciclarli!',
+                'type': 'text',
+                'suggestions': ['Vedi prodotti in scadenza', 'Come riciclare cibo scaduto', 'Suggerimenti anti-spreco'],
+                'actions': [],
+                'data': {},
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        elif any(word in message_lower for word in ['riciclo', 'riciclare', 'spreco', 'sprechi', 'buttare', 'compost']):
+            return {
+                'success': True,
+                'response': 'Ottimo che tu voglia ridurre gli sprechi! Nella sezione Riciclo trovi tanti suggerimenti per trasformare il cibo scaduto in compost, fertilizzante o cibo per animali. Ogni piccolo gesto conta!',
+                'type': 'text',
+                'suggestions': ['Idee per riciclare', 'Come fare il compost', 'Ridurre gli sprechi'],
+                'actions': [],
+                'data': {},
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        elif any(word in message_lower for word in ['spesa', 'comprare', 'lista', 'shopping', 'supermercato']):
+            return {
+                'success': True,
+                'response': 'Vuoi gestire la tua lista della spesa? Controlla la sezione Liste Spesa dove puoi creare liste, aggiungere prodotti e segnare cosa hai già comprato. Posso anche suggerirti cosa comprare in base a cosa sta finendo!',
+                'type': 'text',
+                'suggestions': ['Vedi le mie liste', 'Cosa mi sta finendo?', 'Crea nuova lista'],
+                'actions': [],
+                'data': {},
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        elif any(word in message_lower for word in ['aiuto', 'help', 'come funziona', 'cosa fai', 'chi sei']):
+            return {
+                'success': True,
+                'response': 'Ciao! Sono FoodFlowBot, il tuo assistente personale per gestire la dispensa. Ti aiuto a tenere traccia del cibo, suggerire ricette, ridurre sprechi e organizzare la spesa. Chiedimi quello che vuoi sapere!',
+                'type': 'text',
+                'suggestions': ['Cosa ho in dispensa?', 'Cosa posso cucinare?', 'Mostra le funzionalità'],
+                'actions': [],
+                'data': {},
+                'timestamp': datetime.now().isoformat()
+            }
+        
+        elif any(word in message_lower for word in ['dispensa', 'prodotti', 'inventario', 'magazzino']):
+            return {
+                'success': True,
+                'response': 'La tua dispensa è il cuore di FoodFlow! Lì puoi vedere tutti i prodotti che hai, quando scadono e quanto te ne resta. Vuoi che ti mostri un riepilogo di cosa hai?',
+                'type': 'text',
+                'suggestions': ['Mostra la mia dispensa', 'Prodotti in scadenza', 'Aggiungi prodotto'],
                 'actions': [],
                 'data': {},
                 'timestamp': datetime.now().isoformat()
@@ -1607,15 +1703,10 @@ def _generate_fallback_chat_response(user_message):
         else:
             return {
                 'success': True,
-                'response': '🤔 Interessante! Posso aiutarti con la gestione della dispensa, ricette, suggerimenti di riciclo e molto altro. Cosa vorresti fare?',
+                'response': 'Sono qui per aiutarti! Posso rispondere a domande sulla tua dispensa, suggerirti ricette, aiutarti con la lista della spesa o darti consigli anti-spreco. Cosa ti interessa di più?',
                 'type': 'text',
-                'suggestions': ['Gestisci dispensa', 'Trova ricette', 'Suggerimenti riciclo', 'Vedi analytics'],
-                'actions': [
-                    {'text': 'Dispensa', 'url': '/products', 'icon': 'bi-box-seam'},
-                    {'text': 'Ricette', 'url': '/', 'icon': 'bi-magic'},
-                    {'text': 'Riciclo', 'url': '/recycling-suggestions', 'icon': 'bi-recycle'},
-                    {'text': 'Analytics', 'url': '/analytics', 'icon': 'bi-graph-up'}
-                ],
+                'suggestions': ['Cosa ho in dispensa?', 'Suggerisci ricette', 'Lista della spesa', 'Ridurre sprechi'],
+                'actions': [],
                 'data': {},
                 'timestamp': datetime.now().isoformat()
             }
@@ -1624,9 +1715,9 @@ def _generate_fallback_chat_response(user_message):
         current_app.logger.error(f"_generate_fallback_chat_response error: {e}")
         return {
             'success': False,
-            'response': 'Mi dispiace, si è verificato un errore. Riprova più tardi!',
+            'response': 'Ops! Si è verificato un problema tecnico. Riprova tra un momento, oppure usa il menu per navigare nelle diverse sezioni dell\'app.',
             'type': 'text',
-            'suggestions': [],
+            'suggestions': ['Vai alla Dashboard', 'Vedi la Dispensa', 'Ricette AI'],
             'actions': [],
             'data': {},
             'timestamp': datetime.now().isoformat()
@@ -1795,12 +1886,23 @@ def _get_user_chat_context(user_id):
         if products:
             context_parts.append(f"\n=== DISPENSA ({len(products)} prodotti) ===")
             
-            # Prodotti in scadenza
-            expiring = [p for p in products if p.expiry_date <= datetime.now().date() + timedelta(days=7)]
+            today = datetime.now().date()
+            
+            # Prodotti GIÀ SCADUTI
+            expired = [p for p in products if p.expiry_date < today]
+            if expired:
+                expired_list = [f"{p.name} ({p.quantity} {p.unit}, SCADUTO il {p.expiry_date.strftime('%d/%m')})" 
+                                for p in expired[:5]]
+                context_parts.append(f"⚠️ Prodotti SCADUTI: {', '.join(expired_list)}")
+                if len(expired) > 5:
+                    context_parts.append(f"... e altri {len(expired) - 5} prodotti scaduti")
+            
+            # Prodotti in scadenza (non ancora scaduti ma entro 7 giorni)
+            expiring = [p for p in products if p.expiry_date >= today and p.expiry_date <= today + timedelta(days=7)]
             if expiring:
                 expiring_list = [f"{p.name} ({p.quantity} {p.unit}, scade il {p.expiry_date.strftime('%d/%m')})" 
                                 for p in expiring[:5]]
-                context_parts.append(f"Prodotti in scadenza: {', '.join(expiring_list)}")
+                context_parts.append(f"⏰ Prodotti in scadenza (prossimi 7 giorni): {', '.join(expiring_list)}")
                 if len(expiring) > 5:
                     context_parts.append(f"... e altri {len(expiring) - 5} prodotti in scadenza")
             
@@ -1910,77 +2012,97 @@ def ai_chatbot_response(user_message, user_id, conversation_context=None):
         # Recupera dati utente completi per contesto
         user_context = _get_user_chat_context(user_id)
         
-        # Prepara contesto conversazione
+        # Prepara contesto conversazione (con limite più alto)
         context_text = ""
         if conversation_context:
-            context_text = f"\nUltimi messaggi:\n{conversation_context}"
+            # Mantieni più contesto (ultimi 2000 caratteri invece di 1000)
+            context_text = f"\n\nStorico conversazione recente:\n{conversation_context[-2000:]}"
         
-        # Prompt migliorato per AI
-        system_prompt = """Sei FoodFlowBot, l'assistente intelligente di FoodFlow, un'app per la gestione della dispensa e la riduzione degli sprechi alimentari.
+        # Prompt completamente rinnovato - più naturale e meno rigido
+        system_prompt = """Sei FoodFlowBot, l'assistente personale di FoodFlow - un'app innovativa per gestire la dispensa e ridurre gli sprechi alimentari.
 
-HAI ACCESSO COMPLETO A:
-- Dispensa dell'utente (prodotti disponibili, quantità, scadenze)
-- Liste della spesa (items da comprare, liste attive)
-- Piani pasto (pasti pianificati per i prossimi giorni)
-- Profilo nutrizionale e restrizioni dietetiche
-- Statistiche personali e gamification
+🎯 TUA MISSIONE
+Aiutare l'utente a gestire meglio il cibo, ridurre sprechi, cucinare con ciò che ha e vivere in modo più sostenibile. Sei come un amico esperto di cucina e organizzazione domestica.
 
-Il tuo ruolo è aiutare gli utenti con:
-1. Gestione della dispensa (prodotti, scadenze, scorte)
-2. Suggerimenti di ricette basate su ingredienti disponibili
-3. Consigli per ridurre gli sprechi alimentari
-4. Suggerimenti per la lista spesa
-5. Consigli nutrizionali e obiettivi dietetici
-6. Analytics e statistiche personali
-7. Uso delle funzionalità dell'app
+📊 COSA SAI DELL'UTENTE
+Hai accesso completo ai suoi dati in tempo reale:
+- Tutti i prodotti nella dispensa (nome, quantità, categoria, data scadenza)
+- Liste della spesa attive con items da comprare
+- Piani pasto programmati
+- Profilo nutrizionale, allergie e restrizioni dietetiche
+- Statistiche di utilizzo e gamification
 
-IMPORTANTE - USA I DATI REALI:
-- Quando l'utente chiede "cosa ho in dispensa", elenca i VERI prodotti dal contesto
-- Per "cosa posso cucinare", suggerisci ricette con gli ingredienti REALI disponibili
-- Per "cosa devo comprare", controlla la lista spesa ATTUALE
-- Per "cosa sta per scadere", usa le date REALI di scadenza
-- Menziona sempre quantità specifiche (es. "Hai 2kg di pasta")
+💬 COME DEVI COMUNICARE
+- Parla in modo naturale, come farebbe un amico competente
+- Sii conciso ma completo: punta a 2-4 frasi per risposta
+- Usa emoji CON MODERAZIONE, solo quando aggiungono valore
+- Fornisci sempre informazioni CONCRETE basate sui dati reali dell'utente
+- Se l'utente fa domande generiche, dagli risposte specifiche usando i suoi dati
+- Distingui sempre tra prodotti scaduti (non usabili) e in scadenza (usali subito)
 
-REGOLE IMPORTANTI:
-- Sii sempre utile, amichevole e professionale
-- Fornisci risposte pratiche e actionable
-- Usa emoji appropriati per rendere la conversazione più vivace
-- Se non hai informazioni specifiche, chiedi chiarimenti
-- Suggerisci sempre azioni concrete che l'utente può fare
-- Mantieni le risposte concise ma complete (max 3-4 frasi)
-- Usa un tono italiano colloquiale ma rispettoso
-- Rispetta SEMPRE le allergie e restrizioni dietetiche dell'utente
+🚨 REGOLE CRITICHE
+1. **USA I DATI REALI**: Quando l'utente chiede cosa ha in dispensa, elenca i VERI prodotti con quantità esatte
+2. **ALLERGIE**: Rispetta SEMPRE le allergie dell'utente - non suggerire MAI ingredienti a cui è allergico
+3. **SCADENZE**: Distingui prodotti scaduti (da riciclare) da quelli in scadenza (da usare subito)
+4. **QUANTITÀ**: Menziona sempre quantità specifiche (es. "500g di pasta" non "pasta")
+5. **CONTESTUALE**: Rispondi in base al contesto della conversazione precedente
 
-ESEMPI DI RISPOSTE CORRETTE:
-User: "Cosa ho in dispensa?"
-Bot: "🍽️ Nella tua dispensa hai: Pasta (2kg), Pomodori (500g), Mozzarella (200g), Olio (1L). In totale 15 prodotti. Hai 3 prodotti in scadenza nei prossimi 7 giorni!"
+💡 ESEMPI DI STILE CONVERSAZIONALE
 
-User: "Cosa posso cucinare?"
-Bot: "👨‍🍳 Con i tuoi ingredienti ti suggerisco: Pasta al pomodoro e mozzarella! Hai tutto: pasta, pomodori e mozzarella. Vuoi la ricetta completa?"
+Utente: "cosa ho da mangiare?"
+Tu: "Hai una bella varietà! Nella dispensa: pasta (2kg), riso (1kg), pomodori pelati (800g), mozzarella (250g) e olio d'oliva (1L). Però occhio: i pomodori scadono tra 4 giorni, mentre hai già 2 prodotti scaduti da controllare."
 
-User: "Cosa devo comprare?"
-Bot: "🛒 La tua lista 'Spesa settimanale' ha 8 prodotti da comprare: Latte, Pane, Uova, Yogurt... 3 items sono già completati. Vuoi vedere la lista completa?"
+Utente: "cosa cucino stasera?"
+Tu: "Con quello che hai ti consiglio una bella pasta alla norma! Hai pasta, melanzane (scadono tra 3 giorni - perfetto per usarle!), pomodori e basilico. Oppure se preferisci qualcosa di più veloce, un risotto ai funghi con il tuo riso basmati e i funghi champignon."
 
-Formato risposta:
+Utente: "ho finito il latte"
+Tu: "Ok, te l'aggiungo mentalmente alla lista spesa! Nella tua lista 'Settimanale' hai già latte, pane, uova e yogurt da comprare. Vuoi che ti suggerisca anche altri prodotti in base a cosa sta finendo?"
+
+🎨 TONO E PERSONALITÀ
+- Amichevole ma professionale
+- Proattivo nel dare suggerimenti
+- Empatico verso il problema degli sprechi
+- Entusiasta quando l'utente fa scelte sostenibili
+- Paziente e disponibile a chiarire
+
+📋 FORMATO RISPOSTA - OBBLIGATORIO
+⚠️ IMPORTANTE: Rispondi SOLO ed ESCLUSIVAMENTE con JSON valido. NON aggiungere testo prima o dopo il JSON.
+
+Formato ESATTO richiesto:
 {
-  "response": "Risposta testuale breve e concisa",
+  "response": "La tua risposta naturale e conversazionale",
   "type": "text",
-  "suggestions": [],
-  "actions": [],
+  "suggestions": ["Suggerimento 1", "Suggerimento 2"],
   "data": {}
 }
 
-Rispondi SOLO con JSON valido."""
+Campi:
+- "response": Il tuo messaggio testuale (2-4 frasi, naturale e fluido)
+- "type": Sempre "text" 
+- "suggestions": Array di 2-4 domande/azioni che l'utente potrebbe voler fare dopo (opzionale, lascia [] se non necessario)
+- "data": Oggetto vuoto {} (per future estensioni)
 
-        user_prompt = f"""Messaggio utente: {user_message}
+🚨 REGOLE CRITICHE:
+1. Inizia la risposta direttamente con "{"
+2. NON scrivere testo prima del JSON
+3. NON scrivere testo dopo il JSON
+4. NON includere il campo "actions"
+5. Assicurati che il JSON sia valido e completo
 
-DATI UTENTE COMPLETI:
+🎯 RICORDA
+Sei un assistente intelligente, non un menu di navigazione. Non limitarti a dire "vai alla sezione X" - dai informazioni concrete e utili basate sui dati reali dell'utente, poi eventualmente suggerisci azioni."""
+
+        user_prompt = f"""Messaggio dell'utente: "{user_message}"
+
+=== CONTESTO UTENTE ===
 {user_context}
 {context_text}
 
-Rispondi come FoodFlowBot usando i dati reali forniti sopra. Sii specifico e pratico."""
+Rispondi in modo naturale e conversazionale, usando i dati reali forniti sopra. Sii specifico, pratico e utile.
 
-        # Chiamata API
+⚠️ IMPORTANTE: Rispondi SOLO con il JSON, senza testo extra prima o dopo."""
+
+        # Chiamata API con parametri migliorati
         response = requests.post(
             GROQ_API_URL,
             headers={
@@ -1993,8 +2115,8 @@ Rispondi come FoodFlowBot usando i dati reali forniti sopra. Sii specifico e pra
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                "max_tokens": 800,  # Ridotto per risposte più concise
-                "temperature": 0.7
+                "max_tokens": 1200,  # Aumentato per risposte più elaborate
+                "temperature": 0.7  # Bilanciato tra creatività e consistenza
             },
             timeout=30
         )
@@ -2015,23 +2137,45 @@ Rispondi come FoodFlowBot usando i dati reali forniti sopra. Sii specifico e pra
             current_app.logger.warning("Groq API empty content")
             return _generate_fallback_chat_response(user_message)
         
-        # Estrai JSON
+        # Estrai JSON - gestione più robusta
         content = content.strip()
+        
+        # Rimuovi markdown code blocks
         if content.startswith("```json"):
             content = content[7:]
-        if content.startswith("```"):
+        elif content.startswith("```"):
             content = content[3:]
         if content.endswith("```"):
             content = content[:-3]
         content = content.strip()
         
+        # Cerca il JSON anche se c'è testo extra prima o dopo
+        json_start = content.find('{')
+        json_end = content.rfind('}')
+        
+        if json_start != -1 and json_end != -1 and json_end > json_start:
+            json_content = content[json_start:json_end + 1]
+        else:
+            json_content = content
+        
         # Parse JSON
         try:
-            data = json.loads(content)
+            data = json.loads(json_content)
             return _validate_chat_response(data)
             
         except json.JSONDecodeError as e:
             current_app.logger.error(f"Invalid JSON from AI: {e}; content: {content[:500]}")
+            # Prova a estrarre solo la risposta testuale se presente
+            if content and len(content) > 0:
+                # Se il contenuto sembra una risposta normale, usala direttamente
+                return {
+                    'success': True,
+                    'response': content[:500],  # Limita lunghezza
+                    'type': 'text',
+                    'suggestions': [],
+                    'data': {},
+                    'timestamp': datetime.now().isoformat()
+                }
             return _generate_fallback_chat_response(user_message)
         
     except Exception as e:
