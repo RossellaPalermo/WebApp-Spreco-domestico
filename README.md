@@ -171,6 +171,6 @@ Il sistema famiglia aggiunge le seguenti tabelle:
 ---
 
 ## 👨‍💻 **Autore**
-**Il Tuo Nome**
+Rossella Palermo
 - Email: s329788@studenti.polito.it
 ---
